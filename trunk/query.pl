@@ -12,7 +12,7 @@ print "Content-Type: text/html\n\n";
 
 my $tmpdir = "/Library/Webserver/Documents/as/gobe/";
 #UNCOMMENT FOR TOXIC.
-#$tmpdir = "/opt/apache/CoGe/tmp/";
+#$tmpdir = "/opt/apache/CoGe/";
 
 my $db  = "$tmpdir/" . $q->param('db');
 my $dbh = DBI->connect("dbi:SQLite:dbname=$db") || die "cant connect to db";
