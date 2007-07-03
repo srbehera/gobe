@@ -27,6 +27,8 @@ class Gobe extends Sprite {
     // base_url and n are sent in on the url.
     private var base_url:String;
     private var n:Int;
+    private var img:String;
+    private var tmp_dir:String;
 
     private var rect:QueryBox;
     private var _all:Bool;
@@ -119,30 +121,33 @@ class Gobe extends Sprite {
 
     static function main(){
         haxe.Firebug.redirectTraces();
-        var pars = flash.Lib.current.loaderInfo.parameters;
+        var p = flash.Lib.current.loaderInfo.parameters;
         flash.Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
         flash.Lib.current.stage.align     = StageAlign.TOP_LEFT;
 
 
-        var base_url:String = pars.base_url;
-        flash.Lib.current.addChild(new Gobe(base_url + pars.img,pars.n));
+        flash.Lib.current.addChild(
+            new Gobe(p.base_url, p.img, p.tmp_dir, p.n)
+        );
     }
 
 
-    public function new(base_url:String,  n:Int){
+    public function new(base_url:String, img:String, tmp_dir, n:Int){
         super();
-        this.QUERY_URL = 'query.pl?';
+        this.QUERY_URL = base_url + 'query.pl?';
         this.base_url  = base_url;
+        this.img = img;
+        this.tmp_dir   = tmp_dir;
         this.n         = n;
         getImageTitles(); // this calls initImages();
-        loadStyles('static/gobe.css');
+        loadStyles(base_url + '/static/gobe.css');
     }
 
     public function getImageTitles(){
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, imageTitlesReturn);
-        ul.load(new URLRequest(this.QUERY_URL + '&image_names=1'
-                            + '&db=' + this.base_url + '.sqlite'));
+        ul.load(new URLRequest(this.QUERY_URL + '&image_names=1&db='
+          + this.tmp_dir +  '/' + this.img + '.sqlite'));
     }
     public function imageTitlesReturn(e:Event){
             trace(e.target.data);
@@ -153,7 +158,7 @@ class Gobe extends Sprite {
         imgs = new Array<GImage>();
         var i:Int;
         for(i in 0...n){
-            var url = this.base_url + '_' + (i + 1) + '.png';
+            var url = this.tmp_dir + this.img + '_' + (i + 1) + '.png';
             imgs[i] = new GImage(url,i);
             imgs[i].addEventListener(GEvent.LOADED, imageLoaded);
         }
@@ -174,8 +179,8 @@ class Gobe extends Sprite {
         imgs[i].y = y;
         var ttf = new TextField();
         // ERIC FIX!!!
-        //ttf.htmlText = _image_titles[i];
-        ttf.htmlText = "<b>WAITING FOR ERIC TO FIX MARKUP</b>";
+        ttf.text = _image_titles[i];
+        //ttf.htmlText = "<b>WAITING FOR ERIC TO FIX MARKUP</b>";
         ttf.y = y ; ttf.background = true; ttf.width = 400;
         ttf.height = 25;
         ttf.border = true; ttf.borderColor = 0xcccccc;
@@ -193,7 +198,7 @@ class Gobe extends Sprite {
     private function stylesLoaded(e:Event){
         var style = new StyleSheet();
         style.parseCSS(cast(e.target, URLLoader).data);
-        rect = new QueryBox(style);
+        rect = new QueryBox(style, this.base_url);
         rect.show();
     }
 }
@@ -258,7 +263,7 @@ class QueryBox extends Sprite {
         this.graphics.clear();
     }
 
-    public function new(style:StyleSheet){
+    public function new(style:StyleSheet, base_url:String){
         super();
         _width  = 360;
         _height = 230;
@@ -290,7 +295,7 @@ class QueryBox extends Sprite {
 
         var loader = new URLLoader();
         loader.addEventListener(Event.COMPLETE, handleHtmlLoaded);
-        loader.load(new URLRequest("docs/textfield.html"));
+        loader.load(new URLRequest(base_url + "docs/textfield.html"));
         _close = new Sprite();
         _close.addEventListener(MouseEvent.CLICK, function (e:MouseEvent){
             e.target.parent.hide();
@@ -298,7 +303,7 @@ class QueryBox extends Sprite {
 
         _il = new Loader();
         _il.contentLoaderInfo.addEventListener(Event.COMPLETE, handleCloseLoaded);
-        _il.load(new URLRequest("static/close_button.gif"));
+        _il.load(new URLRequest(base_url + "static/close_button.gif"));
 
         flash.Lib.current.addChild(this);
     }
