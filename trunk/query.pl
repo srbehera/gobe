@@ -10,19 +10,28 @@ use JSON::Syck;
 my $q = new CGI;
 print "Content-Type: text/html\n\n";
 
-my $tmpdir = "/Library/Webserver/Documents/as/gobe/";
-#UNCOMMENT FOR TOXIC.
-#$tmpdir = "/opt/apache/CoGe/";
+my $tmpdir = "/var/www/gobe/";
+if($ENV{SERVER_NAME} =~ /(toxic|synteny)/){
+    $tmpdir = "/opt/apache/CoGe/";
+}
+
 
 my $db  = "$tmpdir/" . $q->param('db');
 my $dbh = DBI->connect("dbi:SQLite:dbname=$db") || die "cant connect to db";
+my $sth;
+
+if ($q->param('image_names')){
+    $sth = $dbh->prepare("SELECT title FROM image_info order by id");
+    $sth->execute();
+    print JSON::Syck::Dump( $sth->fetchall_arrayref() );
+    exit;
+}
 
 my $x    = $q->param('x');
 my $y    = $q->param('y');
 my $all  = $q->param('all') || 0;
 my ($img)= $q->param('img') =~ /.+\/([^\/]+)/;
 
-my $sth;
 if($all){
     $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? BETWEEN ymin and ymax and image = ?");
     $sth->execute($y, $img);
