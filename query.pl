@@ -14,7 +14,7 @@ print "Content-Type: text/html\n\n";
 #$tmpdir = "/opt/apache/CoGe/";
 my $tmpdir = "/var/www/gobe/";
 if($ENV{SERVER_NAME} =~ /(toxic|synteny)/){
-    $tmpdir = "/opt/apache/";
+    $tmpdir = "/opt/apache/CoGe/";
 }
 
 
