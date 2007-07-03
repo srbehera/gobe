@@ -66,7 +66,7 @@ while( my $result = $sth->fetchrow_hashref() ){
     my $link = $result->{link};
     my $color = ($result->{color} ne 'NULL' && $result->{color} || $pair->{color}) ;
     $color =~ s/#/0x/;
-    print STDERR $color . "\n";
+#    print STDERR $color . "\n";
     push(@results, {  link       => "/CoGe/$link"
                     , annotation => $annotation
                     # SOMETIMES one of them is NULL.
