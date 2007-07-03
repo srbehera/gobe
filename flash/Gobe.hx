@@ -214,8 +214,8 @@ class QueryBox extends Sprite {
     private var _il:Loader;
     private var _height:Int;
     private var _taper:Int;
-    public var tf:TextField;
     private var _close:Sprite;
+    public  var tf:TextField;
 
     public function show(){
         var g = this.graphics;
@@ -226,6 +226,7 @@ class QueryBox extends Sprite {
         this.addChild(tf);
         this.addChild(_close);
     }
+
     public function hide(){
         this.removeChild(tf);
         this.removeChild(_close);
@@ -286,6 +287,11 @@ class QueryBox extends Sprite {
     public function handleHtmlLoaded(e:Event){
         tf.htmlText = e.target.data; 
     }
+
+
+}
+
+class ImageTitle extends TextField {
 
 
 }
