@@ -10,9 +10,11 @@ use JSON::Syck;
 my $q = new CGI;
 print "Content-Type: text/html\n\n";
 
+#UNCOMMENT FOR TOXIC.
+#$tmpdir = "/opt/apache/CoGe/";
 my $tmpdir = "/var/www/gobe/";
 if($ENV{SERVER_NAME} =~ /(toxic|synteny)/){
-    $tmpdir = "/opt/apache/CoGe/";
+    $tmpdir = "/opt/apache/";
 }
 
 
