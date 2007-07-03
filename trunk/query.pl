@@ -23,7 +23,7 @@ my $sth;
 if ($q->param('image_names')){
     $sth = $dbh->prepare("SELECT title FROM image_info order by id");
     $sth->execute();
-    print JSON::Syck::Dump( $sth->fetchall_arrayref() );
+    print JSON::Syck::Dump([map{$_->[0]} @{ $sth->fetchall_arrayref()}]);
     exit;
 }
 
@@ -34,7 +34,10 @@ my ($img)= $q->param('img') =~ /.+\/([^\/]+)/;
 
 if($all){
     $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? BETWEEN ymin and ymax and image = ?");
-    $sth->execute($y, $img);
+    $sth = $dbh->prepare("SELECT * FROM image_data WHERE image_track =
+    (SELECT image_track from image_data WHERE ? BETWEEN ymin and ymax
+    and image = ?) and image = ?");
+    $sth->execute($y, $img, $img);
 }
 else{
     $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? + 2 > xmin AND ? - 2 < xmax AND ? BETWEEN ymin and ymax and image = ?");

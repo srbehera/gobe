@@ -33,6 +33,7 @@ class Gobe extends Sprite {
     private var imgs:Array<GImage>;
     private var gcoords:Array<Array<Float>>;
     private var QUERY_URL:String;
+    private var _image_titles:Array<String>;
 
 
     public function onClick(e:MouseEvent) {
@@ -74,7 +75,6 @@ class Gobe extends Sprite {
         var json:Array<Dynamic> = Json.decode(e.target.data).resultset;
         this.gcoords = [];
         var pair;
-        // var g = this.graphics;
         // TODO: create another page in front of hte images for the
         // hsp outlines and use an object for each rectangle so it
         // can respond to mouseover events.
@@ -134,6 +134,22 @@ class Gobe extends Sprite {
         this.QUERY_URL = 'query.pl?';
         this.base_url  = base_url;
         this.n         = n;
+        getImageTitles(); // this calls initImages();
+        loadStyles('static/gobe.css');
+    }
+
+    public function getImageTitles(){
+        var ul = new URLLoader();
+        ul.addEventListener(Event.COMPLETE, imageTitlesReturn);
+        ul.load(new URLRequest(this.QUERY_URL + '&image_names=1'
+                            + '&db=' + this.base_url + '.sqlite'));
+    }
+    public function imageTitlesReturn(e:Event){
+            trace(e.target.data);
+            _image_titles = Json.decode(e.target.data);
+            initImages();
+    }
+    public function initImages(){
         imgs = new Array<GImage>();
         var i:Int;
         for(i in 0...n){
@@ -141,8 +157,8 @@ class Gobe extends Sprite {
             imgs[i] = new GImage(url,i);
             imgs[i].addEventListener(GEvent.LOADED, imageLoaded);
         }
-        this.loadStyles('static/gobe.css');
     }
+
     public function imageLoaded(e:Event){ 
         var i:Int = 0;
         var y:Int = 0;
@@ -156,6 +172,15 @@ class Gobe extends Sprite {
         }
         flash.Lib.current.addChildAt(imgs[i],0);
         imgs[i].y = y;
+        var ttf = new TextField();
+        // ERIC FIX!!!
+        //ttf.htmlText = _image_titles[i];
+        ttf.htmlText = "<b>WAITING FOR ERIC TO FIX MARKUP</b>";
+        ttf.y = y ; ttf.background = true; ttf.width = 400;
+        ttf.height = 25;
+        ttf.border = true; ttf.borderColor = 0xcccccc;
+        ttf.x = 15;
+        flash.Lib.current.addChildAt(ttf,1);
         imgs[i].addEventListener(MouseEvent.CLICK, onClick);
     }
 
@@ -169,6 +194,7 @@ class Gobe extends Sprite {
         var style = new StyleSheet();
         style.parseCSS(cast(e.target, URLLoader).data);
         rect = new QueryBox(style);
+        rect.show();
     }
 }
 
@@ -192,9 +218,8 @@ class GImage extends Sprite {
 
     private function onComplete(event:Event) {
         image = cast(_imageLoader.content, flash.display.Bitmap);
-        trace(image.name);
         _bitmap = image.bitmapData;
-        flash.Lib.current.addChild(image); // working
+        flash.Lib.current.addChild(image);
         dispatchEvent(new GEvent(GEvent.LOADED));
         addChild(image);
     }
@@ -281,17 +306,11 @@ class QueryBox extends Sprite {
         _close.addChild(cast(_il.content,Bitmap));
         _close.x = _width - 20;
         _close.y = 2.5;
-        this.show();
     }
 
     public function handleHtmlLoaded(e:Event){
         tf.htmlText = e.target.data; 
     }
-
-
-}
-
-class ImageTitle extends TextField {
 
 
 }
