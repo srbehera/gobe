@@ -200,6 +200,7 @@ class Gobe extends Sprite {
         var style = new StyleSheet();
         style.parseCSS(cast(e.target, URLLoader).data);
         rect = new QueryBox(style, this.base_url);
+        rect.x =  1030;
         rect.show();
     }
 }
@@ -305,7 +306,6 @@ class QueryBox extends Sprite {
         _il = new Loader();
         _il.contentLoaderInfo.addEventListener(Event.COMPLETE, handleCloseLoaded);
         _il.load(new URLRequest(base_url + "static/close_button.gif"));
-
         flash.Lib.current.addChild(this);
     }
     private function handleCloseLoaded(e:Event){
