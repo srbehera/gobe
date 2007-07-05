@@ -180,9 +180,10 @@ class Gobe extends Sprite {
         var ttf = new TextField();
         // ERIC FIX!!!
         ttf.text = _image_titles[i];
+        ttf.alpha = 50;
         //ttf.htmlText = "<b>WAITING FOR ERIC TO FIX MARKUP</b>";
-        ttf.y = y ; ttf.background = true; ttf.width = 400;
-        ttf.height = 25;
+        ttf.y = y ; ttf.opaqueBackground = 0xffffff;
+        ttf.autoSize = flash.text.TextFieldAutoSize.LEFT;
         ttf.border = true; ttf.borderColor = 0xcccccc;
         ttf.x = 15;
         flash.Lib.current.addChildAt(ttf,1);
