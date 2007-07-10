@@ -85,7 +85,9 @@ class Gobe extends Sprite {
         var isGene = false;
         for(pair in json){
             g.lineStyle(2);
+            trace(pair.annotation);
             rect.tf.htmlText = pair.annotation;
+            rect.tf.htmlText += "<br/>" + pair.link;
             for(hsp in Reflect.fields(pair.features)){
                  
                 if(hsp == ''){ isGene = true; continue; }
@@ -179,7 +181,7 @@ class Gobe extends Sprite {
         imgs[i].y = y;
         var ttf = new TextField();
         // ERIC FIX!!!
-        ttf.text = _image_titles[i];
+        ttf.htmlText = _image_titles[i];
         ttf.alpha = 50;
         //ttf.htmlText = "<b>WAITING FOR ERIC TO FIX MARKUP</b>";
         ttf.y = y ; ttf.opaqueBackground = 0xffffff;

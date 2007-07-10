@@ -52,7 +52,6 @@ while( my $result = $sth->fetchrow_hashref() ){
     #if(! $result){ print 'false'; exit(0); }
     #print STDERR Dumper $result;
     my $annotation = $result->{annotation};
-    $annotation =~ s/=small/="small"/g;
     my $sth2 = $dbh->prepare("SELECT * FROM image_data where id = ?");
     $sth2->execute($result->{pair_id} );
     my $pair = $sth2->fetchrow_hashref();
@@ -66,7 +65,8 @@ while( my $result = $sth->fetchrow_hashref() ){
     my $link = $result->{link};
     my $color = ($result->{color} ne 'NULL' && $result->{color} || $pair->{color}) ;
     $color =~ s/#/0x/;
-#    print STDERR $color . "\n";
+
+    print STDERR $annotation . "\n\n";
     push(@results, {  link       => "/CoGe/$link"
                     , annotation => $annotation
                     # SOMETIMES one of them is NULL.
