@@ -53,7 +53,7 @@ class Gobe extends Sprite {
         if(! e.altKey){
             this.graphics.clear();
             flash.Lib.current.graphics.clear();
-            rect.tf.htmlText = '';
+            rect.tf.text = '';
             for(img in this.imgs){
                 img.graphics.clear();
             }
@@ -86,8 +86,8 @@ class Gobe extends Sprite {
         for(pair in json){
             g.lineStyle(2);
             trace(pair.annotation);
-            rect.tf.htmlText = pair.annotation;
-            rect.tf.htmlText += "<br/>" + pair.link;
+            rect.tf.text = "'<pre>" + pair.annotation + "</pre>'";
+            rect.tf.text += "\n<a target='_blank' href='" + pair.link + "'>full annotation</a>";
             for(hsp in Reflect.fields(pair.features)){
                  
                 if(hsp == ''){ isGene = true; continue; }
@@ -113,7 +113,7 @@ class Gobe extends Sprite {
         }
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
-            rect.tf.htmlText = 'NOT SHOWING ANNOTATION FOR MULTIPLE HITS';
+            rect.tf.text = 'NOT SHOWING ANNOTATION FOR MULTIPLE HITS';
         }
         else{
             rect.show();
@@ -181,9 +181,9 @@ class Gobe extends Sprite {
         imgs[i].y = y;
         var ttf = new TextField();
         // ERIC FIX!!!
-        ttf.htmlText = _image_titles[i];
+        ttf.text = _image_titles[i];
         ttf.alpha = 50;
-        //ttf.htmlText = "<b>WAITING FOR ERIC TO FIX MARKUP</b>";
+        //ttf.text = "<b>WAITING FOR ERIC TO FIX MARKUP</b>";
         ttf.y = y ; ttf.opaqueBackground = 0xffffff;
         ttf.autoSize = flash.text.TextFieldAutoSize.LEFT;
         ttf.border = true; ttf.borderColor = 0xcccccc;
@@ -285,6 +285,8 @@ class QueryBox extends Sprite {
         tf.wordWrap   = true;
         tf.border     = false;
         tf.styleSheet = style;
+        tf.scrollH    = 10;
+        tf.scrollV    = 30;
 
         tf.x = 1;
         tf.y = _taper -1;
@@ -317,7 +319,7 @@ class QueryBox extends Sprite {
     }
 
     public function handleHtmlLoaded(e:Event){
-        tf.htmlText = e.target.data; 
+        tf.text = "'" + e.target.data + "'";
     }
 
 
