@@ -86,8 +86,8 @@ class Gobe extends Sprite {
         for(pair in json){
             g.lineStyle(2);
             trace(pair.annotation);
-            rect.tf.text = "<pre>" + pair.annotation + "</pre>";
-            rect.tf.text += "\n<a target='_blank' href='" + pair.link + "'>full annotation</a>";
+            rect.tf.text = pair.annotation;
+            //rect.tf.text += "\n<a target='_blank' href='" + pair.link + "'>full annotation</a>";
             for(hsp in Reflect.fields(pair.features)){
                  
                 if(hsp == ''){ isGene = true; continue; }
