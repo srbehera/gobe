@@ -88,8 +88,8 @@ class Gobe extends Sprite {
         for(pair in json){
             g.lineStyle(2);
             trace(pair.annotation);
-            rect.tf.htmlText = pair.annotation;
-            rect.tf.htmlText += "&#10;<font color='#0000ff'><a target='_blank' href='" + pair.link + "'>full annotation</a></font>";
+            rect.tf.htmlText = "<font color='#0000ff'><a target='_blank' href='" + pair.link + "'>full annotation</a></font>&#10;&#10;";
+            rect.tf.htmlText += pair.annotation;
             for(hsp in Reflect.fields(pair.features)){
                  
                 if(hsp == ''){ isGene = true; continue; }
@@ -194,7 +194,7 @@ class Gobe extends Sprite {
             ttf.x = 15;
             flash.Lib.current.addChildAt(ttf,1);
             img.addEventListener(MouseEvent.CLICK, onClick);
-            y+=e.target.image.height;
+            y+=h;
             i++;
         }
         /*
