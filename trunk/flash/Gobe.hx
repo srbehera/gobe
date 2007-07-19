@@ -30,6 +30,8 @@ class Gobe extends Sprite {
     private var img:String;
     private var tmp_dir:String;
 
+    private var _heights:Array<Int>;
+
     private var rect:QueryBox;
     private var _all:Bool;
     private var imgs:Array<GImage>;
@@ -86,8 +88,8 @@ class Gobe extends Sprite {
         for(pair in json){
             g.lineStyle(2);
             trace(pair.annotation);
-            rect.tf.text = pair.annotation;
-            rect.tf.text += "&#10;<a target='_blank' href='" + pair.link + "'>full annotation</a>";
+            rect.tf.htmlText = pair.annotation;
+            rect.tf.htmlText += "&#10;<font color='#0000ff'><a target='_blank' href='" + pair.link + "'>full annotation</a></font>";
             for(hsp in Reflect.fields(pair.features)){
                  
                 if(hsp == ''){ isGene = true; continue; }
@@ -111,9 +113,10 @@ class Gobe extends Sprite {
             g.lineTo( (h1[0] + h1[2])/2, (h1[1] + h1[3])/2);
             j+=2;
         }
+
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
-            rect.tf.text = 'NOT SHOWING ANNOTATION FOR MULTIPLE HITS';
+            rect.tf.htmlText = 'NOT SHOWING ANNOTATION FOR MULTIPLE HITS';
         }
         else{
             rect.show();
@@ -141,6 +144,9 @@ class Gobe extends Sprite {
         this.img = img;
         this.tmp_dir   = tmp_dir;
         this.n         = n;
+        _heights = [];
+        var i:Int;
+        for(i in 0...n){ _heights[i] = 0; }
         getImageTitles(); // this calls initImages();
         loadStyles(base_url + '/static/gobe.css');
     }
@@ -169,27 +175,47 @@ class Gobe extends Sprite {
     public function imageLoaded(e:Event){ 
         var i:Int = 0;
         var y:Int = 0;
+        trace(this);
+        _heights[e.target.i] = e.target.image.height;
+        for(h in _heights){ if(h ==0){ return; } }
         // note, this depends on the images being loaded in order.
         // TODO: fix so it doesnt depend on order.
+        
+        for(h in _heights){
+            var img = imgs[i];
+            img.y = y;
+            flash.Lib.current.addChildAt(img,0);
+            var ttf = new TextField();
+            ttf.text = _image_titles[i];
+            ttf.alpha = 50;
+            ttf.y = y ; ttf.opaqueBackground = 0xffffff;
+            ttf.autoSize = flash.text.TextFieldAutoSize.LEFT;
+            ttf.border = true; ttf.borderColor = 0xcccccc;
+            ttf.x = 15;
+            flash.Lib.current.addChildAt(ttf,1);
+            img.addEventListener(MouseEvent.CLICK, onClick);
+            y+=e.target.image.height;
+            i++;
+        }
+        /*
         while(i < imgs.length){
             var img = imgs[i];
-            if (img == e.target){ break;}
+            if (img == e.target){ break; }
             y += e.target.image.height;
             i++;
         }
         flash.Lib.current.addChildAt(imgs[i],0);
         imgs[i].y = y;
         var ttf = new TextField();
-        // ERIC FIX!!!
         ttf.text = _image_titles[i];
         ttf.alpha = 50;
-        //ttf.text = "<b>WAITING FOR ERIC TO FIX MARKUP</b>";
         ttf.y = y ; ttf.opaqueBackground = 0xffffff;
         ttf.autoSize = flash.text.TextFieldAutoSize.LEFT;
         ttf.border = true; ttf.borderColor = 0xcccccc;
         ttf.x = 15;
         flash.Lib.current.addChildAt(ttf,1);
         imgs[i].addEventListener(MouseEvent.CLICK, onClick);
+        */
     }
 
     private function loadStyles(style_path:String){
@@ -270,7 +296,7 @@ class QueryBox extends Sprite {
     public function new(style:StyleSheet, base_url:String){
         super();
         _width  = 360;
-        _height = 230;
+        _height = 630;
         _taper  = 20;
 
         addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
