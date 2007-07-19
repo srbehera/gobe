@@ -88,7 +88,7 @@ class Gobe extends Sprite {
         for(pair in json){
             g.lineStyle(2);
             trace(pair.annotation);
-            rect.tf.htmlText = "<font color='#0000ff'><a target='_blank' href='" + pair.link + "'>full annotation</a></font>&#10;&#10;";
+            rect.tf.htmlText = "<font color='#0000ff'><u><a target='_blank' href='" + pair.link + "'>full annotation</a></u></font>&#10;&#10;";
             rect.tf.htmlText += pair.annotation;
             for(hsp in Reflect.fields(pair.features)){
                  
