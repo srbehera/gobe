@@ -1,3 +1,3 @@
-1. Draw HSP connecting lines on top of image.
-2. Deselect should work as well as select
-3. Ability to change the thickness of connecting lines
+<li>1. Draw HSP connecting lines on top of image.
+<li>2. Deselect should work as well as select
+<li>3. Ability to change the thickness of connecting lines
