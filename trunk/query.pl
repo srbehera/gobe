@@ -35,11 +35,15 @@ my $all  = $q->param('all') || 0;
 my ($img)= $q->param('img') =~ /.+\/([^\/]+)/;
 
 if($all){
-    $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? BETWEEN ymin and ymax and image = ?");
-    $sth = $dbh->prepare("SELECT * FROM image_data WHERE image_track =
-    (SELECT image_track from image_data WHERE ? BETWEEN ymin and ymax
-    and image = ?) and image = ?");
-    $sth->execute($y, $img, $img);
+    $sth = $dbh->prepare("SELECT image_track FROM image_data WHERE ? BETWEEN ymin and ymax and image = ?");
+    $sth->execute($y, $img);
+    my $track = $sth->fetchrow_array();
+    $sth = $dbh->prepare(qq{
+SELECT * FROM image_data 
+WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image = ? 
+}
+			);
+    $sth->execute($track, $track, $img);
 }
 else{
     $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? + 2 > xmin AND ? - 2 < xmax AND ? BETWEEN ymin and ymax and image = ?");
@@ -67,7 +71,7 @@ while( my $result = $sth->fetchrow_hashref() ){
     $color =~ s/#/0x/;
     $annotation =~ s/=small/="small"/g;
     $annotation =~ s/<br>/<br\/>/g;
-    print STDERR $annotation . "\n\n";
+#    print STDERR $annotation . "\n\n";
     push(@results, {  link       => "/CoGe/$link"
                     , annotation => $annotation
                     # SOMETIMES one of them is NULL.
