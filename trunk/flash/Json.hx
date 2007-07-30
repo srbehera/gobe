@@ -20,9 +20,8 @@ SOFTWARE.
 * Updated for haxe by ritchie turner
 * Copyright (c) 2007 ritchie@blackdog-haxe.com
 *
-* There are unicode things I didn't bother with.
+* There are control character things I didn't bother with.
 */
-
 
 
 class Json {
@@ -63,80 +62,43 @@ private class Encode {
 
 		} else if (Std.is(value,Array)) {
 			return arrayToString(value);
+			
 		} else if (value != null && Reflect.isObject(value)) {
 			return objectToString( value );
 		}
+		
 		return "null";
 	}
 
 	function escapeString( str:String ):String {
-		var s:String = "";
+		var s = new StringBuf();
 		var ch:String;
-		var len = str.length;
-		var i:Int = 0;
-		while(i < len) {
-
-			// examine the character to determine if we have to escape it
-			ch = str.charAt( i );
+		var i = 0;
+		while ((ch = str.charAt( i )) != ""){
 			switch ( ch ) {
-
 				case '"':	// quotation mark
-					s += "\\\"";
-					break;
-
-				//case '/':	// solidus
-				//	s += "\\/";
-				//	break;
-
+					s.add('\\"');
+				case '/':	// solidus
+					s.add("\\/");
 				case '\\':	// reverse solidus
-					s += "\\\\";
-					break;
-
-				case '\\b':	// bell
-					s += "\\b";
-					break;
-
+					s.add("\\\\");
+				case '\\b':	// backspace
+					s.add("\\b");
 				case '\\f':	// form feed
-					s += "\\f";
-					break;
-
-				case '\n':	// newline
-					s += "\\n";
-					break;
-
-				case '\r':	// carriage return
-					s += "\\r";
-					break;
-
-				case '\t':	// horizontal tab
-					s += "\\t";
-					break;
-
-				default:	// everything else
-
-					// check for a control character and escape as unicode
-					if ( ch < ' ' ) {
-						// get the hex digit(s) of the character (either 1 or 2 digits)
-					//	var hexCode:String = ch.charCodeAt( 0 ).toString( 16 );
-
-						// ensure that there are 4 digits by adjusting
-						// the # of zeros accordingly.
-				//		var zeroPad:String = hexCode.length == 2 ? "00" : "000";
-
-						// create the unicode escape sequence with 4 hex digits
-				//		s += "\\u" + zeroPad + hexCode;
-					} else {
-
-						// no need to do any special encoding, just pass-through
-						s += ch;
-
-					}
-			}	// end switch
-
+					s.add("\\f");
+				case '\\n':	// newline
+					s.add("\\n");
+				case '\\r':	// carriage return
+					s.add("\\r");
+				case '\\t':	// horizontal tab
+					s.add("\\t");
+				default: // skipped encoding control chars here
+					s.add(ch);
+			}	
 			i++;
 		}	// end for loop
 
-		return "\"" + s + "\"";
+		return "\"" + s.toString() + "\"";
 	}
 
 	function arrayToString( a:Array<Dynamic> ):String {
@@ -147,28 +109,10 @@ private class Encode {
 			if ( s.length > 0 ) {
 				s += ",";
 			}
-
 			s += convertToString( a[i] );
 			i++;
 		}
 
-		// KNOWN ISSUE:  In ActionScript, Arrays can also be associative
-		// objects and you can put anything in them, ie:
-		//		myArray["foo"] = "bar";
-		//
-		// These properties aren't picked up in the for loop above because
-		// the properties don't correspond to indexes.  However, we're
-		// sort of out luck because the JSON specification doesn't allow
-		// these types of array properties.
-		//
-		// So, if the array was also used as an associative object, there
-		// may be some values in the array that don't get properly encoded.
-		//
-		// A possible solution is to instead encode the Array as an Object
-		// but then it won't get decoded correctly (and won't be an
-		// Array instance)
-
-		// close the array and return it's string value
 		return "[" + s + "]";
 	}
 
@@ -224,7 +168,6 @@ private class Decode {
 			this.text = text ;
 			return value();
 		} catch (exc:Dynamic) {
-			trace("parse:"+exc);
 		}
 		return '{"err":"parse error"}';
 	}
@@ -292,12 +235,13 @@ private class Decode {
 				} else if (ch == '\\') {
 					switch (next()) {
 
-/*
-					case 'b':
-						s += '\\b';
+
+				/*	case 'b':
+						s += "\\b";
 						break;
+						
 					case 'f':
-						s += '\\f';
+						s += '\f';
 						break;
 */
 					case 'n':
@@ -438,7 +382,7 @@ private class Decode {
 		return v;
 	}
 
-     function word() {
+     function word():Null<Bool> {
 		switch (ch) {
 			case 't':
 				if (next() == 'r' && next() == 'u' &&

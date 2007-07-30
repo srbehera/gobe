@@ -78,7 +78,7 @@ class Gobe extends Sprite {
     private function handleQueryReturn(e:Event){
         var json:Array<Dynamic> = Json.decode(e.target.data).resultset;
         this.gcoords = [];
-        var pair;
+        var pair:Hash<Dynamic>;
         // TODO: create another page in front of hte images for the
         // hsp outlines and use an object for each rectangle so it
         // can respond to mouseover events.
@@ -87,13 +87,16 @@ class Gobe extends Sprite {
         var isGene = false;
         for(pair in json){
             g.lineStyle(2);
-            trace(pair.annotation);
             rect.tf.htmlText = "<font color='#0000ff'><u><a target='_blank' href='" + pair.link + "'>full annotation</a></u></font>&#10;&#10;";
             rect.tf.htmlText += pair.annotation;
+            
             for(hsp in Reflect.fields(pair.features)){
+                trace(hsp);
                  
-                if(hsp == ''){ isGene = true; continue; }
+                if(hsp == '' || hsp == 'key'){ isGene = true; continue; }
                 var coords:Array<Dynamic> = Reflect.field(pair.features, hsp);
+                // converty key2 to 2; because that's the image we need.
+                hsp = hsp.substr(3); 
                
                 var img = this.imgs[Std.parseInt(hsp) -1];
                 var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
