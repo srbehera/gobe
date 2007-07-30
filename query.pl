@@ -69,15 +69,12 @@ while( my $result = $sth->fetchrow_hashref() ){
     my $link = $result->{link};
     my $color = ($result->{color} ne 'NULL' && $result->{color} || $pair->{color}) ;
     $color =~ s/#/0x/;
-    $annotation =~ s/=small/="small"/g;
-    $annotation =~ s/<br>/<br\/>/g;
 #    print STDERR $annotation . "\n\n";
     push(@results, {  link       => "/CoGe/$link"
                     , annotation => $annotation
                     # SOMETIMES one of them is NULL.
                     , color      => $color
-                    , features   => {$f1name => \@f1pts,$f2name => \@f2pts}
+                    , features   => {'key' . $f1name => \@f1pts,'key'. $f2name => \@f2pts}
                  });
 }
-my $resultset = {resultset => \@results};
-print JSON::Syck::Dump($resultset);
+print JSON::Syck::Dump({resultset => \@results});
