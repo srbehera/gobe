@@ -255,9 +255,8 @@ class GImage extends Sprite {
     }
 
     private function onComplete(event:Event) {
-        image = cast(_imageLoader.content, flash.display.Bitmap);
+        image = cast(_imageLoader.content, Bitmap);
         _bitmap = image.bitmapData;
-        flash.Lib.current.addChild(image);
         dispatchEvent(new GEvent(GEvent.LOADED));
         addChild(image);
     }
