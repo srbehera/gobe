@@ -23,6 +23,7 @@ import Json;
 class Gobe extends Sprite {
 
     public static var ctx = new LoaderContext(true);
+    private var line_width:Int;
 
     // base_url and n are sent in on the url.
     private var base_url:String;
@@ -86,7 +87,7 @@ class Gobe extends Sprite {
         
         var isGene = false;
         for(pair in json){
-            g.lineStyle(2);
+            g.lineStyle(line_width);
             rect.tf.htmlText = "<font color='#0000ff'><u><a target='_blank' href='" + pair.link + "'>full annotation</a></u></font>&#10;&#10;";
             rect.tf.htmlText += pair.annotation;
             
@@ -106,7 +107,7 @@ class Gobe extends Sprite {
                    , 1 + coords[2] - coords[0]
                    , 1 + coords[3] - coords[1]);
             }
-            g.lineStyle(0, pair.color);
+            g.lineStyle(line_width, pair.color);
         }
         var j = 0;
         while(j<this.gcoords.length && ! isGene ){
@@ -143,6 +144,7 @@ class Gobe extends Sprite {
     public function new(base_url:String, img:String, tmp_dir, n:Int){
         super();
         this.QUERY_URL = base_url + 'query.pl?';
+        line_width = 1;
         this.base_url  = base_url;
         this.img = img;
         this.tmp_dir   = tmp_dir;
@@ -233,6 +235,18 @@ class Gobe extends Sprite {
         rect = new QueryBox(style, this.base_url);
         rect.x =  1030;
         rect.show();
+
+        rect.plus.addEventListener(MouseEvent.CLICK, plusClick);
+        rect.minus.addEventListener(MouseEvent.CLICK, minusClick);
+    }
+
+    private function plusClick(e:MouseEvent){
+            line_width += 1;
+    }
+    private function minusClick(e:MouseEvent){
+        if( line_width > 0){
+            line_width -= 1;
+        }
     }
 }
 
@@ -274,10 +288,15 @@ class GEvent extends Event {
 class QueryBox extends Sprite {
     private var _width:Int;
     private var _il:Loader;
+    private var _ilplus:Loader;
+    private var _ilminus:Loader;
     private var _height:Int;
     private var _taper:Int;
     private var _close:Sprite;
+
     public  var tf:TextField;
+    public  var plus:Sprite;
+    public  var minus:Sprite;
 
     public function show(){
         var g = this.graphics;
@@ -287,11 +306,15 @@ class QueryBox extends Sprite {
         g.endFill();
         this.addChild(tf);
         this.addChild(_close);
+        this.addChild(plus);
+        this.addChild(minus);
     }
 
     public function hide(){
         this.removeChild(tf);
         this.removeChild(_close);
+        this.removeChild(plus);
+        this.removeChild(minus);
         this.graphics.clear();
     }
 
@@ -302,10 +325,10 @@ class QueryBox extends Sprite {
         _taper  = 20;
 
         addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
-            if(Std.is(e.target,Sprite)){ e.target.startDrag(); }
+            if(Std.is(e.target,QueryBox)){ e.target.startDrag(); }
         });
         addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent){
-            if(Std.is(e.target,Sprite)){ e.target.stopDrag(); }
+            if(Std.is(e.target,QueryBox)){ e.target.stopDrag(); }
         });
 
 
@@ -331,21 +354,47 @@ class QueryBox extends Sprite {
         loader.addEventListener(Event.COMPLETE, handleHtmlLoaded);
         loader.load(new URLRequest(base_url + "docs/textfield.html"));
         _close = new Sprite();
+        plus = new Sprite();
+        minus = new Sprite();
+
         _close.addEventListener(MouseEvent.CLICK, function (e:MouseEvent){
             e.target.parent.hide();
         });
 
+
         _il = new Loader();
         _il.contentLoaderInfo.addEventListener(Event.COMPLETE, handleCloseLoaded);
         _il.load(new URLRequest(base_url + "static/close_button.gif"));
+
+        
+        _ilplus = new Loader();
+        _ilplus.contentLoaderInfo.addEventListener(Event.COMPLETE, handlePlusLoaded);
+        _ilplus.load(new URLRequest(base_url + "static/plus.gif"));
+
+
+
+        _ilminus = new Loader();
+        _ilminus.contentLoaderInfo.addEventListener(Event.COMPLETE, handleMinusLoaded);
+        _ilminus.load(new URLRequest(base_url + "static/minus.gif"));
+
         flash.Lib.current.addChild(this);
+
     }
     private function handleCloseLoaded(e:Event){
         _close.addChild(cast(_il.content,Bitmap));
         _close.x = _width - 20;
         _close.y = 2.5;
     }
-
+    private function handlePlusLoaded(e:Event){
+        plus.addChild(cast(_ilplus.content,Bitmap));
+        plus.x = _width - 35;
+        plus.y = 2.5;
+    }
+    private function handleMinusLoaded(e:Event){
+        minus.addChild(cast(_ilminus.content,Bitmap));
+        minus.x = _width - 50;
+        minus.y = 2.5;
+    }
     public function handleHtmlLoaded(e:Event){
         tf.text = "'" + e.target.data + "'";
     }
