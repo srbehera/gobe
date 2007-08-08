@@ -202,25 +202,6 @@ class Gobe extends Sprite {
             y+=h;
             i++;
         }
-        /*
-        while(i < imgs.length){
-            var img = imgs[i];
-            if (img == e.target){ break; }
-            y += e.target.image.height;
-            i++;
-        }
-        flash.Lib.current.addChildAt(imgs[i],0);
-        imgs[i].y = y;
-        var ttf = new TextField();
-        ttf.text = _image_titles[i];
-        ttf.alpha = 50;
-        ttf.y = y ; ttf.opaqueBackground = 0xffffff;
-        ttf.autoSize = flash.text.TextFieldAutoSize.LEFT;
-        ttf.border = true; ttf.borderColor = 0xcccccc;
-        ttf.x = 15;
-        flash.Lib.current.addChildAt(ttf,1);
-        imgs[i].addEventListener(MouseEvent.CLICK, onClick);
-        */
     }
 
     private function loadStyles(style_path:String){
@@ -242,10 +223,12 @@ class Gobe extends Sprite {
 
     private function plusClick(e:MouseEvent){
             line_width += 1;
+            rect.tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
     }
     private function minusClick(e:MouseEvent){
         if( line_width > 0){
             line_width -= 1;
+            rect.tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
         }
     }
 }
@@ -293,9 +276,11 @@ class QueryBox extends Sprite {
     private var _height:Int;
     private var _taper:Int;
     private var _close:Sprite;
+    
 
     public  var tf:TextField;
     public  var plus:Sprite;
+    public  var tf_size:TextField;
     public  var minus:Sprite;
 
     public function show(){
@@ -308,6 +293,7 @@ class QueryBox extends Sprite {
         this.addChild(_close);
         this.addChild(plus);
         this.addChild(minus);
+        this.addChild(tf_size);
     }
 
     public function hide(){
@@ -315,6 +301,7 @@ class QueryBox extends Sprite {
         this.removeChild(_close);
         this.removeChild(plus);
         this.removeChild(minus);
+        this.removeChild(tf_size);
         this.graphics.clear();
     }
 
@@ -349,6 +336,18 @@ class QueryBox extends Sprite {
         
         tf.background      = true;
         tf.backgroundColor = 0xFFFFFF;
+
+
+        tf_size = new TextField();
+        tf_size.wordWrap   = true;
+        tf_size.border     = false;
+        tf_size.width = 90;
+        tf_size.height = 30;
+        tf_size.htmlText = "line width: <b>1</b>";
+        tf_size.x = _width - 165;
+        tf_size.y = 0;
+
+
 
         var loader = new URLLoader();
         loader.addEventListener(Event.COMPLETE, handleHtmlLoaded);
