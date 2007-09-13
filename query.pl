@@ -38,10 +38,13 @@ if($all){
     $sth = $dbh->prepare("SELECT image_track FROM image_data WHERE ? BETWEEN ymin and ymax and image = ?");
     $sth->execute($y, $img);
     my $track = $sth->fetchrow_array();
+#    print STDERR $track,"\n";
     $sth = $dbh->prepare(qq{
-SELECT * FROM image_data 
+SELECT name xmin, xmax, ymin, ymax, image, image_track, pair_id, link, color
+ FROM image_data 
 WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image = ? 
 }
+
 			);
     $sth->execute($track, $track, $img);
 }
@@ -55,6 +58,7 @@ my @results;
 while( my $result = $sth->fetchrow_hashref() ){
     #if(! $result){ print 'false'; exit(0); }
     #print STDERR Dumper $result;
+#    print STDERR $result->{name},"\n";
     my $annotation = $result->{annotation};
     my $sth2 = $dbh->prepare("SELECT * FROM image_data where id = ?");
     $sth2->execute($result->{pair_id} );
