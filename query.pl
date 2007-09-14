@@ -40,7 +40,7 @@ if($all){
     my $track = $sth->fetchrow_array();
 #    print STDERR $track,"\n";
     $sth = $dbh->prepare(qq{
-SELECT name xmin, xmax, ymin, ymax, image, image_track, pair_id, link, color
+SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, link, color
  FROM image_data 
 WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image = ? 
 }
