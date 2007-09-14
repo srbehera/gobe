@@ -40,7 +40,7 @@ if($all){
     my $track = $sth->fetchrow_array();
 #    print STDERR $track,"\n";
     $sth = $dbh->prepare(qq{
-SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, link, color
+SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
  FROM image_data 
 WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image = ? 
 }
@@ -68,8 +68,15 @@ while( my $result = $sth->fetchrow_hashref() ){
     my ($f1name) = $result->{image} =~ /_(\d+)\.png/;
     my ($f2name) = $pair->{image} =~ /_(\d)\.png/;
     my @f1pts = map {floor  $result->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
+    my $sum = 0; map { $sum += $_ } @f1pts;
+    if(!$sum) { next; }
     my @f2pts = map { floor $pair->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
+    
+    $sum = 0; map { $sum += $_ } @f2pts;
     #my $f2pts = "[700, 20, 900, 80]";
+    if (!$sum){
+        print STDERR Dumper $result;
+    }
     my $link = $result->{link};
     my $color = ($result->{color} ne 'NULL' && $result->{color} || $pair->{color}) ;
     $color =~ s/#/0x/;
@@ -77,8 +84,10 @@ while( my $result = $sth->fetchrow_hashref() ){
     push(@results, {  link       => "/CoGe/$link"
                     , annotation => $annotation
                     # SOMETIMES one of them is NULL.
+                    , has_pair   => $sum
                     , color      => $color
                     , features   => {'key' . $f1name => \@f1pts,'key'. $f2name => \@f2pts}
                  });
 }
+#print STDERR Dumper @results;
 print JSON::Syck::Dump({resultset => \@results});

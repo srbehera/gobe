@@ -36,7 +36,7 @@ class Gobe extends Sprite {
     private var rect:QueryBox;
     private var _all:Bool;
     private var imgs:Array<GImage>;
-    private var gcoords:Array<Array<Float>>;
+    private var gcoords:Array<Array<Int>>;
     private var QUERY_URL:String;
     private var _image_titles:Array<String>;
 
@@ -78,39 +78,42 @@ class Gobe extends Sprite {
 
     private function handleQueryReturn(e:Event){
         var json:Array<Dynamic> = Json.decode(e.target.data).resultset;
-        this.gcoords = [];
+        gcoords = [];
         var pair:Hash<Dynamic>;
         // TODO: create another page in front of hte images for the
         // hsp outlines and use an object for each rectangle so it
         // can respond to mouseover events.
         var g = flash.Lib.current.graphics;
         
-        var isGene = false;
         for(pair in json){
             g.lineStyle(line_width);
             rect.tf.htmlText = "<font color='#0000ff'><u><a target='_blank' href='" + pair.link + "'>full annotation</a></u></font>&#10;&#10;";
             rect.tf.htmlText += pair.annotation;
-            
             for(hsp in Reflect.fields(pair.features)){
-                trace(hsp);
                  
-                if(hsp == '' || hsp == 'key'){ isGene = true; continue; }
                 var coords:Array<Dynamic> = Reflect.field(pair.features, hsp);
                 // converty key2 to 2; because that's the image we need.
                 hsp = hsp.substr(3); 
                
-                var img = this.imgs[Std.parseInt(hsp) -1];
+                var img = this.imgs[Std.parseInt(hsp) - 1];
                 var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
                 var xy1 = img.localToGlobal(new flash.geom.Point(coords[2],coords[3]));
-                this.gcoords.push([xy0.x,xy0.y,xy1.x,xy1.y]);
+
                 g.drawRect(xy0.x - 2, xy0.y - 2
                    , 1 + coords[2] - coords[0]
                    , 1 + coords[3] - coords[1]);
+
+                if(pair.has_pair != 0){ 
+                    
+                    gcoords.push([Math.round(xy0.x),Math.round(xy0.y)
+                                    ,Math.round(xy1.x),Math.round(xy1.y)]);
+                }
+                else { break; }
             }
             g.lineStyle(line_width, pair.color);
         }
         var j = 0;
-        while(j<this.gcoords.length && ! isGene ){
+        while(j<gcoords.length){
             var h0 = this.gcoords[j];
             var h1 = this.gcoords[j+1];
             g.moveTo( (h0[0] + h0[2])/2, (h0[1] + h0[3])/2);
@@ -128,32 +131,29 @@ class Gobe extends Sprite {
     }
 
 
-    static function main(){
+    public static function main(){
         haxe.Firebug.redirectTraces();
-        var p = flash.Lib.current.loaderInfo.parameters;
         flash.Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
         flash.Lib.current.stage.align     = StageAlign.TOP_LEFT;
-
-
-        flash.Lib.current.addChild(
-            new Gobe(p.base_url, p.img, p.tmp_dir, p.n)
-        );
+        flash.Lib.current.addChild( new Gobe());
     }
 
 
-    public function new(base_url:String, img:String, tmp_dir, n:Int){
+    public function new(){
         super();
-        this.QUERY_URL = base_url + 'query.pl?';
+        var p = flash.Lib.current.loaderInfo.parameters;
+        trace(p);
+        this.QUERY_URL = p.base_url + 'query.pl?';
         line_width = 1;
-        this.base_url  = base_url;
-        this.img = img;
-        this.tmp_dir   = tmp_dir;
-        this.n         = n;
+        this.base_url  = p.base_url;
+        this.img = p.img;
+        this.tmp_dir   = p.tmp_dir;
+        this.n         = p.n;
         _heights = [];
         var i:Int;
-        for(i in 0...n){ _heights[i] = 0; }
+        for(i in 0...p.n){ _heights[i] = 0; }
         getImageTitles(); // this calls initImages();
-        loadStyles(base_url + '/static/gobe.css');
+        loadStyles(p.base_url + '/static/gobe.css');
     }
 
     public function getImageTitles(){
