@@ -74,9 +74,9 @@ while( my $result = $sth->fetchrow_hashref() ){
     
     $sum = 0; map { $sum += $_ } @f2pts;
     #my $f2pts = "[700, 20, 900, 80]";
-    if (!$sum){
-        print STDERR Dumper $result;
-    }
+    #if (!$sum){
+    #    print STDERR Dumper $result;
+    #}
     my $link = $result->{link};
     my $color = ($result->{color} ne 'NULL' && $result->{color} || $pair->{color}) ;
     $color =~ s/#/0x/;
