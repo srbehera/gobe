@@ -8,6 +8,7 @@ use POSIX;
 use JSON::Syck;
 
 my $q = new CGI;
+print STDERR $q->url(-query=>1),"\n";
 print "Content-Type: text/html\n\n";
 
 #UNCOMMENT FOR TOXIC.
@@ -46,6 +47,12 @@ WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image = ?
 }
 
 			);
+    my $statement = qq{
+SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
+ FROM image_data 
+WHERE ( (image_track = $track) or (image_track = ($track * -1) ) ) and image = "$img" 
+};
+print STDERR $statement;
     $sth->execute($track, $track, $img);
 }
 else{
