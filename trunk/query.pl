@@ -8,7 +8,7 @@ use POSIX;
 use JSON::Syck;
 
 my $q = new CGI;
-print STDERR $q->url(-query=>1),"\n";
+#print STDERR $q->url(-query=>1),"\n";
 print "Content-Type: text/html\n\n";
 
 #UNCOMMENT FOR TOXIC.
@@ -52,7 +52,7 @@ SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
  FROM image_data 
 WHERE ( (image_track = $track) or (image_track = ($track * -1) ) ) and image = "$img" 
 };
-print STDERR $statement;
+#print STDERR $statement;
     $sth->execute($track, $track, $img);
 }
 else{
@@ -63,35 +63,31 @@ else{
 
 my @results;
 while( my $result = $sth->fetchrow_hashref() ){
-    #if(! $result){ print 'false'; exit(0); }
-    #print STDERR Dumper $result;
-#    print STDERR $result->{name},"\n";
     my $annotation = $result->{annotation};
     my $sth2 = $dbh->prepare("SELECT * FROM image_data where id = ?");
     $sth2->execute($result->{pair_id} );
-    my $pair = $sth2->fetchrow_hashref();
-    #print STDERR Dumper $pair;
 
+    my $f2name = '';
+    my @f2pts = ();
+    my $has_pair = 0;
+    my @f1pts = map {floor($result->{$_} + 0.5) } qw/xmin ymin xmax ymax/;
     my ($f1name) = $result->{image} =~ /_(\d+)\.png/;
-    my ($f2name) = $pair->{image} =~ /_(\d)\.png/;
-    my @f1pts = map {floor  $result->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
-    my $sum = 0; map { $sum += $_ } @f1pts;
-    if(!$sum) { next; }
-    my @f2pts = map { floor $pair->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
-    
-    $sum = 0; map { $sum += $_ } @f2pts;
-    #my $f2pts = "[700, 20, 900, 80]";
-    #if (!$sum){
-    #    print STDERR Dumper $result;
-    #}
+
+    if($result->{pair_id} != -99){
+        $has_pair = 1;
+        my $pair = $sth2->fetchrow_hashref();
+        #print STDERR Dumper $pair;
+
+        ($f2name) = $pair->{image} =~ /_(\d)\.png/;
+        @f2pts = map { floor($pair->{$_} + 0.5) } qw/xmin ymin xmax ymax/;
+    }
     my $link = $result->{link};
-    my $color = ($result->{color} ne 'NULL' && $result->{color} || $pair->{color}) ;
+    my $color = ($result->{color} ne 'NULL') && $result->{color} || "0xCCCCCC";
     $color =~ s/#/0x/;
-#    print STDERR $annotation . "\n\n";
     push(@results, {  link       => "/CoGe/$link"
                     , annotation => $annotation
                     # SOMETIMES one of them is NULL.
-                    , has_pair   => $sum
+                    , has_pair   => $has_pair
                     , color      => $color
                     , features   => {'key' . $f1name => \@f1pts,'key'. $f2name => \@f2pts}
                  });
