@@ -35,6 +35,7 @@ my $y    = $q->param('y');
 my $all  = $q->param('all') || 0;
 my ($img)= $q->param('img') =~ /.+\/([^\/]+)/;
 
+my $statement;
 if($all){
     $sth = $dbh->prepare("SELECT image_track FROM image_data WHERE ? BETWEEN ymin and ymax and image = ?");
     $sth->execute($y, $img);
@@ -43,34 +44,31 @@ if($all){
     $sth = $dbh->prepare(qq{
 SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
  FROM image_data 
-WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image = ? 
+WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image = ? and pair_id != -99 and type = "HSP"
 }
-
 			);
-#    my $statement = qq{
-#SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
-# FROM image_data 
-#WHERE ( (image_track = $track) or (image_track = ($track * -1) ) ) and image = "$img" 
-#};
-#print STDERR $statement;
+    $statement = qq{
+SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
+ FROM image_data 
+WHERE ( (image_track = $track) or (image_track = ($track * -1) ) ) and image = "$img" and pair_id != -99 and type = "HSP"
+};
     $sth->execute($track, $track, $img);
 }
 else{
     $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? + 2 > xmin AND ? - 2 < xmax AND ? BETWEEN ymin and ymax and image = ?");
+    $statement = "SELECT * FROM image_data WHERE $x + 2 > xmin AND $x - 2 < xmax AND $y BETWEEN ymin and ymax and image = \"$img\"";
     $sth->execute($x, $x, $y, $img);
 }
+#print STDERR $statement,"\n";
+
 
 
 my @results;
 while( my $result = $sth->fetchrow_hashref() ){
-    #if(! $result){ print 'false'; exit(0); }
-    #print STDERR Dumper $result;
-#    print STDERR $result->{name},"\n";
     my $annotation = $result->{annotation};
     my $sth2 = $dbh->prepare("SELECT * FROM image_data where id = ?");
     $sth2->execute($result->{pair_id} );
     my $pair = $sth2->fetchrow_hashref();
-    #print STDERR Dumper $pair;
 
     my ($f1name) = $result->{image} =~ /_(\d+)\.png/;
     my ($f2name) = $pair->{image} =~ /_(\d)\.png/;
@@ -80,10 +78,6 @@ while( my $result = $sth->fetchrow_hashref() ){
     my @f2pts = map { floor $pair->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
     
     $sum = 0; map { $sum += $_ } @f2pts;
-    #my $f2pts = "[700, 20, 900, 80]";
-    #if (!$sum){
-    #    print STDERR Dumper $result;
-    #}
     my $link = $result->{link};
     my $color = ($result->{color} ne 'NULL' && $result->{color} || $pair->{color}) ;
     $color =~ s/#/0x/;
@@ -96,5 +90,4 @@ while( my $result = $sth->fetchrow_hashref() ){
                     , features   => {'key' . $f1name => \@f1pts,'key'. $f2name => \@f2pts}
                  });
 }
-#print STDERR Dumper @results;
 print JSON::Syck::Dump({resultset => \@results});
