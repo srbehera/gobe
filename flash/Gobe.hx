@@ -50,7 +50,7 @@ class Gobe extends Sprite {
     private function query(e:MouseEvent){
         var img = e.target.url;
         var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + img + '&db=' 
-                      + img.substr(0,img.lastIndexOf('.png') - 2) + '.sqlite';
+                      + img.substr(0,img.lastIndexOf('_')) + '.sqlite';
         
 
         if(! e.altKey){

@@ -17,10 +17,13 @@ my $tmpdir = "/opt/apache/CoGe/tmp/";
 if($ENV{SERVER_NAME} =~ /(toxic|synteny)/){
     $tmpdir = "/opt/apache/CoGe/";
 }
+if ($ENV{SERVER_NAME} !~/(toxic|synteny)/){
+    $tmpdir = "/var/www/gobe/";
+}
+
 
 
 my $db  = "$tmpdir/" . $q->param('db');
-$db =~ s/_\./\./;
 unless (-r $db)
   {
     print STDERR $q->url(-query=>1),"\n";
@@ -60,7 +63,6 @@ SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
  FROM image_data 
 WHERE ( (image_track = $track) or (image_track = ($track * -1) ) ) and image = "$img" and pair_id != -99 and type = "HSP"
 };
-#    print STDERR $statement;
     $sth->execute($track, $track, $img);
 }
 else{
@@ -69,7 +71,6 @@ else{
 #    print STDERR $statement,"\n";
     $sth->execute($x, $x, $y, $img);
 }
-#print STDERR $statement,"\n";
 
 
 
