@@ -11,15 +11,15 @@ my $q = new CGI;
 #print STDERR $q->url(-query=>1),"\n";
 print "Content-Type: text/html\n\n";
 
-#UNCOMMENT FOR TOXIC.
-my $tmpdir = "/opt/apache/CoGe/tmp/";
+my $tmpdir;
 #my $tmpdir = "/var/www/gobe/";
 if($ENV{SERVER_NAME} =~ /(toxic|synteny)/){
     $tmpdir = "/opt/apache/CoGe/";
 }
-if ($ENV{SERVER_NAME} !~/(toxic|synteny)/){
+else
+  {
     $tmpdir = "/var/www/gobe/";
-}
+  }
 
 
 
@@ -48,9 +48,21 @@ my ($img)= $q->param('img') =~ /.+\/([^\/]+)/;
 
 my $statement;
 if($all){
-    $sth = $dbh->prepare("SELECT image_track FROM image_data WHERE ? BETWEEN ymin and ymax and image = ?");
+    $sth = $dbh->prepare("SELECT image_track FROM image_data WHERE ? BETWEEN ymin and ymax and image = ? order by image_track DESC");
     $sth->execute($y, $img);
-    my $track = $sth->fetchrow_array();
+    my $track;
+    while (my $result = $sth->fetchrow_array())
+      {
+	$track = $result unless $track;
+	if ($track > 0)
+	  {
+	    $track = $result if $result > $track;
+	  }
+	else
+	  {
+	    $track = $result if $result < $track;
+	  }
+      }
 #    print STDERR $track,"\n";
     $sth = $dbh->prepare(qq{
 SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
@@ -63,6 +75,7 @@ SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
  FROM image_data 
 WHERE ( (image_track = $track) or (image_track = ($track * -1) ) ) and image = "$img" and pair_id != -99 and type = "HSP"
 };
+#    print STDERR $statement,"\n";
     $sth->execute($track, $track, $img);
 }
 else{
