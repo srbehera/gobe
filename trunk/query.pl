@@ -12,14 +12,22 @@ my $q = new CGI;
 print "Content-Type: text/html\n\n";
 
 #UNCOMMENT FOR TOXIC.
-#$tmpdir = "/opt/apache/CoGe/";
-my $tmpdir = "/var/www/gobe/";
+my $tmpdir = "/opt/apache/CoGe/tmp/";
+#my $tmpdir = "/var/www/gobe/";
 if($ENV{SERVER_NAME} =~ /(toxic|synteny)/){
     $tmpdir = "/opt/apache/CoGe/";
 }
 
 
 my $db  = "$tmpdir/" . $q->param('db');
+$db =~ s/_\./\./;
+unless (-r $db)
+  {
+    print STDERR $q->url(-query=>1),"\n";
+    warn "database file $db does not exist or cannot be read!\n";
+    exit;
+  }
+#print STDERR "query.pl: $db\n";
 my $dbh = DBI->connect("dbi:SQLite:dbname=$db") || die "cant connect to db";
 my $sth;
 
@@ -52,11 +60,13 @@ SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
  FROM image_data 
 WHERE ( (image_track = $track) or (image_track = ($track * -1) ) ) and image = "$img" and pair_id != -99 and type = "HSP"
 };
+#    print STDERR $statement;
     $sth->execute($track, $track, $img);
 }
 else{
     $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? + 2 > xmin AND ? - 2 < xmax AND ? BETWEEN ymin and ymax and image = ?");
     $statement = "SELECT * FROM image_data WHERE $x + 2 > xmin AND $x - 2 < xmax AND $y BETWEEN ymin and ymax and image = \"$img\"";
+#    print STDERR $statement,"\n";
     $sth->execute($x, $x, $y, $img);
 }
 #print STDERR $statement,"\n";
