@@ -8,29 +8,25 @@ use POSIX;
 use JSON::Syck;
 
 my $q = new CGI;
-#print STDERR $q->url(-query=>1),"\n";
 print "Content-Type: text/html\n\n";
 
 my $tmpdir;
-#my $tmpdir = "/var/www/gobe/";
 if($ENV{SERVER_NAME} =~ /(toxic|synteny)/){
     $tmpdir = "/opt/apache/CoGe/";
 }
-else
-  {
+else {
     $tmpdir = "/var/www/gobe/";
-  }
+}
 
 
 
 my $db  = "$tmpdir/" . $q->param('db');
-unless (-r $db)
-  {
+unless (-r $db) {
     print STDERR $q->url(-query=>1),"\n";
     warn "database file $db does not exist or cannot be read!\n";
     exit;
-  }
-#print STDERR "query.pl: $db\n";
+}
+
 my $dbh = DBI->connect("dbi:SQLite:dbname=$db") || die "cant connect to db";
 my $sth;
 
@@ -51,25 +47,16 @@ if($all){
     $sth = $dbh->prepare("SELECT distinct(image_track) FROM image_data WHERE ? BETWEEN ymin and ymax and image = ? order by abs(image_track) DESC");
     $sth->execute($y, $img);
     my ($track) = $sth->fetchrow_array();
-#    print STDERR $track,"\n";
-    $sth = $dbh->prepare(qq{
-SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
- FROM image_data 
-WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image = ? and pair_id != -99 and type = "HSP"
-}
-			);
-    $statement = qq{
-SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
- FROM image_data 
-WHERE ( (image_track = $track) or (image_track = ($track * -1) ) ) and image = "$img" and pair_id != -99 and type = "HSP"
-};
-#    print STDERR $statement,"\n";
+
+    $statement = qq{ SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color FROM image_data 
+    WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image = ? and pair_id != -99 and type = "HSP" };
+    $sth = $dbh->prepare($statement);
+
     $sth->execute($track, $track, $img);
 }
 else{
     $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? + 2 > xmin AND ? - 2 < xmax AND ? BETWEEN ymin and ymax and image = ?");
-    $statement = "SELECT * FROM image_data WHERE $x + 2 > xmin AND $x - 2 < xmax AND $y BETWEEN ymin and ymax and image = \"$img\"";
-#    print STDERR $statement,"\n";
+    #$statement = "SELECT * FROM image_data WHERE $x + 2 > xmin AND $x - 2 < xmax AND $y BETWEEN ymin and ymax and image = \"$img\"";
     $sth->execute($x, $x, $y, $img);
 }
 
@@ -77,29 +64,31 @@ else{
 
 my @results;
 while( my $result = $sth->fetchrow_hashref() ){
-    my $annotation = $result->{annotation};
     my $sth2 = $dbh->prepare("SELECT * FROM image_data where id = ?");
-    $sth2->execute($result->{pair_id} );
+    $sth2->execute( $result->{pair_id} );
     my $pair = $sth2->fetchrow_hashref();
 
-    my ($f1name) = $result->{image} =~ /_(\d+)\.png/;
-    my ($f2name) = $pair->{image} =~ /_(\d)\.png/;
+    my $annotation = $result->{annotation};
+    my ($f1name) = $result->{image} =~ /_(\d+)\.png/; # GEvo_rIKDAf4x_1.png -> 1
+    my ($f2name) = $pair->{image} =~ /_(\d+)\.png/;
+
+    # TODO: clean this up. we should know if there's a pair or not.
     my @f1pts = map {floor  $result->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
     my $sum = 0; map { $sum += $_ } @f1pts;
     if(!$sum) { next; }
     my @f2pts = map { floor $pair->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
-    
     $sum = 0; map { $sum += $_ } @f2pts;
+
     my $link = $result->{link};
     my $color = ($result->{color} ne 'NULL' && $result->{color} || $pair->{color}) ;
     $color =~ s/#/0x/;
-#    print STDERR $annotation . "\n\n";
+
     push(@results, {  link       => "/CoGe/$link"
                     , annotation => $annotation
-                    # SOMETIMES one of them is NULL.
                     , has_pair   => $sum
                     , color      => $color
                     , features   => {'key' . $f1name => \@f1pts,'key'. $f2name => \@f2pts}
                  });
 }
+#print STDERR Dumper @results;
 print JSON::Syck::Dump({resultset => \@results});
