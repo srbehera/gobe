@@ -222,10 +222,9 @@ class Gobe extends Sprite {
             rect.tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
     }
     private function minusClick(e:MouseEvent){
-        if( line_width > 0){
-            line_width -= 1;
-            rect.tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
-        }
+        if( line_width < 1){ return; }
+        line_width -= 1;
+        rect.tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
     }
 }
 
@@ -263,6 +262,7 @@ class GEvent extends Event {
         super(type);
     }
 }
+
 
 class QueryBox extends Sprite {
     private var _width:Int;
@@ -307,9 +307,6 @@ class QueryBox extends Sprite {
         _height = 630;
         _taper  = 20;
 
-        var style = new StyleSheet();
-        style.parseCSS(".blue{color:blue;size:13px;}");
-
         addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
             if(Std.is(e.target,QueryBox)){ e.target.startDrag(); }
         });
@@ -321,7 +318,7 @@ class QueryBox extends Sprite {
         tf = new TextField();
         tf.wordWrap   = true;
         tf.border     = false;
-        tf.styleSheet = style;
+        tf.styleSheet = new StyleSheet();
         tf.scrollH    = 10;
         tf.scrollV    = 30;
 
@@ -340,12 +337,11 @@ class QueryBox extends Sprite {
         tf_size = new TextField();
         tf_size.wordWrap   = true;
         tf_size.border     = false;
-        tf_size.width = 90;
-        tf_size.height = 30;
-        tf_size.htmlText = "line width: <b>1</b>";
-        tf_size.x = _width - 165;
-        tf_size.y = 0;
-
+        tf_size.width      = 90;
+        tf_size.height     = 30;
+        tf_size.htmlText   = "line width: <b>1</b>";
+        tf_size.x          = _width - 165;
+        tf_size.y          = 0;
 
 
         var loader = new URLLoader();
