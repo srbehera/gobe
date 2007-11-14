@@ -117,6 +117,9 @@ class Gobe extends Sprite {
             }
             g.lineStyle(line_width, pair.color);
         }
+
+
+        // draw lines between hsps.
         var j = 0;
         while(j<gcoords.length){
             var h0 = this.gcoords[j];
@@ -128,7 +131,7 @@ class Gobe extends Sprite {
 
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
-            rect.tf.htmlText = 'Not showing annotation for multiple hits.';
+            rect.tf.htmlText = '<b>Not showing annotation for multiple hits.</b>';
             return;
         }
         rect.show();
@@ -157,7 +160,13 @@ class Gobe extends Sprite {
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageTitles(); // this calls initImages();
-        loadStyles(p.base_url + '/static/gobe.css');
+
+        rect = new QueryBox(this.base_url);
+        rect.x =  1030;
+        rect.show();
+
+        rect.plus.addEventListener(MouseEvent.CLICK, plusClick);
+        rect.minus.addEventListener(MouseEvent.CLICK, minusClick);
     }
 
     public function getImageTitles(){
@@ -184,11 +193,10 @@ class Gobe extends Sprite {
     public function imageLoaded(e:Event){ 
         var i:Int = 0;
         var y:Int = 0;
-        trace(this);
+
         _heights[e.target.i] = e.target.image.height;
-        for(h in _heights){ if(h ==0){ return; } }
-        // note, this depends on the images being loaded in order.
-        // TODO: fix so it doesnt depend on order.
+        // wait for all previous images to load...
+        for(h in _heights){ if(h == 0){ return; } }
         
         for(h in _heights){
             var img = imgs[i];
@@ -208,22 +216,6 @@ class Gobe extends Sprite {
         }
     }
 
-    private function loadStyles(style_path:String){
-        var ul = new URLLoader();
-        ul.addEventListener(Event.COMPLETE, stylesLoaded);
-        ul.load(new URLRequest(style_path));
-
-    }
-    private function stylesLoaded(e:Event){
-        var style = new StyleSheet();
-        style.parseCSS(cast(e.target, URLLoader).data);
-        rect = new QueryBox(style, this.base_url);
-        rect.x =  1030;
-        rect.show();
-
-        rect.plus.addEventListener(MouseEvent.CLICK, plusClick);
-        rect.minus.addEventListener(MouseEvent.CLICK, minusClick);
-    }
 
     private function plusClick(e:MouseEvent){
             line_width += 1;
@@ -309,11 +301,14 @@ class QueryBox extends Sprite {
         this.graphics.clear();
     }
 
-    public function new(style:StyleSheet, base_url:String){
+    public function new(base_url:String){
         super();
         _width  = 360;
         _height = 630;
         _taper  = 20;
+
+        var style = new StyleSheet();
+        style.parseCSS(".blue{color:blue;size:13px;}");
 
         addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
             if(Std.is(e.target,QueryBox)){ e.target.startDrag(); }
