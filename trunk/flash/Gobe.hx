@@ -10,6 +10,7 @@ import flash.events.Event;
 import flash.events.MouseEvent;
 import flash.events.TimerEvent;
 import flash.geom.Point;
+import flash.geom.Rectangle;
 import flash.net.URLRequest;
 import flash.net.URLLoader;
 import flash.system.LoaderContext;
@@ -42,16 +43,17 @@ class Gobe extends Sprite {
 
 
     public function onClick(e:MouseEvent) {
-        if(e.target._bitmap.getPixel(e.localX, e.localY)){
+        // only send the query to the server if they clicked on a
+        // colored pixel or they hit the shift key.
+        if(e.shiftKey || e.target._bitmap.getPixel(e.localX, e.localY)){
             query(e);
         }
     }
 
     private function query(e:MouseEvent){
         var img = e.target.url;
-        var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + img + '&db=' 
-                      + img.substr(0,img.lastIndexOf('_')) + '.sqlite';
-        
+        var sqlite = img.substr(0, img.lastIndexOf('_')) + '.sqlite';
+        var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + img + '&db=' + sqlite;
 
         if(! e.altKey){
             this.graphics.clear();
@@ -102,7 +104,10 @@ class Gobe extends Sprite {
                 g.drawRect(xy0.x - 2, xy0.y - 2
                    , 1 + coords[2] - coords[0]
                    , 1 + coords[3] - coords[1]);
-
+                
+                //new Rectangle(xy0.x -2, xy0.y - 2
+                //   , 1 + coords[2] - coords[0]
+                //   , 1 + coords[3] - coords[1]);
                 if(pair.has_pair != 0){ 
                     
                     gcoords.push([Math.round(xy0.x),Math.round(xy0.y)
@@ -123,11 +128,10 @@ class Gobe extends Sprite {
 
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
-            rect.tf.htmlText = 'NOT SHOWING ANNOTATION FOR MULTIPLE HITS';
+            rect.tf.htmlText = 'Not showing annotation for multiple hits.';
+            return;
         }
-        else{
-            rect.show();
-        }
+        rect.show();
     }
 
 
