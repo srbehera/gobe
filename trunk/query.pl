@@ -48,21 +48,9 @@ my ($img)= $q->param('img') =~ /.+\/([^\/]+)/;
 
 my $statement;
 if($all){
-    $sth = $dbh->prepare("SELECT image_track FROM image_data WHERE ? BETWEEN ymin and ymax and image = ? order by image_track DESC");
+    $sth = $dbh->prepare("SELECT distinct(image_track) FROM image_data WHERE ? BETWEEN ymin and ymax and image = ? order by abs(image_track) DESC");
     $sth->execute($y, $img);
-    my $track;
-    while (my $result = $sth->fetchrow_array())
-      {
-	$track = $result unless $track;
-	if ($track > 0)
-	  {
-	    $track = $result if $result > $track;
-	  }
-	else
-	  {
-	    $track = $result if $result < $track;
-	  }
-      }
+    my ($track) = $sth->fetchrow_array();
 #    print STDERR $track,"\n";
     $sth = $dbh->prepare(qq{
 SELECT name, xmin, xmax, ymin, ymax, image, image_track, pair_id, color
