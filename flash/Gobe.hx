@@ -221,12 +221,17 @@ class Gobe extends Sprite {
     public function getImageTitles(){
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, imageTitlesReturn);
-        ul.load(new URLRequest(this.QUERY_URL + '&image_names=1&db='
+        ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db='
           + this.tmp_dir +  '/' + this.img + '.sqlite'));
     }
     public function imageTitlesReturn(e:Event){
-            trace(e.target.data);
-            _image_titles = Json.decode(e.target.data);
+            var strdata:String = e.target.data;
+            trace(strdata);
+            var a = strdata.split("|||");
+            trace(a[0]);
+            trace(a[1]);
+            _image_titles = Json.decode(a[0]);
+            trace(_image_titles);
             initImages();
     }
     public function initImages(){
@@ -265,7 +270,9 @@ class Gobe extends Sprite {
             img.addEventListener(MouseEvent.CLICK, onClick);
             i++;
             flash.Lib.current.addChild(new GSlider(1, y + 20, h - 40,'drup' + i));
-            flash.Lib.current.addChild(new GSlider(595, y + 20, h - 40,'drdown' + i));
+            var gs = new GSlider(1, y + 20, h - 40,'drdown' + i);
+            gs.x = 999;
+            flash.Lib.current.addChild(gs);
             y+=h;
         }
     }
@@ -319,15 +326,14 @@ class GSlider extends Sprite {
         super();
         this.id = id;
         var g = this.graphics;
+        var bounds = new Rectangle(0,0,1000,0);
         g.beginFill(0xcccccc);
         g.lineStyle(1,0x000000);
         g.drawRect(x0, y0, 7, h);
         g.endFill();
         var self = this;
         addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
-            var bounds = new Rectangle(0,0,1000,0);
-            self.startDrag(false,bounds);
-            trace(bounds);
+            self.startDrag(false, bounds);
         });
         addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent){
             self.stopDrag();
