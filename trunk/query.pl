@@ -74,10 +74,7 @@ while( my $result = $sth->fetchrow_hashref() ){
 
     # TODO: clean this up. we should know if there's a pair or not.
     my @f1pts = map {floor  $result->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
-    my $sum = 0; map { $sum += $_ } @f1pts;
-    if(!$sum) { next; }
     my @f2pts = map { floor $pair->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
-    $sum = 0; map { $sum += $_ } @f2pts;
 
     my $link = $result->{link};
     my $color = ($result->{color} ne 'NULL' && $result->{color} || $pair->{color}) ;
@@ -85,7 +82,7 @@ while( my $result = $sth->fetchrow_hashref() ){
 
     push(@results, {  link       => "/CoGe/$link"
                     , annotation => $annotation
-                    , has_pair   => $sum
+                    , has_pair   => 1
                     , color      => $color
                     , features   => {'key' . $f1name => \@f1pts,'key'. $f2name => \@f2pts}
                  });
