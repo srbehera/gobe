@@ -1,0 +1,5 @@
+-swf gobe.swf
+-swf-version 9
+-main Gobe
+--flash-strict
+--no-traces

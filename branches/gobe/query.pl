@@ -15,7 +15,7 @@ if($ENV{SERVER_NAME} =~ /(toxic|synteny)/){
     $tmpdir = "/opt/apache/CoGe/";
 }
 else {
-    $tmpdir = "/var/www/gobe/trunk/";
+    $tmpdir = "/var/www/gobe/branches/gobe/";
 }
 
 
