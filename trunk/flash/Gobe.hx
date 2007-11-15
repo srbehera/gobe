@@ -115,6 +115,7 @@ class Gobe extends Sprite {
             g.lineStyle(line_width);
             rect.tf.htmlText = "<font color='#0000ff'><u><a target='_blank' href='" + pair.link + "'>full annotation</a></u></font>&#10;&#10;";
             rect.tf.htmlText += pair.annotation;
+            if(! pair.has_pair){ continue; }
             for(hsp in Reflect.fields(pair.features)){
                  
                 var coords:Array<Dynamic> = Reflect.field(pair.features, hsp);
