@@ -126,19 +126,19 @@ class Gobe extends Sprite {
                 var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
                 var xy1 = img.localToGlobal(new flash.geom.Point(coords[2],coords[3]));
 
-                var x0 = xy0.x - 2;
-                var y0 = xy0.y - 2;
+                var x0 = xy0.x - 1;
+                var y0 = xy0.y - 1;
                 var w = 1 + coords[2] - coords[0];
                 var h = 1 + coords[3] - coords[1];
 
                 var pr:GRect;
                 // dont add a rectangle that's already drawn
-                var doadd = true;
+                var seen = false;
                 for(pr in _rectangles){
-                    doadd = !(x0 == pr.x0 && y0 == pr.y0 && w == pr.w && h == pr.h);
-                    if(doadd){break;}
+                    seen = x0 == pr.x0 && y0 == pr.y0 && w == pr.w && h == pr.h;
+                    if(seen){break;}
                 }
-                if (doadd) {     
+                if (! seen) {     
                     var r = new GRect(x0, y0 , w, h);
                     flash.Lib.current.addChild(r);
                     _rectangles.push(r);
@@ -266,8 +266,8 @@ class Gobe extends Sprite {
 
 
     private function plusClick(e:MouseEvent){
-            line_width += 1;
-            rect.tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
+        line_width += 1;
+        rect.tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
     }
     private function minusClick(e:MouseEvent){
         if( line_width < 1){ return; }
@@ -299,7 +299,7 @@ class GLine extends Shape {
     public function new(x0:Float, y0:Float, x1:Float, y1:Float, lwidth:Int, lcolor:Int) {
         super();
         var g = this.graphics;    
-        g.lineStyle(lwidth,lcolor);
+        g.lineStyle(lwidth, lcolor);
         g.moveTo(x0,y0);
         g.lineTo(x1,y1);
     }
