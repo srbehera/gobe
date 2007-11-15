@@ -263,10 +263,11 @@ class Gobe extends Sprite {
 
             flash.Lib.current.addChildAt(ttf, 1);
             img.addEventListener(MouseEvent.CLICK, onClick);
-            y+=h;
             i++;
+            flash.Lib.current.addChild(new GSlider(1, y + 20, h - 40,'drup' + i));
+            flash.Lib.current.addChild(new GSlider(595, y + 20, h - 40,'drdown' + i));
+            y+=h;
         }
-        flash.Lib.current.addChild(new GSlider(1,100,'drup1'));
     }
 
 
@@ -314,19 +315,19 @@ class GSlider extends Sprite {
     // id is the string (drup1,drdown1, drup2, or drdown2)
     public var id:String;
     public var bounds:Rectangle;
-    public function new(x0:Float, y0:Float, id:String) {
+    public function new(x0:Float, y0:Float, h:Float, id:String) {
         super();
         this.id = id;
         var g = this.graphics;
         g.beginFill(0xcccccc);
         g.lineStyle(1,0x000000);
-        g.drawRect(x0, y0, 7, 100);
+        g.drawRect(x0, y0, 7, h);
         g.endFill();
-        bounds = new Rectangle(x0,0,1000,1);
         var self = this;
         addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
-            self.startDrag(false,self.bounds);
-            trace(self.bounds);
+            var bounds = new Rectangle(0,0,1000,0);
+            self.startDrag(false,bounds);
+            trace(bounds);
         });
         addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent){
             self.stopDrag();
