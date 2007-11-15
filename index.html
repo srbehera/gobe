@@ -15,7 +15,7 @@
         var so = new SWFObject("flash/gobe.swf", "gobe", width, height, "9", "#FFFFFF");
         so.useExpressInstall('flash/expressinstall.swf');
         so.addVariable('n', getQueryParamValue('n') || 2); 
-        so.addVariable('base_url', getQueryParamValue('base_url') || '/gobe/trunk/'); 
+        so.addVariable('base_url', getQueryParamValue('base_url') || '/gobe/branches/gobe/'); 
         so.addVariable('tmp_dir', getQueryParamValue('tmp_dir')|| 'tmpdir/');
         so.addVariable('img', getQueryParamValue('img')|| 'CoGe_TGpMxaCc');
         so.write("flashcontent");

@@ -1,3 +1,4 @@
+import flash.external.ExternalInterface; 
 import flash.display.MovieClip;
 import flash.display.Sprite;
 import flash.display.Shape;
@@ -11,6 +12,7 @@ import flash.events.KeyboardEvent;
 import flash.events.MouseEvent;
 import flash.events.TimerEvent;
 import flash.geom.Point;
+import flash.geom.Rectangle;
 import flash.net.URLRequest;
 import flash.net.URLLoader;
 import flash.system.LoaderContext;
@@ -188,8 +190,10 @@ class Gobe extends Sprite {
     }
 
 
+
     public function new(){
         super();
+        //ExternalInterface.call('alert','hiiii');
         var p = flash.Lib.current.loaderInfo.parameters;
         trace(p);
         this.QUERY_URL = p.base_url + 'query.pl?';
@@ -262,6 +266,7 @@ class Gobe extends Sprite {
             y+=h;
             i++;
         }
+        flash.Lib.current.addChild(new GSlider(1,100,'drup1'));
     }
 
 
@@ -302,6 +307,31 @@ class GLine extends Shape {
         g.lineStyle(lwidth, lcolor);
         g.moveTo(x0,y0);
         g.lineTo(x1,y1);
+    }
+}
+
+class GSlider extends Sprite {
+    // id is the string (drup1,drdown1, drup2, or drdown2)
+    public var id:String;
+    public var bounds:Rectangle;
+    public function new(x0:Float, y0:Float, id:String) {
+        super();
+        this.id = id;
+        var g = this.graphics;
+        g.beginFill(0xcccccc);
+        g.lineStyle(1,0x000000);
+        g.drawRect(x0, y0, 7, 100);
+        g.endFill();
+        bounds = new Rectangle(x0,0,1000,1);
+        var self = this;
+        addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
+            self.startDrag(false,self.bounds);
+            trace(self.bounds);
+        });
+        addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent){
+            self.stopDrag();
+            ExternalInterface.call('set_genespace',self.id,self.x);
+        });    
     }
 }
 
@@ -487,3 +517,4 @@ class QueryBox extends Sprite {
 
 
 }
+
