@@ -30,10 +30,19 @@ unless (-r $db) {
 my $dbh = DBI->connect("dbi:SQLite:dbname=$db") || die "cant connect to db";
 my $sth;
 
-if ($q->param('image_names')){
+if ($q->param('get_info')){
     $sth = $dbh->prepare("SELECT title FROM image_info order by id");
     $sth->execute();
     print JSON::Syck::Dump([map{$_->[0]} @{ $sth->fetchall_arrayref()}]);
+    print "|||";
+    $sth = $dbh->prepare("select min(xmin),max(xmax), image from image_data where type='anchor' group by image;");
+    $sth->execute();
+    my @results;
+    while (my $row = $sth->fetchrow_arrayref){
+        my ($idx) = $row->[2] =~ /_(\d+)\.png$/;
+        push(@results, {'xmin' => $row->[0], 'xmax' => $row->[1], idx => $idx });
+    }
+    print JSON::Syck::Dump(\@results);
     exit;
 }
 
@@ -59,6 +68,8 @@ else{
     #$statement = "SELECT * FROM image_data WHERE $x + 2 > xmin AND $x - 2 < xmax AND $y BETWEEN ymin and ymax and image = \"$img\"";
     $sth->execute($x, $x, $y, $img);
 }
+
+
 
 
 
