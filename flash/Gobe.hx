@@ -7,10 +7,10 @@ import flash.display.StageAlign;
 import flash.display.Bitmap;
 import flash.display.BitmapData;
 import flash.events.Event;
+import flash.events.KeyboardEvent;
 import flash.events.MouseEvent;
 import flash.events.TimerEvent;
 import flash.geom.Point;
-import flash.geom.Rectangle;
 import flash.net.URLRequest;
 import flash.net.URLLoader;
 import flash.system.LoaderContext;
@@ -35,6 +35,10 @@ class Gobe extends Sprite {
     private var _heights:Array<Int>;
 
     private var rect:QueryBox;
+    // hold the hsps so we know if one contained a click
+    public var _rectangles:Array<GRect>; 
+    public var _lines:Array<GLine>; 
+
     private var _all:Bool;
     private var imgs:Array<GImage>;
     private var gcoords:Array<Array<Int>>;
@@ -49,30 +53,49 @@ class Gobe extends Sprite {
             query(e);
         }
     }
-
+    public function clearGraphics(e:MouseEvent){
+        var r:GRect; 
+        for(r in _rectangles){
+            flash.Lib.current.removeChild(r);
+        }
+        var l:GLine; 
+        for(l in _lines){
+            flash.Lib.current.removeChild(l);
+        }
+        _rectangles = [];
+        _lines = [];
+    }
     private function query(e:MouseEvent){
         var img = e.target.url;
         var sqlite = img.substr(0, img.lastIndexOf('_')) + '.sqlite';
         var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + img + '&db=' + sqlite;
 
-        if(! e.altKey){
-            this.graphics.clear();
-            flash.Lib.current.graphics.clear();
-            rect.tf.text = '';
-            for(img in this.imgs){
-                img.graphics.clear();
+        var removed = false;
+        if(! e.shiftKey){
+            var r:GRect; var i:Int = 0;
+            for(r in _rectangles){
+               if(r.hitTestPoint(e.stageX, e.stageY)){
+                    var pair_idx = i % 2 == 0 ? i : i - 1;
+                    var rects = _rectangles.splice(pair_idx, 2);
+                    trace(Reflect.fields(rects[0]));
+                    flash.Lib.current.removeChild(rects[1]);
+                    flash.Lib.current.removeChild(rects[0]);
+                    // one line per 2 rectangles.
+                    var lidx = Math.floor(i/2);
+                    flash.Lib.current.removeChild(_lines.splice(lidx, 1)[0]);
+                    removed = true;
+               } else { i++;  }
             }
-        }
-        if(e.shiftKey) {
+            if(removed) { return; }
+            rect.tf.text = '';
+            url += '&x=' + e.localX;
+            this._all = false;
+        } 
+        else {
             url      += '&all=1';
             this._all = true;
         }
-        else{
-            url      += '&x=' + e.localX;
-            this._all = false;
-        }
 
-        trace(url);
         var queryLoader = new URLLoader();
         queryLoader.addEventListener(Event.COMPLETE, handleQueryReturn);
         queryLoader.load(new URLRequest(url));
@@ -86,6 +109,7 @@ class Gobe extends Sprite {
         // hsp outlines and use an object for each rectangle so it
         // can respond to mouseover events.
         var g = flash.Lib.current.graphics;
+        var lcolor:Int;
         
         for(pair in json){
             g.lineStyle(line_width);
@@ -101,32 +125,49 @@ class Gobe extends Sprite {
                 var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
                 var xy1 = img.localToGlobal(new flash.geom.Point(coords[2],coords[3]));
 
-                g.drawRect(xy0.x - 2, xy0.y - 2
-                   , 1 + coords[2] - coords[0]
-                   , 1 + coords[3] - coords[1]);
-                
-                //new Rectangle(xy0.x -2, xy0.y - 2
-                //   , 1 + coords[2] - coords[0]
-                //   , 1 + coords[3] - coords[1]);
-                if(pair.has_pair != 0){ 
-                    
-                    gcoords.push([Math.round(xy0.x),Math.round(xy0.y)
-                                    ,Math.round(xy1.x),Math.round(xy1.y)]);
+                var x0 = xy0.x - 2;
+                var y0 = xy0.y - 2;
+                var w = 1 + coords[2] - coords[0];
+                var h = 1 + coords[3] - coords[1];
+
+                var pr:GRect;
+                // dont add a rectangle that's already drawn
+                var doadd = true;
+                for(pr in _rectangles){
+                    doadd = !(x0 == pr.x0 && y0 == pr.y0 && w == pr.w && h == pr.h);
+                    if(doadd){break;}
                 }
-                else { break; }
+                if (doadd) {     
+                    var r = new GRect(x0, y0 , w, h);
+                    flash.Lib.current.addChild(r);
+                    _rectangles.push(r);
+                    gcoords.push([Math.round(xy0.x),Math.round(xy0.y)
+                                 ,Math.round(xy1.x),Math.round(xy1.y)]);
+                }
+
             }
-            g.lineStyle(line_width, pair.color);
+            lcolor = pair.color;
         }
 
 
         // draw lines between hsps.
         var j = 0;
         while(j<gcoords.length){
-            var h0 = this.gcoords[j];
-            var h1 = this.gcoords[j+1];
-            g.moveTo( (h0[0] + h0[2])/2, (h0[1] + h0[3])/2);
-            g.lineTo( (h1[0] + h1[2])/2, (h1[1] + h1[3])/2);
+            var h0 = gcoords[j];
+            var h1 = gcoords[j+1];
+            //g.moveTo( (h0[0] + h0[2])/2, (h0[1] + h0[3])/2);
+            //g.lineTo( (h1[0] + h1[2])/2, (h1[1] + h1[3])/2);
             j+=2;
+            var l = new GLine(
+                  (h0[0] + h0[2])/2
+                , (h0[1] + h0[3])/2
+                , (h1[0] + h1[2])/2
+                , (h1[1] + h1[3])/2
+                , line_width
+                , lcolor
+                );
+            _lines.push(l);
+            flash.Lib.current.addChild(l);
         }
 
         // if it was showing all the hsps, dont show the annotation.
@@ -164,9 +205,12 @@ class Gobe extends Sprite {
         rect = new QueryBox(this.base_url);
         rect.x =  1030;
         rect.show();
+        _rectangles = [];
+        _lines      = [];
 
         rect.plus.addEventListener(MouseEvent.CLICK, plusClick);
         rect.minus.addEventListener(MouseEvent.CLICK, minusClick);
+        rect.clear_sprite.addEventListener(MouseEvent.CLICK, clearGraphics);
     }
 
     public function getImageTitles(){
@@ -201,15 +245,18 @@ class Gobe extends Sprite {
         for(h in _heights){
             var img = imgs[i];
             img.y = y;
-            flash.Lib.current.addChildAt(img,0);
+            flash.Lib.current.addChildAt(img, 0);
+
             var ttf = new TextField();
-            ttf.text = _image_titles[i];
-            ttf.alpha = 50;
-            ttf.y = y ; ttf.opaqueBackground = 0xffffff;
-            ttf.autoSize = flash.text.TextFieldAutoSize.LEFT;
-            ttf.border = true; ttf.borderColor = 0xcccccc;
-            ttf.x = 15;
-            flash.Lib.current.addChildAt(ttf,1);
+            ttf.text   = _image_titles[i];
+            ttf.y      = y ; 
+            ttf.x      = 15;
+            ttf.border = true; 
+            ttf.borderColor      = 0xcccccc;
+            ttf.opaqueBackground = 0xf4f4f4;
+            ttf.autoSize         = flash.text.TextFieldAutoSize.LEFT;
+
+            flash.Lib.current.addChildAt(ttf, 1);
             img.addEventListener(MouseEvent.CLICK, onClick);
             y+=h;
             i++;
@@ -225,6 +272,35 @@ class Gobe extends Sprite {
         if( line_width < 1){ return; }
         line_width -= 1;
         rect.tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
+    }
+}
+
+// instead of just drawing on the stage, we add a lightweight shape.
+class GRect extends Shape {
+    public var x0:Float;
+    public var y0:Float;
+    public var w:Float;
+    public var h:Float;
+
+    public function new(x:Float, y:Float, w:Float, h:Float) {
+        super();
+        this.x0 = x;
+        this.y0 = y;
+        this.w  = w;
+        this.w  = h;
+        var g = this.graphics;
+        g.lineStyle(2,0x00000);
+        g.drawRect(x, y, w, h);
+    }
+}
+
+class GLine extends Shape {
+    public function new(x0:Float, y0:Float, x1:Float, y1:Float, lwidth:Int, lcolor:Int) {
+        super();
+        var g = this.graphics;    
+        g.lineStyle(lwidth,lcolor);
+        g.moveTo(x0,y0);
+        g.lineTo(x1,y1);
     }
 }
 
@@ -269,6 +345,7 @@ class QueryBox extends Sprite {
     private var _il:Loader;
     private var _ilplus:Loader;
     private var _ilminus:Loader;
+    private var _ilclear:Loader;
     private var _height:Int;
     private var _taper:Int;
     private var _close:Sprite;
@@ -276,6 +353,7 @@ class QueryBox extends Sprite {
 
     public  var tf:TextField;
     public  var plus:Sprite;
+    public  var clear_sprite:Sprite;
     public  var tf_size:TextField;
     public  var minus:Sprite;
 
@@ -283,11 +361,12 @@ class QueryBox extends Sprite {
         var g = this.graphics;
         g.lineStyle(1,0x777777);
         g.beginFill(0xcccccc);
-        g.drawRoundRect(0,0,_width + 1,_height + 2 * _taper,_taper);
+        g.drawRoundRect(0, 0, _width + 1, _height + 2 * _taper, _taper);
         g.endFill();
         this.addChild(tf);
         this.addChild(_close);
         this.addChild(plus);
+        this.addChild(clear_sprite);
         this.addChild(minus);
         this.addChild(tf_size);
     }
@@ -297,6 +376,7 @@ class QueryBox extends Sprite {
         this.removeChild(_close);
         this.removeChild(plus);
         this.removeChild(minus);
+        this.removeChild(clear_sprite);
         this.removeChild(tf_size);
         this.graphics.clear();
     }
@@ -350,6 +430,7 @@ class QueryBox extends Sprite {
         _close = new Sprite();
         plus = new Sprite();
         minus = new Sprite();
+        clear_sprite = new Sprite();
 
         _close.addEventListener(MouseEvent.CLICK, function (e:MouseEvent){
             e.target.parent.hide();
@@ -371,8 +452,18 @@ class QueryBox extends Sprite {
         _ilminus.contentLoaderInfo.addEventListener(Event.COMPLETE, handleMinusLoaded);
         _ilminus.load(new URLRequest(base_url + "static/minus.gif"));
 
+       
+        _ilclear = new Loader();
+        _ilclear.contentLoaderInfo.addEventListener(Event.COMPLETE, handleClearLoaded);
+        _ilclear.load(new URLRequest(base_url + "static/clear_button.gif"));
+
         flash.Lib.current.addChild(this);
 
+    }
+    private function handleClearLoaded(e:Event){
+        clear_sprite.addChild(cast(_ilclear.content,Bitmap));
+        clear_sprite.x = 12;
+        clear_sprite.y = 1.5;
     }
     private function handleCloseLoaded(e:Event){
         _close.addChild(cast(_il.content,Bitmap));
