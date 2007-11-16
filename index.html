@@ -1,8 +1,17 @@
 <html>
 <head>
 <script src="static/swfobject.js"></script>
+<script>
+function set_genespace(drid,value){
+    document.getElementById(drid).value = value;
+}
+</script>
 </head>
 <body>
+<input  name="drup1" id="drup1" size="10" value="10000" type="text">
+<input  name="drdown1" id="drdown1"  size="10" value="10000" type="text">
+<input  name="drup2" id="drup2" size="10" value="10000" type="text">
+<input  name="drdown2" id="drdown2" size="10" value="10000" type="text">
 
     <div id="flashcontent" style="z-index=0;position:absolute">
         <strong>You need to upgrade your Flash Player</strong>
@@ -17,7 +26,7 @@
         so.addVariable('n', getQueryParamValue('n') || 2); 
         so.addVariable('base_url', getQueryParamValue('base_url') || '/gobe/trunk/'); 
         so.addVariable('tmp_dir', getQueryParamValue('tmp_dir')|| 'tmpdir/');
-        so.addVariable('img', getQueryParamValue('img')|| 'CoGe_TGpMxaCc');
+        so.addVariable('img', getQueryParamValue('img')|| 'GEvo_8sQ0CK4V');
         so.write("flashcontent");
         
         // ]]>

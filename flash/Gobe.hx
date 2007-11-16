@@ -1,3 +1,4 @@
+import flash.external.ExternalInterface; 
 import flash.display.MovieClip;
 import flash.display.Sprite;
 import flash.display.Shape;
@@ -11,6 +12,7 @@ import flash.events.KeyboardEvent;
 import flash.events.MouseEvent;
 import flash.events.TimerEvent;
 import flash.geom.Point;
+import flash.geom.Rectangle;
 import flash.net.URLRequest;
 import flash.net.URLLoader;
 import flash.system.LoaderContext;
@@ -68,7 +70,8 @@ class Gobe extends Sprite {
     private function query(e:MouseEvent){
         var img = e.target.url;
         var sqlite = img.substr(0, img.lastIndexOf('_')) + '.sqlite';
-        var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + img + '&db=' + sqlite;
+        var idx:Int = e.target.i + 1;
+        var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + idx + '&db=' + sqlite;
 
         var removed = false;
         if(! e.shiftKey){
@@ -188,8 +191,10 @@ class Gobe extends Sprite {
     }
 
 
+
     public function new(){
         super();
+        //ExternalInterface.call('alert','hiiii');
         var p = flash.Lib.current.loaderInfo.parameters;
         trace(p);
         this.QUERY_URL = p.base_url + 'query.pl?';
@@ -217,12 +222,14 @@ class Gobe extends Sprite {
     public function getImageTitles(){
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, imageTitlesReturn);
-        ul.load(new URLRequest(this.QUERY_URL + '&image_names=1&db='
+        ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db='
           + this.tmp_dir +  '/' + this.img + '.sqlite'));
     }
     public function imageTitlesReturn(e:Event){
-            trace(e.target.data);
-            _image_titles = Json.decode(e.target.data);
+            var strdata:String = e.target.data;
+            var a = strdata.split("|||");
+            _image_titles = Json.decode(a[0]);
+            trace(_image_titles);
             initImages();
     }
     public function initImages(){
@@ -259,8 +266,12 @@ class Gobe extends Sprite {
 
             flash.Lib.current.addChildAt(ttf, 1);
             img.addEventListener(MouseEvent.CLICK, onClick);
-            y+=h;
             i++;
+            flash.Lib.current.addChild(new GSlider(1, y + 20, h - 40,'drup' + i));
+            var gs = new GSlider(1, y + 20, h - 40,'drdown' + i);
+            gs.x = 999;
+            flash.Lib.current.addChild(gs);
+            y+=h;
         }
     }
 
@@ -302,6 +313,30 @@ class GLine extends Shape {
         g.lineStyle(lwidth, lcolor);
         g.moveTo(x0,y0);
         g.lineTo(x1,y1);
+    }
+}
+
+class GSlider extends Sprite {
+    // id is the string (drup1,drdown1, drup2, or drdown2)
+    public var id:String;
+    public var bounds:Rectangle;
+    public function new(x0:Float, y0:Float, h:Float, id:String) {
+        super();
+        this.id = id;
+        var g = this.graphics;
+        var bounds = new Rectangle(0,0,1000,0);
+        g.beginFill(0xcccccc);
+        g.lineStyle(1,0x000000);
+        g.drawRect(x0, y0, 7, h);
+        g.endFill();
+        var self = this;
+        addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
+            self.startDrag(false, bounds);
+        });
+        addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent){
+            self.stopDrag();
+            ExternalInterface.call('set_genespace',self.id,self.x);
+        });    
     }
 }
 
@@ -487,3 +522,4 @@ class QueryBox extends Sprite {
 
 
 }
+
