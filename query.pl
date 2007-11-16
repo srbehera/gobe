@@ -53,15 +53,6 @@ if ($q->param('get_info')){
     while (my $row = $sth->fetchrow_hashref){
         push(@extents, {'bpmin' => $row->{bpmin}, 'bpmax' => $row->{bpmax}, 'img_width' => $row->{px_width} });
     }
-    #print JSON::Syck::Dump(\@results);
-    # TODO get basepair extents from here:
-    # bpmin, bpmax, imgwidth.
-    # then save in Gobe as:
-    # gobe.bpmin, gobe.bpmax, gobe.imgwidth
-    # then create a function in gobe:
-    # function pix2rw(px, py){
-    #
-    #}
     print JSON::Syck::Dump({'titles' => $titles, 'anchors' => \@anchors,  'extents' => \@extents });
     exit;
 }
