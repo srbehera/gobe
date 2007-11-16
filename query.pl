@@ -33,15 +33,36 @@ my $sth;
 if ($q->param('get_info')){
     $sth = $dbh->prepare("SELECT title FROM image_info order by id");
     $sth->execute();
-    print JSON::Syck::Dump([map{$_->[0]} @{ $sth->fetchall_arrayref()}]);
-    print "|||";
-    $sth = $dbh->prepare("select min(xmin),max(xmax), image_id from image_data where type='anchor' group by image_id;");
+    my $titles = [map{$_->[0]} @{ $sth->fetchall_arrayref()}];
+
+    #print "|||";
+
+    $sth = $dbh->prepare("select min(xmin),max(xmax), image_id from image_data where type='anchor' group by image_id order by image_id;");
     $sth->execute();
-    my @results;
+    my @anchors;
     while (my $row = $sth->fetchrow_arrayref){
-        push(@results, {'xmin' => $row->[0], 'xmax' => $row->[1], idx => $row->[2] });
+        push(@anchors, {'xmin' => $row->[0], 'xmax' => $row->[1], idx => $row->[2] });
     }
-    print JSON::Syck::Dump(\@results);
+    #print JSON::Syck::Dump(\@results);
+
+    #print "|||";
+
+    $sth = $dbh->prepare("select * from image_info order by iname;");
+    $sth->execute();
+    my @extents;
+    while (my $row = $sth->fetchrow_hashref){
+        push(@extents, {'bpmin' => $row->{bpmin}, 'bpmax' => $row->{bpmax}, 'img_width' => $row->{px_width} });
+    }
+    #print JSON::Syck::Dump(\@results);
+    # TODO get basepair extents from here:
+    # bpmin, bpmax, imgwidth.
+    # then save in Gobe as:
+    # gobe.bpmin, gobe.bpmax, gobe.imgwidth
+    # then create a function in gobe:
+    # function pix2rw(px, py){
+    #
+    #}
+    print JSON::Syck::Dump({'titles' => $titles, 'anchors' => \@anchors,  'extents' => \@extents });
     exit;
 }
 

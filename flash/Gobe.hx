@@ -46,6 +46,7 @@ class Gobe extends Sprite {
     private var gcoords:Array<Array<Int>>;
     private var QUERY_URL:String;
     private var _image_titles:Array<String>;
+    private var _extents:Array<Hash<Float>>;
 
 
     public function onClick(e:MouseEvent) {
@@ -206,32 +207,75 @@ class Gobe extends Sprite {
         _heights = [];
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
-        getImageTitles(); // this calls initImages();
+        getImageInfo(); // this calls initImages();
 
         rect = new QueryBox(this.base_url);
         rect.x =  1030;
         rect.show();
         _rectangles = [];
         _lines      = [];
+        _extents    = [];
 
         rect.plus.addEventListener(MouseEvent.CLICK, plusClick);
         rect.minus.addEventListener(MouseEvent.CLICK, minusClick);
         rect.clear_sprite.addEventListener(MouseEvent.CLICK, clearGraphics);
     }
 
-    public function getImageTitles(){
+    public function getImageInfo(){
         var ul = new URLLoader();
-        ul.addEventListener(Event.COMPLETE, imageTitlesReturn);
+        ul.addEventListener(Event.COMPLETE, ImageInfoReturn);
         ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db='
           + this.tmp_dir +  '/' + this.img + '.sqlite'));
     }
-    public function imageTitlesReturn(e:Event){
+    public function ImageInfoReturn(e:Event){
             var strdata:String = e.target.data;
-            var a = strdata.split("|||");
-            _image_titles = Json.decode(a[0]);
+            trace(strdata);
+            var json = Json.decode(strdata);
+            _image_titles = json.titles;
             trace(_image_titles);
+            json.extents[0];// let the compiler know it's an array
+            json.anchors[0];// let the compiler know it's an array
+
+            var i = 0;
+            for(exts in json.extents){
+                _extents[i] = new Hash<Float>();
+                _extents[i].set('bpmin', exts.bpmin);
+                _extents[i].set('bpmax', exts.bpmax);
+                _extents[i].set('img_width', exts.img_width);
+                // base pairs per pixel.
+                _extents[i].set('bpp', (exts.bpmax - exts.bpmin)/exts.img_width);
+                ++i;
+            }   
+
+            i = 0;
+            for(exts in json.anchors){
+                trace(exts.xmin);
+                _extents[i].set('xmin', exts.xmin);
+                _extents[i].set('xmax', exts.xmax);
+                _extents[i].set('idx', exts.idx);
+                ++i;
+            }
+            trace(_extents);
+            
             initImages();
     }
+
+    public function pix2relative(e:MouseEvent):Float{
+        var ext = _extents[e.target.i];
+        var click_bp = e.stageX * ext.get('bpp');
+        if(e.localX > ext.get('xmin') && e.localX  < ext.get('xmax')){
+            trace("BAD");
+            return -1;
+        }
+        if(e.stageX < ext.get('xmin')) {
+            var end_of_anchor_bp = ext.get('xmin') * ext.get('bpp');
+            return end_of_anchor_bp - click_bp;
+        }
+        var end_of_anchor_bp = ext.get('xmax') * ext.get('bpp');
+
+        return ( click_bp - end_of_anchor_bp);
+    }
+
     public function initImages(){
         imgs = new Array<GImage>();
         var i:Int;
@@ -267,14 +311,25 @@ class Gobe extends Sprite {
             flash.Lib.current.addChildAt(ttf, 1);
             img.addEventListener(MouseEvent.CLICK, onClick);
             i++;
-            flash.Lib.current.addChild(new GSlider(1, y + 20, h - 40,'drup' + i));
-            var gs = new GSlider(1, y + 20, h - 40,'drdown' + i);
-            gs.x = 999;
-            flash.Lib.current.addChild(gs);
+            var gs0 = new GSlider(1, y + 20, h - 40,'drup' + i);
+            gs0.i = i - 1;
+            flash.Lib.current.addChild(gs0);
+            gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
+            var gs1 = new GSlider(1, y + 20, h - 40,'drdown' + i);
+            gs1.x = 999; gs1.i = i - 1;
+            gs1.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
+            flash.Lib.current.addChild(gs1);
             y+=h;
         }
     }
 
+    public function sliderMouseUp(e:MouseEvent){
+            e.target.stopDrag();
+            var xupdown = pix2relative(e);
+            if(xupdown > 0){
+                ExternalInterface.call('set_genespace',e.target.id,xupdown);
+            }
+    }
 
     private function plusClick(e:MouseEvent){
         line_width += 1;
@@ -320,23 +375,25 @@ class GSlider extends Sprite {
     // id is the string (drup1,drdown1, drup2, or drdown2)
     public var id:String;
     public var bounds:Rectangle;
+    public var i:Int; // the index of the image it's on
+    public var gobe:Gobe;
     public function new(x0:Float, y0:Float, h:Float, id:String) {
         super();
         this.id = id;
         var g = this.graphics;
-        var bounds = new Rectangle(0,0,1000,0);
+        // TODO: can make these bounds based on the _extents stuff.
+        bounds = new Rectangle(0,0,1000,0);
         g.beginFill(0xcccccc);
         g.lineStyle(1,0x000000);
         g.drawRect(x0, y0, 7, h);
         g.endFill();
         var self = this;
-        addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
-            self.startDrag(false, bounds);
-        });
-        addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent){
-            self.stopDrag();
-            ExternalInterface.call('set_genespace',self.id,self.x);
-        });    
+        addEventListener(MouseEvent.MOUSE_DOWN, sliderMouseDown);    
+        //addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);    
+    }
+
+    public function sliderMouseDown(e:MouseEvent){
+            e.target.startDrag(false, bounds);
     }
 }
 
