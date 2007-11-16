@@ -260,14 +260,13 @@ class Gobe extends Sprite {
             initImages();
     }
 
-    public function pix2relative(e:MouseEvent):Float{
-        var ext = _extents[e.target.i];
-        var click_bp = e.stageX * ext.get('bpp');
-        if(e.localX > ext.get('xmin') && e.localX  < ext.get('xmax')){
-            trace("BAD");
-            return -1;
+    public function pix2relative(px:Float, i:Int):Float{
+        var ext = _extents[i];
+        var click_bp =  px * ext.get('bpp');
+        if(px > ext.get('xmin') && px  < ext.get('xmax')){
+            return 1;
         }
-        if(e.stageX < ext.get('xmin')) {
+        if(px < ext.get('xmin')) {
             var end_of_anchor_bp = ext.get('xmin') * ext.get('bpp');
             return end_of_anchor_bp - click_bp;
         }
@@ -311,24 +310,24 @@ class Gobe extends Sprite {
             flash.Lib.current.addChildAt(ttf, 1);
             img.addEventListener(MouseEvent.CLICK, onClick);
             i++;
-            var gs0 = new GSlider(1, y + 20, h - 40,'drup' + i);
+            var gs0 = new GSlider(1, y + 20, h - 40,'drup' + i, 0, _extents[i-1].get('xmin'));
             gs0.i = i - 1;
             flash.Lib.current.addChild(gs0);
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
-            var gs1 = new GSlider(1, y + 20, h - 40,'drdown' + i);
+            var gs1 = new GSlider(1, y + 20, h - 40,'drdown' + i, _extents[i-1].get('xmax') ,_extents[i-1].get('img_width'));
             gs1.x = 999; gs1.i = i - 1;
             gs1.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             flash.Lib.current.addChild(gs1);
+
+
             y+=h;
         }
     }
 
     public function sliderMouseUp(e:MouseEvent){
             e.target.stopDrag();
-            var xupdown = pix2relative(e);
-            if(xupdown > 0){
-                ExternalInterface.call('set_genespace',e.target.id,xupdown);
-            }
+            var xupdown = pix2relative(e.stageX, e.target.i);
+            ExternalInterface.call('set_genespace',e.target.id,xupdown);
     }
 
     private function plusClick(e:MouseEvent){
@@ -377,19 +376,20 @@ class GSlider extends Sprite {
     public var bounds:Rectangle;
     public var i:Int; // the index of the image it's on
     public var gobe:Gobe;
-    public function new(x0:Float, y0:Float, h:Float, id:String) {
+    public function new(x0:Float, y0:Float, h:Float, id:String, bounds_min:Float, bounds_max:Float) {
         super();
         this.id = id;
         var g = this.graphics;
         // TODO: can make these bounds based on the _extents stuff.
-        bounds = new Rectangle(0,0,1000,0);
-        g.beginFill(0xcccccc);
+        bounds = new Rectangle(bounds_min,0,bounds_max,0);
+        g.beginFill(0xffcccccc);
         g.lineStyle(1,0x000000);
         g.drawRect(x0, y0, 7, h);
         g.endFill();
         var self = this;
         addEventListener(MouseEvent.MOUSE_DOWN, sliderMouseDown);    
-        //addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);    
+        // the mouse up is in the Gobe namespace as we need to access
+        // pix2relative.
     }
 
     public function sliderMouseDown(e:MouseEvent){
