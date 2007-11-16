@@ -240,8 +240,12 @@ class Gobe extends Sprite {
             ids.push(gl.db_id1);
             ids.push(gl.db_id2);
         }
-            
-        trace(ids);
+        var ul = new URLLoader();    
+        ul.addEventListener(Event.COMPLETE, function(e:Event){
+            ExternalInterface.call('alert', 'genespace saved');
+        });
+        ul.load(new URLRequest(this.QUERY_URL +  '&db=' + this.tmp_dir + '/' + this.img + '.sqlite' 
+                                                + '&save_cns=' + ids.join(",")));
     }
 
     public function getImageInfo(){
