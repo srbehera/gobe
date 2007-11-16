@@ -25,6 +25,7 @@ function set_genespace(drid,value){
         so.useExpressInstall('flash/expressinstall.swf');
         so.addVariable('n', getQueryParamValue('n') || 2); 
         so.addVariable('base_url', getQueryParamValue('base_url') || '/gobe/trunk/'); 
+        so.addVariable('freezable', getQueryParamValue('freezable') || 'false'); 
         so.addVariable('tmp_dir', getQueryParamValue('tmp_dir')|| 'tmpdir/');
         so.addVariable('img', getQueryParamValue('img')|| 'GEvo_8sQ0CK4V');
         so.write("flashcontent");

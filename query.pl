@@ -68,7 +68,7 @@ if($all){
     $sth->execute($y, $img_id);
     my ($track) = $sth->fetchrow_array();
 
-    $statement = qq{ SELECT name, xmin, xmax, ymin, ymax, image_id, image_track, pair_id, color FROM image_data 
+    $statement = qq{ SELECT id, xmin, xmax, ymin, ymax, image_id, image_track, pair_id, color FROM image_data 
     WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image_id = ? and pair_id != -99 and type = "HSP" };
     $sth = $dbh->prepare($statement);
 
@@ -76,7 +76,6 @@ if($all){
 }
 else{
     $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? + 2 > xmin AND ? - 2 < xmax AND ? BETWEEN ymin and ymax and image_id = ?");
-    #$statement = "SELECT * FROM image_data WHERE $x + 2 > xmin AND $x - 2 < xmax AND $y BETWEEN ymin and ymax and image = \"$img_id\"";
     $sth->execute($x, $x, $y, $img_id);
 }
 
@@ -86,7 +85,7 @@ else{
 
 my @results;
 while( my $result = $sth->fetchrow_hashref() ){
-    my $sth2 = $dbh->prepare("SELECT * FROM image_data where id = ?");
+    my $sth2 = $dbh->prepare("SELECT id, xmin, xmax, ymin, ymax, image_id, image_track, pair_id, color FROM image_data where id = ?");
     $sth2->execute( $result->{pair_id} );
     my $pair = $sth2->fetchrow_hashref();
 
@@ -95,8 +94,8 @@ while( my $result = $sth->fetchrow_hashref() ){
     my $f2name = $pair->{image_id};
 
     # TODO: clean this up. we should know if there's a pair or not.
-    my @f1pts = map {floor  $result->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
-    my @f2pts = map { floor $pair->{$_} + 0.5 } qw/xmin ymin xmax ymax/;
+    my @f1pts = map {floor  $result->{$_} + 0.5 } qw/xmin ymin xmax ymax/; push(@f1pts, $result->{'id'});
+    my @f2pts = map { floor $pair->{$_} + 0.5 } qw/xmin ymin xmax ymax/;   push(@f2pts, $pair->{'id'});
     my $has_pair = 0;
     map { $has_pair += $_ } @f2pts;
 
@@ -111,5 +110,5 @@ while( my $result = $sth->fetchrow_hashref() ){
                     , features   => {'key' . $f1name => \@f1pts,'key'. $f2name => \@f2pts}
                  });
 }
-#print STDERR Dumper @results;
+print STDERR Dumper @results;
 print JSON::Syck::Dump({resultset => \@results});
