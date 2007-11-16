@@ -57,6 +57,12 @@ if ($q->param('get_info')){
     exit;
 }
 
+if ($q->param('save_cns')){
+    my @ids = split(/,/, $q->param('save_cns'));
+    print STDERR join("   ", @ids) . "\n";
+    exit();
+}
+
 my $x    = $q->param('x');
 my $y    = $q->param('y');
 my $all  = $q->param('all') || 0;
@@ -110,5 +116,4 @@ while( my $result = $sth->fetchrow_hashref() ){
                     , features   => {'key' . $f1name => \@f1pts,'key'. $f2name => \@f2pts}
                  });
 }
-print STDERR Dumper @results;
 print JSON::Syck::Dump({resultset => \@results});
