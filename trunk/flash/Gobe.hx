@@ -33,6 +33,7 @@ class Gobe extends Sprite {
     private var n:Int;
     private var img:String;
     private var tmp_dir:String;
+    private var freezable:Bool;
 
     private var _heights:Array<Int>;
 
@@ -81,7 +82,6 @@ class Gobe extends Sprite {
                if(r.hitTestPoint(e.stageX, e.stageY)){
                     var pair_idx = i % 2 == 0 ? i : i - 1;
                     var rects = _rectangles.splice(pair_idx, 2);
-                    trace(Reflect.fields(rects[0]));
                     flash.Lib.current.removeChild(rects[1]);
                     flash.Lib.current.removeChild(rects[0]);
                     // one line per 2 rectangles.
@@ -107,7 +107,7 @@ class Gobe extends Sprite {
 
     private function handleQueryReturn(e:Event){
         var json:Array<Dynamic> = Json.decode(e.target.data).resultset;
-        gcoords = [];
+        gcoords = new Array<Array<Int>>();
         var pair:Hash<Dynamic>;
         // TODO: create another page in front of hte images for the
         // hsp outlines and use an object for each rectangle so it
@@ -125,15 +125,16 @@ class Gobe extends Sprite {
                 var coords:Array<Dynamic> = Reflect.field(pair.features, hsp);
                 // converty key2 to 2; because that's the image we need.
                 hsp = hsp.substr(3); 
+                var db_id = coords[4]; // this links to the value in the image_data table
                
                 var img = this.imgs[Std.parseInt(hsp) - 1];
                 var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
                 var xy1 = img.localToGlobal(new flash.geom.Point(coords[2],coords[3]));
 
-                var x0 = xy0.x - 1;
-                var y0 = xy0.y - 1;
-                var w = 1 + coords[2] - coords[0];
-                var h = 1 + coords[3] - coords[1];
+                var x0 = xy0.x;
+                var y0 = xy0.y;
+                var w = coords[2] - coords[0];
+                var h = coords[3] - coords[1];
 
                 var pr:GRect;
                 // dont add a rectangle that's already drawn
@@ -146,8 +147,12 @@ class Gobe extends Sprite {
                     var r = new GRect(x0, y0 , w, h);
                     flash.Lib.current.addChild(r);
                     _rectangles.push(r);
-                    gcoords.push([Math.round(xy0.x),Math.round(xy0.y)
-                                 ,Math.round(xy1.x),Math.round(xy1.y)]);
+                    gcoords.push([ Math.round(xy0.x)
+                                 , Math.round(xy0.y)
+                                 , Math.round(xy1.x)
+                                 , Math.round(xy1.y)
+                                 , db_id
+                                 ]);
                 }
 
             }
@@ -160,17 +165,19 @@ class Gobe extends Sprite {
         while(j<gcoords.length){
             var h0 = gcoords[j];
             var h1 = gcoords[j+1];
-            //g.moveTo( (h0[0] + h0[2])/2, (h0[1] + h0[3])/2);
-            //g.lineTo( (h1[0] + h1[2])/2, (h1[1] + h1[3])/2);
+            var db_id0 = h0[4];
+            var db_id1 = h1[4];
             j+=2;
             var l = new GLine(
-                  (h0[0] + h0[2])/2
-                , (h0[1] + h0[3])/2
-                , (h1[0] + h1[2])/2
-                , (h1[1] + h1[3])/2
-                , line_width
-                , lcolor
-                );
+                        (h0[0] + h0[2])/2
+                        , (h0[1] + h0[3])/2
+                        , (h1[0] + h1[2])/2
+                        , (h1[1] + h1[3])/2
+                        , line_width
+                        , lcolor
+                        , db_id0
+                        , db_id1
+                    );
             _lines.push(l);
             flash.Lib.current.addChild(l);
         }
@@ -197,19 +204,21 @@ class Gobe extends Sprite {
         super();
         //ExternalInterface.call('alert','hiiii');
         var p = flash.Lib.current.loaderInfo.parameters;
-        trace(p);
+
         this.QUERY_URL = p.base_url + 'query.pl?';
-        line_width = 1;
+        line_width     = 1;
         this.base_url  = p.base_url;
-        this.img = p.img;
+        this.img       = p.img;
         this.tmp_dir   = p.tmp_dir;
         this.n         = p.n;
+        this.freezable = p.freezable == 'false' ? false : true;
+
         _heights = [];
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
 
-        rect = new QueryBox(this.base_url);
+        rect = new QueryBox(this.base_url, freezable);
         rect.x =  1030;
         rect.show();
         _rectangles = [];
@@ -219,6 +228,20 @@ class Gobe extends Sprite {
         rect.plus.addEventListener(MouseEvent.CLICK, plusClick);
         rect.minus.addEventListener(MouseEvent.CLICK, minusClick);
         rect.clear_sprite.addEventListener(MouseEvent.CLICK, clearGraphics);
+        if(freezable){
+            rect.freeze.addEventListener(MouseEvent.CLICK, freezeSpace);
+        }
+    }
+
+    public function freezeSpace(e:MouseEvent){
+        var gl: GLine;
+        var ids = new Array<Int>();
+        for(gl in _lines){
+            ids.push(gl.db_id1);
+            ids.push(gl.db_id2);
+        }
+            
+        trace(ids);
     }
 
     public function getImageInfo(){
@@ -232,7 +255,6 @@ class Gobe extends Sprite {
             trace(strdata);
             var json = Json.decode(strdata);
             _image_titles = json.titles;
-            trace(_image_titles);
             json.extents[0];// let the compiler know it's an array
             json.anchors[0];// let the compiler know it's an array
 
@@ -249,7 +271,6 @@ class Gobe extends Sprite {
 
             i = 0;
             for(exts in json.anchors){
-                trace(exts.xmin);
                 _extents[i].set('xmin', exts.xmin);
                 _extents[i].set('xmax', exts.xmax);
                 _extents[i].set('idx', exts.idx);
@@ -260,6 +281,14 @@ class Gobe extends Sprite {
             initImages();
     }
 
+    public function pix2rw(px:Float, i:Int):Float {
+        return px * _extents[i].get('bpp');
+    }
+
+    // find the up or down stream basepairs given a mouse click
+    // (actually the e.globalX fo the mouseclick).
+    // it determines whether to use up/downstream based on which side
+    // of the anchor the click falls on.
     public function pix2relative(px:Float, i:Int):Float{
         var ext = _extents[i];
         var click_bp =  px * ext.get('bpp');
@@ -314,14 +343,21 @@ class Gobe extends Sprite {
             gs0.i = i - 1;
             flash.Lib.current.addChild(gs0);
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
+            gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
             var gs1 = new GSlider(1, y + 20, h - 40,'drdown' + i, _extents[i-1].get('xmax') ,_extents[i-1].get('img_width'));
             gs1.x = 999; gs1.i = i - 1;
             gs1.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
+            gs1.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
             flash.Lib.current.addChild(gs1);
 
 
             y+=h;
         }
+    }
+    // this is a hack for when a mouseup occurs off the slider. this
+    // seems to work ok. to trigger intuitive behavior.
+    public function sliderMouseOut (e:MouseEvent){
+        if(Math.abs(e.target.lastX - e.stageX ) > 9){ sliderMouseUp(e);}
     }
 
     public function sliderMouseUp(e:MouseEvent){
@@ -361,12 +397,17 @@ class GRect extends Shape {
 }
 
 class GLine extends Shape {
-    public function new(x0:Float, y0:Float, x1:Float, y1:Float, lwidth:Int, lcolor:Int) {
+    public var db_id1:Int;
+    public var db_id2:Int;
+
+    public function new(x0:Float, y0:Float, x1:Float, y1:Float, lwidth:Int, lcolor:Int, db_id1, db_id2) {
         super();
         var g = this.graphics;    
         g.lineStyle(lwidth, lcolor);
         g.moveTo(x0,y0);
         g.lineTo(x1,y1);
+        this.db_id1 = db_id1;
+        this.db_id2 = db_id2;
     }
 }
 
@@ -374,6 +415,7 @@ class GSlider extends Sprite {
     // id is the string (drup1,drdown1, drup2, or drdown2)
     public var id:String;
     public var bounds:Rectangle;
+    public var lastX:Float;
     public var i:Int; // the index of the image it's on
     public var gobe:Gobe;
     public function new(x0:Float, y0:Float, h:Float, id:String, bounds_min:Float, bounds_max:Float) {
@@ -388,10 +430,15 @@ class GSlider extends Sprite {
         g.endFill();
         var self = this;
         addEventListener(MouseEvent.MOUSE_DOWN, sliderMouseDown);    
+        addEventListener(MouseEvent.MOUSE_MOVE, sliderMouseMove);
+
         // the mouse up is in the Gobe namespace as we need to access
         // pix2relative.
     }
 
+    public function sliderMouseMove (e:MouseEvent){
+        lastX = e.stageX;
+    }
     public function sliderMouseDown(e:MouseEvent){
             e.target.startDrag(false, bounds);
     }
@@ -441,9 +488,11 @@ class QueryBox extends Sprite {
     private var _ilclear:Loader;
     private var _height:Int;
     private var _taper:Int;
+    private var _if:Loader;
     private var _close:Sprite;
     
 
+    public  var freeze:Sprite;
     public  var tf:TextField;
     public  var plus:Sprite;
     public  var clear_sprite:Sprite;
@@ -457,6 +506,7 @@ class QueryBox extends Sprite {
         g.drawRoundRect(0, 0, _width + 1, _height + 2 * _taper, _taper);
         g.endFill();
         this.addChild(tf);
+        this.addChild(freeze);
         this.addChild(_close);
         this.addChild(plus);
         this.addChild(clear_sprite);
@@ -468,13 +518,14 @@ class QueryBox extends Sprite {
         this.removeChild(tf);
         this.removeChild(_close);
         this.removeChild(plus);
+        this.removeChild(freeze);
         this.removeChild(minus);
         this.removeChild(clear_sprite);
         this.removeChild(tf_size);
         this.graphics.clear();
     }
 
-    public function new(base_url:String){
+    public function new(base_url:String, freezable:Bool){
         super();
         _width  = 360;
         _height = 630;
@@ -521,6 +572,7 @@ class QueryBox extends Sprite {
         loader.addEventListener(Event.COMPLETE, handleHtmlLoaded);
         loader.load(new URLRequest(base_url + "docs/textfield.html"));
         _close = new Sprite();
+        freeze = new Sprite();
         plus = new Sprite();
         minus = new Sprite();
         clear_sprite = new Sprite();
@@ -528,6 +580,13 @@ class QueryBox extends Sprite {
         _close.addEventListener(MouseEvent.CLICK, function (e:MouseEvent){
             e.target.parent.hide();
         });
+
+        if(freezable){
+            _if = new Loader();
+            _if.contentLoaderInfo.addEventListener(Event.COMPLETE, handleFreezeLoaded);
+            _if.load(new URLRequest(base_url + "static/save.gif"));
+        }
+            
 
 
         _il = new Loader();
@@ -557,6 +616,13 @@ class QueryBox extends Sprite {
         clear_sprite.addChild(cast(_ilclear.content,Bitmap));
         clear_sprite.x = 12;
         clear_sprite.y = 1.5;
+    }
+
+    private function handleFreezeLoaded(e:Event){
+        freeze.addChild(cast(_if.content,Bitmap));
+        freeze.x = 90;
+        freeze.y = 1;
+
     }
     private function handleCloseLoaded(e:Event){
         _close.addChild(cast(_il.content,Bitmap));
