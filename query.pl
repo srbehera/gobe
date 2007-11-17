@@ -58,7 +58,8 @@ if ($q->param('get_info')){
 }
 
 if ($q->param('save_cns')){
-    my @ids =  split(/,/, $q->param('save_cns'));
+    my %seen;
+    my @ids =  grep { !$seen{$_}++ } split(/,/, $q->param('save_cns'));
     $sth = $dbh->prepare("SELECT bpmin, bpmax, dataset_id FROM image_data");
     print STDERR $q->param('save_cns') . "\n";
     print STDERR $q->param('gsid') . "\n";
