@@ -128,7 +128,7 @@ class Gobe extends Sprite {
                 var coords:Array<Dynamic> = Reflect.field(pair.features, hsp);
                 // converty key2 to 2; because that's the image we need.
                 hsp = hsp.substr(3); 
-                var db_id = coords[4]; // this links to the value in the image_data table
+                var db_id = coords[4]; // this links to the id in the image_data table
                
                 var img = this.imgs[Std.parseInt(hsp) - 1];
                 var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
@@ -138,12 +138,11 @@ class Gobe extends Sprite {
                 var y0 = xy0.y;
                 var w = coords[2] - coords[0];
                 var h = coords[3] - coords[1];
-
                 var pr:GRect;
                 // dont add a rectangle that's already drawn
                 var seen = false;
                 for(pr in _rectangles){
-                    seen = x0 == pr.x0 && y0 == pr.y0 && w == pr.w && h == pr.h;
+                    seen = x0 == pr.x0 && y0 == pr.y0 && w == pr.w; // && h == pr.h;
                     if(seen){break;}
                 }
                 if (! seen) {     
@@ -401,7 +400,7 @@ class GRect extends Shape {
         this.x0 = x;
         this.y0 = y;
         this.w  = w;
-        this.w  = h;
+        this.h  = h;
         var g = this.graphics;
         g.lineStyle(2,0x00000);
         g.drawRect(x, y, w, h);
