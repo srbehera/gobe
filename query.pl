@@ -54,12 +54,16 @@ if ($q->param('get_info')){
         push(@extents, {'bpmin' => $row->{bpmin}, 'bpmax' => $row->{bpmax}, 'img_width' => $row->{px_width} });
     }
     print JSON::Syck::Dump({'titles' => $titles, 'anchors' => \@anchors,  'extents' => \@extents });
-    exit;
+    exit();
 }
 
 if ($q->param('save_cns')){
-    my @ids = split(/,/, $q->param('save_cns'));
-    print STDERR join("   ", @ids) . "\n";
+    my @ids =  split(/,/, $q->param('save_cns'));
+    $sth = $dbh->prepare("SELECT bpmin, bpmax, dataset_id FROM image_data");
+    print STDERR $q->param('save_cns') . "\n";
+    print STDERR $q->param('gsid') . "\n";
+    my $n = scalar(@ids)/2;
+    printf("$n cns pair%s saved.", $n == 1 ? '': 's');
     exit();
 }
 
@@ -75,7 +79,8 @@ if($all){
     my ($track) = $sth->fetchrow_array();
 
     $statement = qq{ SELECT id, xmin, xmax, ymin, ymax, image_id, image_track, pair_id, color FROM image_data 
-    WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) and image_id = ? and pair_id != -99 and type = "HSP" };
+                    WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) 
+                    and image_id = ? and pair_id != -99 and type = "HSP" };
     $sth = $dbh->prepare($statement);
 
     $sth->execute($track, $track, $img_id);

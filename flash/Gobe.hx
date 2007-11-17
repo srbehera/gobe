@@ -33,7 +33,8 @@ class Gobe extends Sprite {
     private var n:Int;
     private var img:String;
     private var tmp_dir:String;
-    private var freezable:Bool;
+    private var freezable:Bool; // does the user have permission to freeze this genespace?
+    private var genespace_id:Int; // the id to link the cns's when freezing
 
     private var _heights:Array<Int>;
 
@@ -79,6 +80,7 @@ class Gobe extends Sprite {
         if(! e.shiftKey){
             var r:GRect; var i:Int = 0;
             for(r in _rectangles){
+               // removed the rectangle (and pair) that was clicked on.
                if(r.hitTestPoint(e.stageX, e.stageY)){
                     var pair_idx = i % 2 == 0 ? i : i - 1;
                     var rects = _rectangles.splice(pair_idx, 2);
@@ -88,6 +90,7 @@ class Gobe extends Sprite {
                     var lidx = Math.floor(i/2);
                     flash.Lib.current.removeChild(_lines.splice(lidx, 1)[0]);
                     removed = true;
+                    i--;
                } else { i++;  }
             }
             if(removed) { return; }
@@ -211,7 +214,9 @@ class Gobe extends Sprite {
         this.img       = p.img;
         this.tmp_dir   = p.tmp_dir;
         this.n         = p.n;
-        this.freezable = p.freezable == 'false' ? false : true;
+
+        this.genespace_id = Std.parseInt(p.gsid);
+        this.freezable = p.freezable == 'false' ? false : (this.genespace_id == 0) ? false : true;
 
         _heights = [];
         var i:Int;
@@ -242,10 +247,13 @@ class Gobe extends Sprite {
         }
         var ul = new URLLoader();    
         ul.addEventListener(Event.COMPLETE, function(e:Event){
-            ExternalInterface.call('alert', 'genespace saved');
+            var str:String = e.target.data;
+            ExternalInterface.call('alert', str);
         });
         ul.load(new URLRequest(this.QUERY_URL +  '&db=' + this.tmp_dir + '/' + this.img + '.sqlite' 
-                                                + '&save_cns=' + ids.join(",")));
+                                                + '&save_cns=' + ids.join(",")
+                                                + '&gsid=' + this.genespace_id
+                                                ));
     }
 
     public function getImageInfo(){
