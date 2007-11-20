@@ -391,7 +391,7 @@ class Gobe extends Sprite {
 
     public function sliderMouseUp(e:MouseEvent){
             e.target.stopDrag();
-            var xupdown = pix2relative(e.stageX, e.target.i);
+            var xupdown = Math.round(pix2relative(e.stageX, e.target.i));
             ExternalInterface.call('set_genespace',e.target.id,xupdown);
     }
 
