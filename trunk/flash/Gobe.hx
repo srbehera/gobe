@@ -359,20 +359,20 @@ class Gobe extends Sprite {
             flash.Lib.current.addChildAt(ttf, 1);
             img.addEventListener(MouseEvent.CLICK, onClick);
             i++;
-            
+             
             var xmin = rw2pix(this.bpmins[i - 1] + this.inset_gs, i - 1);
             trace(xmin);
-            trace(this.bpmaxs);
             var gs0 = new GSlider(1 , y + 20, h - 40,'drup' + i, 0, _extents[i-1].get('xmin') - 4);
             gs0.i = 1;
-            gs0.x = xmin;
+            gs0.x = xmin < 1 ? 1: (xmin > _extents[i-1].get('img_width') ?  1 : xmin);
             flash.Lib.current.addChild(gs0);
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
             var xmax = rw2pix(this.bpmaxs[i-1] - this.inset_gs, i - 1);
-            trace('xmax:' + xmax);
             var gs1 = new GSlider(1, y + 20, h - 40,'drdown' + i, _extents[i-1].get('xmax') + 4 ,_extents[i-1].get('img_width'));
-            gs1.x = xmax; gs1.i = i - 1;
+            trace(xmax);
+            gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : (xmax < 0 ? _extents[i-1].get('img_width') : xmax); 
+            gs1.i = i - 1;
             gs1.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs1.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
             flash.Lib.current.addChild(gs1);
