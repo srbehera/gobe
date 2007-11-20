@@ -364,14 +364,16 @@ class Gobe extends Sprite {
             trace(xmin);
             var gs0 = new GSlider(1 , y + 20, h - 40,'drup' + i, 0, _extents[i-1].get('xmin') - 4);
             gs0.i = 1;
-            gs0.x = xmin < 1 ? 1: (xmin > _extents[i-1].get('img_width') ?  1 : xmin);
+            // make sure inset_gs cant cause the min to go beyond the gene
+            gs0.x = xmin < 1 ? 1: (xmin > _extents[i-1].get('xmin') ?  _extents[i-1].get('xmin') : xmin);
             flash.Lib.current.addChild(gs0);
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
             var xmax = rw2pix(this.bpmaxs[i-1] - this.inset_gs, i - 1);
             var gs1 = new GSlider(1, y + 20, h - 40,'drdown' + i, _extents[i-1].get('xmax') + 4 ,_extents[i-1].get('img_width'));
             trace(xmax);
-            gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : (xmax < 0 ? _extents[i-1].get('img_width') : xmax); 
+            // fix in case the inset_gs causes the max to go below the  xmax
+            gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : (xmax < _extents[i-1].get('xmax') ? _extents[i-1].get('xmax') : xmax); 
             gs1.i = i - 1;
             gs1.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs1.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
