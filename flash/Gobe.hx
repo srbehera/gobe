@@ -31,10 +31,13 @@ class Gobe extends Sprite {
     // base_url and n are sent in on the url.
     private var base_url:String;
     private var n:Int;
+    private var inset_gs:Int; // how many bp in to put the bars from the edge of the image
     private var img:String;
     private var tmp_dir:String;
     private var freezable:Bool; // does the user have permission to freeze this genespace?
     private var genespace_id:Int; // the id to link the cns's when freezing
+    private var bpmins:Array<Int>; //the left most bp of the image
+    private var bpmaxs:Array<Int>; //the left most bp of the image
 
     private var _heights:Array<Int>;
 
@@ -112,9 +115,7 @@ class Gobe extends Sprite {
         var json:Array<Dynamic> = Json.decode(e.target.data).resultset;
         gcoords = new Array<Array<Int>>();
         var pair:Hash<Dynamic>;
-        // TODO: create another page in front of hte images for the
-        // hsp outlines and use an object for each rectangle so it
-        // can respond to mouseover events.
+
         var g = flash.Lib.current.graphics;
         var lcolor:Int;
         
@@ -154,7 +155,7 @@ class Gobe extends Sprite {
                                  , Math.round(xy1.x)
                                  , Math.round(xy1.y)
                                  , db_id
-                                 ]);
+                        ]);
                 }
 
             }
@@ -212,6 +213,7 @@ class Gobe extends Sprite {
         this.base_url  = p.base_url;
         this.img       = p.img;
         this.tmp_dir   = p.tmp_dir;
+        this.inset_gs  = p.inset_gs;
         this.n         = p.n;
 
         this.genespace_id = Std.parseInt(p.gsid);
@@ -257,12 +259,14 @@ class Gobe extends Sprite {
 
     public function getImageInfo(){
         var ul = new URLLoader();
-        ul.addEventListener(Event.COMPLETE, ImageInfoReturn);
+        ul.addEventListener(Event.COMPLETE, imageInfoReturn);
         ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db='
           + this.tmp_dir +  '/' + this.img + '.sqlite'));
     }
-    public function ImageInfoReturn(e:Event){
+    public function imageInfoReturn(e:Event){
             var strdata:String = e.target.data;
+            this.bpmins = [];
+            this.bpmaxs = [];
             trace(strdata);
             var json = Json.decode(strdata);
             _image_titles = json.titles;
@@ -277,6 +281,8 @@ class Gobe extends Sprite {
                 _extents[i].set('img_width', exts.img_width);
                 // base pairs per pixel.
                 _extents[i].set('bpp', (exts.bpmax - exts.bpmin)/exts.img_width);
+                this.bpmins[i] = Math.round(exts.bpmin);
+                this.bpmaxs[i] = Math.round(exts.bpmax);
                 ++i;
             }   
 
@@ -294,6 +300,9 @@ class Gobe extends Sprite {
 
     public function pix2rw(px:Float, i:Int):Float {
         return px * _extents[i].get('bpp');
+    }
+    public function rw2pix(rw:Float, i:Int):Float {
+        return (rw - _extents[i].get('bpmin')) / _extents[i].get('bpp');
     }
 
     // find the up or down stream basepairs given a mouse click
@@ -350,13 +359,20 @@ class Gobe extends Sprite {
             flash.Lib.current.addChildAt(ttf, 1);
             img.addEventListener(MouseEvent.CLICK, onClick);
             i++;
-            var gs0 = new GSlider(1, y + 20, h - 40,'drup' + i, 0, _extents[i-1].get('xmin'));
-            gs0.i = i - 1;
+            
+            var xmin = rw2pix(this.bpmins[i - 1] + this.inset_gs, i - 1);
+            trace(xmin);
+            trace(this.bpmaxs);
+            var gs0 = new GSlider(1 , y + 20, h - 40,'drup' + i, 0, _extents[i-1].get('xmin'));
+            gs0.i = 1;
+            gs0.x = xmin;
             flash.Lib.current.addChild(gs0);
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
+            var xmax = rw2pix(this.bpmaxs[i-1] - this.inset_gs, i - 1);
+            trace('xmax:' + xmax);
             var gs1 = new GSlider(1, y + 20, h - 40,'drdown' + i, _extents[i-1].get('xmax') ,_extents[i-1].get('img_width'));
-            gs1.x = 999; gs1.i = i - 1;
+            gs1.x = xmax; gs1.i = i - 1;
             gs1.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs1.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
             flash.Lib.current.addChild(gs1);
@@ -368,7 +384,7 @@ class Gobe extends Sprite {
     // this is a hack for when a mouseup occurs off the slider. this
     // seems to work ok. to trigger intuitive behavior.
     public function sliderMouseOut (e:MouseEvent){
-        if(Math.abs(e.target.lastX - e.stageX ) > 9){ sliderMouseUp(e);}
+        if(Math.abs(e.target.lastX - e.stageX ) > 15){ sliderMouseUp(e);}
     }
 
     public function sliderMouseUp(e:MouseEvent){
