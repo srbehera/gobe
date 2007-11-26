@@ -68,6 +68,11 @@ if ($q->param('save_cns')){
     exit();
 }
 
+if ($q->param('predict')){
+    my $result = `/usr/bin/python predict_cns.py $db`;
+    return $result;
+}
+
 my $x    = $q->param('x');
 my $y    = $q->param('y');
 my $all  = $q->param('all') || 0;
