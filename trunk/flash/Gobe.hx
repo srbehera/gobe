@@ -352,6 +352,9 @@ class Gobe extends Sprite {
             ttf.y      = y ; 
             ttf.x      = 15;
             ttf.border = true; 
+            if(ttf.text.indexOf('Reverse Complement') != -1  ) {
+                ttf.textColor = 0xff0000;
+            }
             ttf.borderColor      = 0xcccccc;
             ttf.opaqueBackground = 0xf4f4f4;
             ttf.autoSize         = flash.text.TextFieldAutoSize.LEFT;
