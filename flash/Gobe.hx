@@ -364,7 +364,7 @@ class Gobe extends Sprite {
             i++;
              
             var xmin = rw2pix(this.bpmins[i - 1] + this.pad_gs, i - 1);
-            var gs0 = new GSlider(1 , y + 28, h - 35,'drup' + i, 0, _extents[i-1].get('xmin') - 10);
+            var gs0 = new GSlider(y + 28, h - 35, 'drup' + i, 0, _extents[i-1].get('xmin'));
             gs0.i = i - 1;
             // make sure pad_gs cant cause the min to go beyond the gene
             gs0.x = xmin < 1 ? 1: (xmin > _extents[i-1].get('xmin') ?  _extents[i-1].get('xmin') : xmin);
@@ -373,7 +373,7 @@ class Gobe extends Sprite {
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
             var xmax = rw2pix(this.bpmaxs[i-1] - this.pad_gs, i - 1);
-            var gs1 = new GSlider(1, y + 28, h - 35,'drdown' + i, _extents[i-1].get('xmax') - 3 ,_extents[i-1].get('img_width'));
+            var gs1 = new GSlider(y + 28, h - 35,'drdown' + i, _extents[i-1].get('xmax') - 3 ,_extents[i-1].get('img_width'));
             // fix in case the pad_gs causes the max to go below the  xmax
             gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : (xmax < _extents[i-1].get('xmax') ? _extents[i-1].get('xmax') : xmax); 
             gs1.i = i - 1;
@@ -453,22 +453,32 @@ class GSlider extends Sprite {
     public var lastX:Float;
     public var i:Int; // the index of the image it's on
     public var gobe:Gobe;
-    public function new(x0:Float, y0:Float, h:Float, id:String, bounds_min:Float, bounds_max:Float) {
+    public function new(y0:Float, h:Float, id:String, bounds_min:Float, bounds_max:Float) {
         super();
         this.id = id;
+        var updown = 1;
+        if(id.indexOf('up') == 2){ //drup
+            updown = -1;
+        }
+            
         var g = this.graphics;
-        // TODO: can make these bounds based on the _extents stuff.
-        bounds = new Rectangle(bounds_min,0,bounds_max,0);
-        g.beginFill(0xffcccccc);
+        bounds = new Rectangle(bounds_min,y0,bounds_max,0);
+        // draw the half-circle
+        g.moveTo(0, 0);
         g.lineStyle(1,0x000000);
-        g.drawRect(x0, y0, 7, h);
+        g.beginFill(0xcccccc);
+        g.curveTo(updown * 16, 8, updown, 16);
+        g.lineTo(updown, h - 16);
+        g.curveTo(updown * 16, h - 8, updown, h);
+        g.lineTo(-updown, h);
+        g.lineTo(-updown, 0);
+        g.lineTo(0, 0);
         g.endFill();
-        var self = this;
+
         addEventListener(MouseEvent.MOUSE_DOWN, sliderMouseDown);    
         addEventListener(MouseEvent.MOUSE_MOVE, sliderMouseMove);
+        this.y = y0;
 
-        // the mouse up is in the Gobe namespace as we need to access
-        // pix2relative.
     }
 
     public function sliderMouseMove (e:MouseEvent){
