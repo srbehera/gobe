@@ -293,7 +293,8 @@ class Gobe extends Sprite {
                 _extents[i].set('idx', exts.idx);
                 ++i;
             }
-            trace(_extents);
+            trace(_extents[0]);
+            trace(_extents[1]);
             
             initImages();
     }
@@ -364,8 +365,8 @@ class Gobe extends Sprite {
             i++;
              
             var xmin = rw2pix(this.bpmins[i - 1] + this.pad_gs, i - 1);
-            var gs0 = new GSlider(1 , y + 28, h - 35,'drup' + i, 0, _extents[i-1].get('xmin') - 4);
-            gs0.i = 1;
+            var gs0 = new GSlider(1 , y + 28, h - 35,'drup' + i, 0, _extents[i-1].get('xmin') - 10);
+            gs0.i = i - 1;
             // make sure pad_gs cant cause the min to go beyond the gene
             gs0.x = xmin < 1 ? 1: (xmin > _extents[i-1].get('xmin') ?  _extents[i-1].get('xmin') : xmin);
             trace(xmin + ", " + gs0.x);
@@ -373,10 +374,9 @@ class Gobe extends Sprite {
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
             var xmax = rw2pix(this.bpmaxs[i-1] - this.pad_gs, i - 1);
-            var gs1 = new GSlider(1, y + 28, h - 35,'drdown' + i, _extents[i-1].get('xmax') + 4 ,_extents[i-1].get('img_width'));
+            var gs1 = new GSlider(1, y + 28, h - 35,'drdown' + i, _extents[i-1].get('xmax') - 3 ,_extents[i-1].get('img_width'));
             // fix in case the pad_gs causes the max to go below the  xmax
             gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : (xmax < _extents[i-1].get('xmax') ? _extents[i-1].get('xmax') : xmax); 
-            trace(xmax + ", " + gs1.x);
             gs1.i = i - 1;
             gs1.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs1.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
@@ -394,7 +394,9 @@ class Gobe extends Sprite {
 
     public function sliderMouseUp(e:MouseEvent){
             e.target.stopDrag();
-            var xupdown = Math.round(pix2relative(e.stageX, e.target.i));
+            var x = e.target.x - 4;
+            if (e.target.i == 0) { x += e.target.width + 4; }
+            var xupdown = Math.round(pix2relative(x, e.target.i));
             ExternalInterface.call('set_genespace',e.target.id,xupdown);
     }
 
