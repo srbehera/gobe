@@ -267,7 +267,6 @@ class Gobe extends Sprite {
             var strdata:String = e.target.data;
             this.bpmins = [];
             this.bpmaxs = [];
-            trace(strdata);
             var json = Json.decode(strdata);
             _image_titles = json.titles;
             json.extents[0];// let the compiler know it's an array
@@ -369,8 +368,8 @@ class Gobe extends Sprite {
             gs0.i = i - 1;
             // make sure pad_gs cant cause the min to go beyond the gene
             gs0.x = xmin < 1 ? 1: (xmin > _extents[i-1].get('xmin') ?  _extents[i-1].get('xmin') : xmin);
-            trace(xmin + ", " + gs0.x);
             flash.Lib.current.addChild(gs0);
+
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
             var xmax = rw2pix(this.bpmaxs[i-1] - this.pad_gs, i - 1);
@@ -384,6 +383,8 @@ class Gobe extends Sprite {
 
 
             y+=h;
+            gs0.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
+            gs1.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
         }
     }
     // this is a hack for when a mouseup occurs off the slider. this
