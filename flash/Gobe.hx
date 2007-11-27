@@ -31,7 +31,7 @@ class Gobe extends Sprite {
     // base_url and n are sent in on the url.
     private var base_url:String;
     private var n:Int;
-    private var inset_gs:Int; // how many bp in to put the bars from the edge of the image
+    private var pad_gs:Int; // how many bp in to put the bars from the edge of the image
     private var img:String;
     private var tmp_dir:String;
     private var freezable:Bool; // does the user have permission to freeze this genespace?
@@ -213,7 +213,7 @@ class Gobe extends Sprite {
         this.base_url  = p.base_url;
         this.img       = p.img;
         this.tmp_dir   = p.tmp_dir;
-        this.inset_gs  = p.inset_gs;
+        this.pad_gs  = p.pad_gs;
         this.n         = p.n;
 
         this.genespace_id = Std.parseInt(p.gsid);
@@ -363,20 +363,20 @@ class Gobe extends Sprite {
             img.addEventListener(MouseEvent.CLICK, onClick);
             i++;
              
-            var xmin = rw2pix(this.bpmins[i - 1] + this.inset_gs, i - 1);
-            trace(xmin);
+            var xmin = rw2pix(this.bpmins[i - 1] + this.pad_gs, i - 1);
             var gs0 = new GSlider(1 , y + 28, h - 35,'drup' + i, 0, _extents[i-1].get('xmin') - 4);
             gs0.i = 1;
-            // make sure inset_gs cant cause the min to go beyond the gene
+            // make sure pad_gs cant cause the min to go beyond the gene
             gs0.x = xmin < 1 ? 1: (xmin > _extents[i-1].get('xmin') ?  _extents[i-1].get('xmin') : xmin);
+            trace(xmin + ", " + gs0.x);
             flash.Lib.current.addChild(gs0);
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
-            var xmax = rw2pix(this.bpmaxs[i-1] - this.inset_gs, i - 1);
+            var xmax = rw2pix(this.bpmaxs[i-1] - this.pad_gs, i - 1);
             var gs1 = new GSlider(1, y + 28, h - 35,'drdown' + i, _extents[i-1].get('xmax') + 4 ,_extents[i-1].get('img_width'));
-            trace(xmax);
-            // fix in case the inset_gs causes the max to go below the  xmax
+            // fix in case the pad_gs causes the max to go below the  xmax
             gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : (xmax < _extents[i-1].get('xmax') ? _extents[i-1].get('xmax') : xmax); 
+            trace(xmax + ", " + gs1.x);
             gs1.i = i - 1;
             gs1.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             gs1.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
