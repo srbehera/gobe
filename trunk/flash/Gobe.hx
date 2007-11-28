@@ -309,19 +309,14 @@ class Gobe extends Sprite {
     // (actually the e.globalX fo the mouseclick).
     // it determines whether to use up/downstream based on which side
     // of the anchor the click falls on.
-    public function pix2relative(px:Float, i:Int):Float{
+    public function pix2relative(px:Float, i:Int, updown:Int):Float{
         var ext = _extents[i];
         var click_bp =  px * ext.get('bpp');
-        if(px > ext.get('xmin') && px  < ext.get('xmax')){
-            return 1;
-        }
-        if(px < ext.get('xmin')) {
+        if(updown == -1) {
             var end_of_anchor_bp = ext.get('xmin') * ext.get('bpp');
             return end_of_anchor_bp - click_bp;
         }
-        var end_of_anchor_bp = ext.get('xmax') * ext.get('bpp');
-
-        return ( click_bp - end_of_anchor_bp);
+        return  click_bp - ext.get('xmax') * ext.get('bpp');
     }
 
     public function initImages(){
@@ -362,42 +357,83 @@ class Gobe extends Sprite {
             flash.Lib.current.addChildAt(ttf, 1);
             img.addEventListener(MouseEvent.CLICK, onClick);
             i++;
+            add_sliders(img, i, y, h);
              
+            img.addEventListener(MouseEvent.MOUSE_UP, imageMouseUp);
+            img.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
+            y+=h;
+        }
+    }
+    public function imageMouseUp(e:MouseEvent){ 
+        var i:Int;
+        for( i in 0 ... 1){
+            e.target.sliders[i]._buttonDown = true;
+            e.target.sliders[i].dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
+        }
+    }
+
+    public function add_sliders(img:GImage, i:Int, y:Int, h:Int){
             var xmin = rw2pix(this.bpmins[i - 1] + this.pad_gs, i - 1);
-            var gs0 = new GSlider(y + 28, h - 35, 'drup' + i, 0, _extents[i-1].get('xmin'));
+            //var gs0 = new GSlider(y + 24, h - 29, 'drup' + i, 0, _extents[i-1].get('xmin'));
+            var gs0 = new GSlider(y + 24, h - 29, 'drup' + i, 0, _extents[i-1].get('img_width') - 4);
             gs0.i = i - 1;
+            gs0.image = img;
             // make sure pad_gs cant cause the min to go beyond the gene
             gs0.x = xmin < 1 ? 1: (xmin > _extents[i-1].get('xmin') ?  _extents[i-1].get('xmin') : xmin);
+            img.sliders.push(gs0);
             flash.Lib.current.addChild(gs0);
 
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
-            gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
+            //gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
+
             var xmax = rw2pix(this.bpmaxs[i-1] - this.pad_gs, i - 1);
-            var gs1 = new GSlider(y + 28, h - 35,'drdown' + i, _extents[i-1].get('xmax') - 3 ,_extents[i-1].get('img_width'));
-            // fix in case the pad_gs causes the max to go below the  xmax
+            var gs1 = new GSlider(y + 24, h - 29,'drdown' + i, 4 ,_extents[i-1].get('img_width'));
             gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : (xmax < _extents[i-1].get('xmax') ? _extents[i-1].get('xmax') : xmax); 
             gs1.i = i - 1;
-            gs1.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
-            gs1.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
+            gs1.image = img;
             flash.Lib.current.addChild(gs1);
+            gs1.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
+            //gs1.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
+
+            img.sliders.push(gs1);
 
 
-            y+=h;
-            gs0.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
-            gs1.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
-        }
+            gs1.other = gs0;
+            gs0.other = gs1;
+
+
     }
     // this is a hack for when a mouseup occurs off the slider. this
     // seems to work ok. to trigger intuitive behavior.
     public function sliderMouseOut (e:MouseEvent){
-        if(Math.abs(e.target.lastX - e.stageX ) > 15){ sliderMouseUp(e);}
+        if(e.buttonDown){ return; }
+        if(!(Math.abs(e.target.lastX - e.stageX ) > 15)){ return; }
+        e.target._buttonDown = true;
+        sliderMouseUp(e);
     }
 
     public function sliderMouseUp(e:MouseEvent){
+            trace(e.target + ", " +  e.target.updown);
             e.target.stopDrag();
-            var x = e.target.x - 4;
-            if (e.target.i == 0) { x += e.target.width + 4; }
-            var xupdown = Math.round(pix2relative(x, e.target.i));
+            if(!Reflect.hasField(e.target, '_buttonDown')){ return; }
+            if(!e.target._buttonDown){ return; }
+            e.target._buttonDown = false;
+            trace('in');
+
+            if( e.target.updown == 1 && e.target.x - 5 < e.target.other.x){
+                e.target.other.x = e.target.x - e.target.updown * 15;
+                e.target.other._buttonDown = true;
+                e.target.other.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
+            }
+            else if( e.target.updown == -1 && e.target.x + 5 > e.target.other.x){
+                e.target.other.x = e.target.x - e.target.updown * 15;
+                e.target.other._buttonDown = true;
+                e.target.other.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
+            }
+
+            var x = e.target.x;
+            if (e.target.updown == -1) { x += e.target.width; }
+            var xupdown = Math.round(pix2relative(x, e.target.i, e.target.updown));
             ExternalInterface.call('set_genespace',e.target.id,xupdown);
     }
 
@@ -449,19 +485,24 @@ class GLine extends Shape {
 class GSlider extends Sprite {
     // id is the string (drup1,drdown1, drup2, or drdown2)
     public var id:String;
+    public var updown:Int;
     public var bounds:Rectangle;
+    public var other:GSlider;
+    public var image:GImage;
+    private var _buttonDown:Bool;
     public var lastX:Float;
     public var i:Int; // the index of the image it's on
     public var gobe:Gobe;
     public function new(y0:Float, h:Float, id:String, bounds_min:Float, bounds_max:Float) {
         super();
         this.id = id;
-        var updown = 1;
+        this.updown = 1;
         if(id.indexOf('up') == 2){ //drup
-            updown = -1;
+            this.updown = -1;
         }
             
         var g = this.graphics;
+        _buttonDown = true;
         bounds = new Rectangle(bounds_min,y0,bounds_max,0);
         // draw the half-circle
         g.moveTo(0, 0);
@@ -482,9 +523,11 @@ class GSlider extends Sprite {
     }
 
     public function sliderMouseMove (e:MouseEvent){
+        if(! this._buttonDown){ return; }
         lastX = e.stageX;
     }
     public function sliderMouseDown(e:MouseEvent){
+            this._buttonDown = true;
             e.target.startDrag(false, bounds);
     }
 }
@@ -493,15 +536,19 @@ class GImage extends Sprite {
 
     private var _imageLoader:Loader;
     private var _bitmap:BitmapData;
+
+    public  var sliders:Array<GSlider>;
     public  var image:Bitmap;
     public  var url:String;
     public  var i:Int;
+
 
 
     public function new(url:String,i:Int){
         super();
         this.url = url;
         this.i   = i;
+        sliders = new Array<GSlider>();
         _imageLoader = new Loader();
         _imageLoader.load(new URLRequest(url));
         _imageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, onComplete);
