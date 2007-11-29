@@ -366,7 +366,7 @@ class Gobe extends Sprite {
     }
     public function imageMouseUp(e:MouseEvent){ 
         var i:Int;
-        for( i in 0 ... 1){
+        for( i in 0 ... 2){
             e.target.sliders[i]._buttonDown = true;
             e.target.sliders[i].dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
         }
@@ -418,7 +418,6 @@ class Gobe extends Sprite {
             if(!Reflect.hasField(e.target, '_buttonDown')){ return; }
             if(!e.target._buttonDown){ return; }
             e.target._buttonDown = false;
-            trace('in');
 
             if( e.target.updown == 1 && e.target.x - 5 < e.target.other.x){
                 e.target.other.x = e.target.x - e.target.updown * 15;
