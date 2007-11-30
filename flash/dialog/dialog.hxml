@@ -1,0 +1,7 @@
+-swf dialog.swf
+-swf-version 9
+-main Dialog
+-lib arctic
+-swf-header 400:600:32
+--flash-strict
+#--no-traces
