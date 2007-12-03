@@ -1,0 +1,18 @@
+<html>
+<head>
+<script src="../../static/swfobject.js"></script>
+</head>
+<body>
+    <div id="flashcontent" style="z-index=0;position:absolute">
+        <strong>You need to upgrade your Flash Player</strong>
+    </div>
+
+    <script type="text/javascript">
+        // <![CDATA[
+        var so = new SWFObject("dialog.swf", "dialog", 400, 600, "9", "#FFFFFF");
+        so.write("flashcontent");
+        
+        // ]]>
+    </script>
+</body>
+</html>
