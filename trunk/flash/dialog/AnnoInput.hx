@@ -50,8 +50,6 @@ class AnnoInput extends MovieClip {
 
     function new (mc:MovieClip, genespace_id:Int) {
         super();
-
-
         // FComponents.FTextInputGFXRect = new flash.geom.Rectangle ( 3, 3, 58, 10 );
         // Add your own CSS style:
         var css = FComponents.css;

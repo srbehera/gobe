@@ -26,7 +26,7 @@ import Json;
 class Gobe extends Sprite {
 
     public static var ctx = new LoaderContext(true);
-    private var line_width:Int;
+    //private var line_width:Int;
 
     // base_url and n are sent in on the url.
     private var base_url:String;
@@ -41,9 +41,9 @@ class Gobe extends Sprite {
 
     private var _heights:Array<Int>;
 
-    private var rect:QueryBox;
+    private var qbx:QueryBox;
     // hold the hsps so we know if one contained a click
-    public var _rectangles:Array<GRect>; 
+    public var _qbxangles:Array<GRect>; 
     public var _lines:Array<GLine>; 
 
     private var _all:Bool;
@@ -63,14 +63,14 @@ class Gobe extends Sprite {
     }
     public function clearGraphics(e:MouseEvent){
         var r:GRect; 
-        for(r in _rectangles){
+        for(r in _qbxangles){
             flash.Lib.current.removeChild(r);
         }
         var l:GLine; 
         for(l in _lines){
             flash.Lib.current.removeChild(l);
         }
-        _rectangles = [];
+        _qbxangles = [];
         _lines = [];
     }
     private function query(e:MouseEvent){
@@ -82,14 +82,14 @@ class Gobe extends Sprite {
         var removed = false;
         if(! e.shiftKey){
             var r:GRect; var i:Int = 0;
-            for(r in _rectangles){
-               // removed the rectangle (and pair) that was clicked on.
+            for(r in _qbxangles){
+               // removed the qbxangle (and pair) that was clicked on.
                if(r.hitTestPoint(e.stageX, e.stageY)){
                     var pair_idx = i % 2 == 0 ? i : i - 1;
-                    var rects = _rectangles.splice(pair_idx, 2);
-                    flash.Lib.current.removeChild(rects[1]);
-                    flash.Lib.current.removeChild(rects[0]);
-                    // one line per 2 rectangles.
+                    var qbxs = _qbxangles.splice(pair_idx, 2);
+                    flash.Lib.current.removeChild(qbxs[1]);
+                    flash.Lib.current.removeChild(qbxs[0]);
+                    // one line per 2 qbxangles.
                     var lidx = Math.floor(i/2);
                     flash.Lib.current.removeChild(_lines.splice(lidx, 1)[0]);
                     removed = true;
@@ -97,7 +97,7 @@ class Gobe extends Sprite {
                } else { i++;  }
             }
             if(removed) { return; }
-            rect.tf.text = '';
+            qbx.tf.text = '';
             url += '&x=' + e.localX;
             this._all = false;
         } 
@@ -120,9 +120,9 @@ class Gobe extends Sprite {
         var lcolor:Int;
         
         for(pair in json){
-            g.lineStyle(line_width);
-            rect.tf.htmlText = "<font color='#0000ff'><u><a target='_blank' href='" + pair.link + "'>full annotation</a></u></font>&#10;&#10;";
-            rect.tf.htmlText += pair.annotation;
+            g.lineStyle(qbx.line_width);
+            qbx.tf.htmlText = "<font color='#0000ff'><u><a target='_blank' href='" + pair.link + "'>full annotation</a></u></font>&#10;&#10;";
+            qbx.tf.htmlText += pair.annotation;
             if(! pair.has_pair){ continue; }
             for(hsp in Reflect.fields(pair.features)){
                  
@@ -140,16 +140,16 @@ class Gobe extends Sprite {
                 var w = coords[2] - coords[0];
                 var h = coords[3] - coords[1];
                 var pr:GRect;
-                // dont add a rectangle that's already drawn
+                // dont add a qbxangle that's already drawn
                 var seen = false;
-                for(pr in _rectangles){
+                for(pr in _qbxangles){
                     seen = x0 == pr.x0 && y0 == pr.y0 && w == pr.w; // && h == pr.h;
                     if(seen){break;}
                 }
                 if (! seen) {     
                     var r = new GRect(x0, y0 , w, h);
                     flash.Lib.current.addChild(r);
-                    _rectangles.push(r);
+                    _qbxangles.push(r);
                     gcoords.push([ Math.round(xy0.x)
                                  , Math.round(xy0.y)
                                  , Math.round(xy1.x)
@@ -176,7 +176,7 @@ class Gobe extends Sprite {
                         , (h0[1] + h0[3])/2
                         , (h1[0] + h1[2])/2
                         , (h1[1] + h1[3])/2
-                        , line_width
+                        , qbx.line_width
                         , lcolor
                         , db_id0
                         , db_id1
@@ -187,10 +187,10 @@ class Gobe extends Sprite {
 
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
-            rect.tf.htmlText = '<b>Not showing annotation for multiple hits.</b>';
+            qbx.tf.htmlText = '<b>Not showing annotation for multiple hits.</b>';
             return;
         }
-        rect.show();
+        qbx.show();
     }
 
 
@@ -209,7 +209,6 @@ class Gobe extends Sprite {
         var p = flash.Lib.current.loaderInfo.parameters;
 
         this.QUERY_URL = p.base_url + 'query.pl?';
-        line_width     = 1;
         this.base_url  = p.base_url;
         this.img       = p.img;
         this.tmp_dir   = p.tmp_dir;
@@ -224,18 +223,16 @@ class Gobe extends Sprite {
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
 
-        rect = new QueryBox(this.base_url, freezable);
-        rect.x =  1030;
-        rect.show();
-        _rectangles = [];
+        qbx = new QueryBox(this.base_url, freezable);
+        qbx.x =  1030;
+        qbx.show();
+        _qbxangles = [];
         _lines      = [];
         _extents    = [];
 
-        rect.plus.addEventListener(MouseEvent.CLICK, plusClick);
-        rect.minus.addEventListener(MouseEvent.CLICK, minusClick);
-        rect.clear_sprite.addEventListener(MouseEvent.CLICK, clearGraphics);
+        qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearGraphics);
         if(freezable){
-            rect.freeze.addEventListener(MouseEvent.CLICK, freezeSpace);
+            qbx.freeze.addEventListener(MouseEvent.CLICK, freezeSpace);
         }
     }
 
@@ -436,15 +433,6 @@ class Gobe extends Sprite {
             ExternalInterface.call('set_genespace',e.target.id,xupdown);
     }
 
-    private function plusClick(e:MouseEvent){
-        line_width += 1;
-        rect.tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
-    }
-    private function minusClick(e:MouseEvent){
-        if( line_width < 1){ return; }
-        line_width -= 1;
-        rect.tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
-    }
 }
 
 // instead of just drawing on the stage, we add a lightweight shape.
@@ -569,171 +557,3 @@ class GEvent extends Event {
         super(type);
     }
 }
-
-
-class QueryBox extends Sprite {
-    private var _width:Int;
-    private var _il:Loader;
-    private var _ilplus:Loader;
-    private var _ilminus:Loader;
-    private var _ilclear:Loader;
-    private var _height:Int;
-    private var _taper:Int;
-    private var _if:Loader;
-    private var _close:Sprite;
-    
-
-    public  var freeze:Sprite;
-    public  var tf:TextField;
-    public  var plus:Sprite;
-    public  var clear_sprite:Sprite;
-    public  var tf_size:TextField;
-    public  var minus:Sprite;
-
-    public function show(){
-        var g = this.graphics;
-        g.lineStyle(1,0x777777);
-        g.beginFill(0xcccccc);
-        g.drawRoundRect(0, 0, _width + 1, _height + 2 * _taper, _taper);
-        g.endFill();
-        this.addChild(tf);
-        this.addChild(freeze);
-        this.addChild(_close);
-        this.addChild(plus);
-        this.addChild(clear_sprite);
-        this.addChild(minus);
-        this.addChild(tf_size);
-    }
-
-    public function hide(){
-        this.removeChild(tf);
-        this.removeChild(_close);
-        this.removeChild(plus);
-        this.removeChild(freeze);
-        this.removeChild(minus);
-        this.removeChild(clear_sprite);
-        this.removeChild(tf_size);
-        this.graphics.clear();
-    }
-
-    public function new(base_url:String, freezable:Bool){
-        super();
-        _width  = 360;
-        _height = 630;
-        _taper  = 20;
-
-        addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
-            if(Std.is(e.target,QueryBox)){ e.target.startDrag(); }
-        });
-        addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent){
-            if(Std.is(e.target,QueryBox)){ e.target.stopDrag(); }
-        });
-
-
-        tf = new TextField();
-        tf.wordWrap   = true;
-        tf.border     = false;
-        tf.styleSheet = new StyleSheet();
-        tf.scrollH    = 10;
-        tf.scrollV    = 30;
-
-        tf.x = 1;
-        tf.y = _taper -1;
-
-        tf.width  = _width;
-        tf.height = _height;
-
-        tf.mouseWheelEnabled = true;
-        
-        tf.background      = true;
-        tf.backgroundColor = 0xFFFFFF;
-
-
-        tf_size = new TextField();
-        tf_size.wordWrap   = true;
-        tf_size.border     = false;
-        tf_size.width      = 90;
-        tf_size.height     = 30;
-        tf_size.htmlText   = "line width: <b>1</b>";
-        tf_size.x          = _width - 165;
-        tf_size.y          = 0;
-
-
-        var loader = new URLLoader();
-        loader.addEventListener(Event.COMPLETE, handleHtmlLoaded);
-        loader.load(new URLRequest(base_url + "docs/textfield.html"));
-        _close = new Sprite();
-        freeze = new Sprite();
-        plus = new Sprite();
-        minus = new Sprite();
-        clear_sprite = new Sprite();
-
-        _close.addEventListener(MouseEvent.CLICK, function (e:MouseEvent){
-            e.target.parent.hide();
-        });
-
-        if(freezable){
-            _if = new Loader();
-            _if.contentLoaderInfo.addEventListener(Event.COMPLETE, handleFreezeLoaded);
-            _if.load(new URLRequest(base_url + "static/save.gif"));
-        }
-            
-
-
-        _il = new Loader();
-        _il.contentLoaderInfo.addEventListener(Event.COMPLETE, handleCloseLoaded);
-        _il.load(new URLRequest(base_url + "static/close_button.gif"));
-
-        
-        _ilplus = new Loader();
-        _ilplus.contentLoaderInfo.addEventListener(Event.COMPLETE, handlePlusLoaded);
-        _ilplus.load(new URLRequest(base_url + "static/plus.gif"));
-
-
-
-        _ilminus = new Loader();
-        _ilminus.contentLoaderInfo.addEventListener(Event.COMPLETE, handleMinusLoaded);
-        _ilminus.load(new URLRequest(base_url + "static/minus.gif"));
-
-       
-        _ilclear = new Loader();
-        _ilclear.contentLoaderInfo.addEventListener(Event.COMPLETE, handleClearLoaded);
-        _ilclear.load(new URLRequest(base_url + "static/clear_button.gif"));
-
-        flash.Lib.current.addChild(this);
-
-    }
-    private function handleClearLoaded(e:Event){
-        clear_sprite.addChild(cast(_ilclear.content,Bitmap));
-        clear_sprite.x = 12;
-        clear_sprite.y = 1.5;
-    }
-
-    private function handleFreezeLoaded(e:Event){
-        freeze.addChild(cast(_if.content,Bitmap));
-        freeze.x = 90;
-        freeze.y = 1;
-
-    }
-    private function handleCloseLoaded(e:Event){
-        _close.addChild(cast(_il.content,Bitmap));
-        _close.x = _width - 20;
-        _close.y = 2.5;
-    }
-    private function handlePlusLoaded(e:Event){
-        plus.addChild(cast(_ilplus.content,Bitmap));
-        plus.x = _width - 35;
-        plus.y = 2.5;
-    }
-    private function handleMinusLoaded(e:Event){
-        minus.addChild(cast(_ilminus.content,Bitmap));
-        minus.x = _width - 50;
-        minus.y = 2.5;
-    }
-    public function handleHtmlLoaded(e:Event){
-        tf.text = "'" + e.target.data + "'";
-    }
-
-
-}
-
