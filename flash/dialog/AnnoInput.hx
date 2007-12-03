@@ -27,21 +27,21 @@ class AnnoInput extends MovieClip {
 
     static var keywords:Array<String> = ['BIGFOOT', 'APPRESSED', 'DUPLICATE HSPs', 'SPECIAL', 'NGCS NEARBY'];
     var keywords_label   : FLabel;
-    var keywords_cbxs    : FListView;
+    static var keywords_cbxs    : FListView;
     
     static var annos:Array<String> = ['EXON NOT CALLED', 'FALSE EXON CALLED', 'SPLITS AND FUSIONS', 'USED SB MODEL FOR MASK'];
     var anno_label       : FLabel;
-    var anno_cbxs        : FListView;
+    static var anno_cbxs        : FListView;
 
     var dups_label       : FLabel;
     var dups_cbxs        : FListView;
 
     var notes_label      : FLabel;
     //var notes_txt        : FTextInput;
-    var notes_txt        : flash.text.TextField;
+    static var notes_txt        : flash.text.TextField;
 
     var in_progress_label: FLabel;
-    var in_progress      : FCheckButton;
+    static var in_progress      : FCheckButton;
 
     var save_button      : FButton;
 
@@ -94,18 +94,25 @@ class AnnoInput extends MovieClip {
     }
 
     public function cnx_save(e: MouseEvent){
-        var kwds = new Array<String>();
-        var anns = [];
-        for(i in keywords_cbxs.selectedIndexes){ kwds.push(keywords[i]); }
-        for(i in anno_cbxs.selectedIndexes){ anns.push(annos[i]); }
-
-        var resp = new flash.net.Responder(function(r:Dynamic){trace(r);}, function(r){trace(r);});
-        cnx.save.call([{keywords:kwds, annos:anns, notes:notes_txt.text, in_progress: in_progress.checked}], function(s){trace(s);});
+        cnx.save.call([{
+             keywords:keywords_cbxs.selectedIndexes
+             ,annos:anno_cbxs.selectedIndexes
+             ,notes:notes_txt.text
+             ,in_progress: in_progress.checked}
+          ]
+          , function(s){trace(s);}
+       );
     }
 
-    public function cnx_load(genespace_id:Int){
+    private function cnx_load(genespace_id:Int){
         trace(genespace_id);
-        cnx.load.call([genespace_id], function(s:Dynamic){ trace(s); });
+        cnx.load.call([genespace_id], function(s:Dynamic){  
+            trace(Reflect.field(s, 'annos'));
+            anno_cbxs.setSelectedIndexes(Reflect.field(s, 'annos'));
+            keywords_cbxs.setSelectedIndexes(Reflect.field(s, 'keywords'));
+            notes_txt.text = Reflect.field(s, 'notes');
+            in_progress.setChecked(Reflect.field(s,'in_progress'));
+        });
     }
 
 

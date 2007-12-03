@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from pyamf.gateway.wsgi import WSGIGateway
-import pyamf.amf0
+import pyamf.amf3 # for some reason, have to import this...
 import sys
 
 def bagwrap(fn):
@@ -20,7 +20,7 @@ def save(*args):
 
 @bagwrap
 def load(genespace_id):
-    ret = {'notes':'SENT FROM SERVER','annos':[0, 3],'keywords':[2,1]}
+    ret = {'notes':'NEW SENT FROM SERVER','annos':[0, 1],'keywords':[2,1], 'in_progress':True}
     print >>sys.stderr, ret, type(ret)
     return ret
   
