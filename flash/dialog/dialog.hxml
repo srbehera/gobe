@@ -4,4 +4,5 @@
 -lib arctic
 -swf-header 400:600:32
 --flash-strict
+-D debug
 #--no-traces
