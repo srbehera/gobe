@@ -1,6 +1,0 @@
--swf-header 450:450:21:ffffff
--swf-version 9
--swf dialog.swf
--swf-lib skins/grayGlassSkin.swf
--lib fcomponentshx
--main AnnoInput

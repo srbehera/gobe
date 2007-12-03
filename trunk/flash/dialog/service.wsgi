@@ -20,7 +20,8 @@ def save(*args):
 
 @bagwrap
 def load(genespace_id):
-    ret = {'notes':'NEW SENT FROM SERVER','annos':[0, 1],'keywords':[2,1], 'in_progress':True}
+    ret = {'notes':'','annos':[],'keywords':[], 'in_progress':False}
+    #ret = {'notes':'NEW SENT FROM SERVER','annos':[0, 1],'keywords':[2,1], 'in_progress':False}
     print >>sys.stderr, ret, type(ret)
     return ret
   

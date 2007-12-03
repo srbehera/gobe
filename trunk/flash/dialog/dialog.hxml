@@ -1,8 +1,6 @@
--swf dialog.swf
+-swf-header 450:450:21:ffffff
 -swf-version 9
--main Dialog
--lib arctic
--swf-header 400:600:32
---flash-strict
--D debug
-#--no-traces
+-swf dialog.swf
+-swf-lib skins/grayGlassSkin.swf
+-lib fcomponentshx
+-main AnnoInput
