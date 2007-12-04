@@ -2,4 +2,6 @@
 -swf-version 9
 -main Gobe
 --flash-strict
+-swf-lib skins/grayGlassSkin.swf
+-lib fcomponentshx
 --no-traces

@@ -97,7 +97,7 @@ class Gobe extends Sprite {
                } else { i++;  }
             }
             if(removed) { return; }
-            qbx.tf.text = '';
+            qbx.info.text = '';
             url += '&x=' + e.localX;
             this._all = false;
         } 
@@ -121,8 +121,8 @@ class Gobe extends Sprite {
         
         for(pair in json){
             g.lineStyle(qbx.line_width);
-            qbx.tf.htmlText = "<font color='#0000ff'><u><a target='_blank' href='" + pair.link + "'>full annotation</a></u></font>&#10;&#10;";
-            qbx.tf.htmlText += pair.annotation;
+            qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
+            qbx.info.htmlText += "<p>" + pair.annotation + "</p>";
             if(! pair.has_pair){ continue; }
             for(hsp in Reflect.fields(pair.features)){
                  
@@ -187,7 +187,7 @@ class Gobe extends Sprite {
 
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
-            qbx.tf.htmlText = '<b>Not showing annotation for multiple hits.</b>';
+            qbx.info.htmlText = '<b>Not showing annotation for multiple hits.</b>';
             return;
         }
         qbx.show();
@@ -222,7 +222,7 @@ class Gobe extends Sprite {
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
-
+        trace(freezable);
         qbx = new QueryBox(this.base_url, freezable);
         qbx.x =  1030;
         qbx.show();
@@ -232,7 +232,6 @@ class Gobe extends Sprite {
 
         qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearGraphics);
         if(freezable){
-            qbx.freeze.addEventListener(MouseEvent.CLICK, freezeSpace);
         }
     }
 
@@ -410,7 +409,7 @@ class Gobe extends Sprite {
     }
 
     public function sliderMouseUp(e:MouseEvent){
-            trace(e.target + ", " +  e.target.updown);
+            //trace(e.target + ", " +  e.target.updown);
             e.target.stopDrag();
             if(!Reflect.hasField(e.target, '_buttonDown')){ return; }
             if(!e.target._buttonDown){ return; }
