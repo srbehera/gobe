@@ -10,6 +10,7 @@ use JSON::Syck;
 my $q = new CGI;
 print "Content-Type: text/html\n\n";
 
+
 my $tmpdir;
 if($ENV{SERVER_NAME} =~ /(toxic|synteny)/){
     $tmpdir = "/opt/apache/CoGe/";
@@ -92,7 +93,7 @@ if($all){
     $sth->execute($track, $track, $img_id);
 }
 else{
-    $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? + 2 > xmin AND ? - 2 < xmax AND ? BETWEEN ymin and ymax and image_id = ?");
+    $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? + 3 > xmin AND ? - 3 < xmax AND ? BETWEEN ymin and ymax and image_id = ?");
     $sth->execute($x, $x, $y, $img_id);
 }
 
