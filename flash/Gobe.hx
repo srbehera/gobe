@@ -231,6 +231,7 @@ class Gobe extends Sprite {
 
         qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearPanelGraphics);
         if(freezable){
+            ExternalInterface.call('setheight');
         }
     }
 
