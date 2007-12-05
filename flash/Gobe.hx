@@ -36,7 +36,7 @@ class Gobe extends Sprite {
     private var tmp_dir:String;
     public var db:String; // path to database
     private var freezable:Bool; // does the user have permission to freeze this genespace?
-    private var genespace_id:Int; // the id to link the cns's when freezing
+    public var genespace_id:Int; // the id to link the cns's when freezing
     private var bpmins:Array<Int>; //the left most bp of the image
     private var bpmaxs:Array<Int>; //the left most bp of the image
 
