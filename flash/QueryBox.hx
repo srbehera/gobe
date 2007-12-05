@@ -28,6 +28,7 @@ class QueryBox extends Sprite {
     
 
     public  var view:String;
+    public  var gobe:Gobe;
     public  var freezable:Bool;
     public  var  container:MovieClip;
     public  var info:TextField;
@@ -72,13 +73,14 @@ class QueryBox extends Sprite {
         flash.Lib.current.stage.align     = flash.display.StageAlign.TOP_LEFT;
         haxe.Firebug.redirectTraces();
 
-        var qbx = new QueryBox('../../', true);
+        var qbx = new QueryBox('../../', true, new Gobe());
         qbx.show();
     }
 
 
-    public function new(base_url:String, freezable:Bool){
+    public function new(base_url:String, freezable:Bool, gobe:Gobe){
         super();
+        this.gobe = gobe;
         this.freezable =freezable;
         _width  = 360;
         _height = 630;
@@ -109,7 +111,10 @@ class QueryBox extends Sprite {
         css.setStyle('sequence', { fontSize: 11, display:'inline'});
 
         addEventListener(MouseEvent.MOUSE_DOWN, function(e:MouseEvent){
-            if(Std.is(e.target,QueryBox)){ e.target.startDrag(); }
+            if(Std.is(e.target,QueryBox)){ 
+                e.target.startDrag();
+                flash.Lib.current.setChildIndex(e.target, flash.Lib.current.numChildren - 1);
+            }
         });
         addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent){
             if(Std.is(e.target,QueryBox)){ e.target.stopDrag(); }
@@ -139,7 +144,7 @@ class QueryBox extends Sprite {
         anno_mc = new MovieClip();
         anno_mc.y = _taper - 1;
         anno_mc.x = 10;
-        anno = new AnnoInput(anno_mc, 23);
+        anno = new AnnoInput(anno_mc, 2, this.gobe);
 
         tf_size = new TextField();
         tf_size.wordWrap   = true;

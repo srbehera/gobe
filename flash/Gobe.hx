@@ -34,6 +34,7 @@ class Gobe extends Sprite {
     private var pad_gs:Int; // how many bp in to put the bars from the edge of the image
     private var img:String;
     private var tmp_dir:String;
+    public var db:String; // path to database
     private var freezable:Bool; // does the user have permission to freeze this genespace?
     private var genespace_id:Int; // the id to link the cns's when freezing
     private var bpmins:Array<Int>; //the left most bp of the image
@@ -43,8 +44,9 @@ class Gobe extends Sprite {
 
     private var qbx:QueryBox;
     // hold the hsps so we know if one contained a click
-    public var _qbxangles:Array<GRect>; 
+    public var _rectangles:Array<GRect>; 
     public var _lines:Array<GLine>; 
+    public var panel:Sprite; // holds the lines.
 
     private var _all:Bool;
     private var imgs:Array<GImage>;
@@ -57,20 +59,11 @@ class Gobe extends Sprite {
     public function onClick(e:MouseEvent) {
         // only send the query to the server if they clicked on a
         // colored pixel or they hit the shift key.
-        if(e.shiftKey || e.target._bitmap.getPixel(e.localX, e.localY)){
-            query(e);
-        }
+        query(e);
     }
-    public function clearGraphics(e:MouseEvent){
-        var r:GRect; 
-        for(r in _qbxangles){
-            flash.Lib.current.removeChild(r);
-        }
-        var l:GLine; 
-        for(l in _lines){
-            flash.Lib.current.removeChild(l);
-        }
-        _qbxangles = [];
+    public function clearPanelGraphics(e:MouseEvent){
+        while(panel.numChildren != 0){ panel.removeChildAt(0); }
+        _rectangles = [];
         _lines = [];
     }
     private function query(e:MouseEvent){
@@ -82,16 +75,16 @@ class Gobe extends Sprite {
         var removed = false;
         if(! e.shiftKey){
             var r:GRect; var i:Int = 0;
-            for(r in _qbxangles){
+            for(r in _rectangles){
                // removed the qbxangle (and pair) that was clicked on.
                if(r.hitTestPoint(e.stageX, e.stageY)){
                     var pair_idx = i % 2 == 0 ? i : i - 1;
-                    var qbxs = _qbxangles.splice(pair_idx, 2);
-                    flash.Lib.current.removeChild(qbxs[1]);
-                    flash.Lib.current.removeChild(qbxs[0]);
-                    // one line per 2 qbxangles.
+                    var qbxs = _rectangles.splice(pair_idx, 2);
+                    panel.removeChild(qbxs[1]);
+                    panel.removeChild(qbxs[0]);
+                    // one line per 2 rectangles.
                     var lidx = Math.floor(i/2);
-                    flash.Lib.current.removeChild(_lines.splice(lidx, 1)[0]);
+                    panel.removeChild(_lines.splice(lidx, 1)[0]);
                     removed = true;
                     i--;
                } else { i++;  }
@@ -111,59 +104,34 @@ class Gobe extends Sprite {
         queryLoader.load(new URLRequest(url));
     }
 
-    private function handleQueryReturn(e:Event){
-        var json:Array<Dynamic> = Json.decode(e.target.data).resultset;
-        gcoords = new Array<Array<Int>>();
-        var pair:Hash<Dynamic>;
+    public function drawHsp(coords:Array<Int>, img_idx:Int){
+        var img:GImage = imgs[img_idx];
+        var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
+        var xy1 = img.localToGlobal(new flash.geom.Point(coords[2],coords[3]));
 
-        var g = flash.Lib.current.graphics;
-        var lcolor:Int;
-        
-        for(pair in json){
-            g.lineStyle(qbx.line_width);
-            qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
-            qbx.info.htmlText += "<p>" + pair.annotation + "</p>";
-            if(! pair.has_pair){ continue; }
-            for(hsp in Reflect.fields(pair.features)){
-                 
-                var coords:Array<Dynamic> = Reflect.field(pair.features, hsp);
-                // converty key2 to 2; because that's the image we need.
-                hsp = hsp.substr(3); 
-                var db_id = coords[4]; // this links to the id in the image_data table
-               
-                var img = this.imgs[Std.parseInt(hsp) - 1];
-                var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
-                var xy1 = img.localToGlobal(new flash.geom.Point(coords[2],coords[3]));
+        var db_id = coords[4]; // this links to the id in the image_data table
+        var x0 = xy0.x;
+        var y0 = xy0.y;
+        var w = coords[2] - coords[0];
+        var h = coords[3] - coords[1];
+        var pr:GRect;
+        // dont add a rectangle that's already drawn
+        var r = new GRect(x0, y0 , w, h);
+        if(panel.contains(r)){ return; }
+        panel.addChild(r);
+        _rectangles.push(r);
+        gcoords.push([ Math.round(xy0.x)
+                        , Math.round(xy0.y)
+                        , Math.round(xy1.x)
+                        , Math.round(xy1.y)
+                        , db_id
+            ]);
 
-                var x0 = xy0.x;
-                var y0 = xy0.y;
-                var w = coords[2] - coords[0];
-                var h = coords[3] - coords[1];
-                var pr:GRect;
-                // dont add a qbxangle that's already drawn
-                var seen = false;
-                for(pr in _qbxangles){
-                    seen = x0 == pr.x0 && y0 == pr.y0 && w == pr.w; // && h == pr.h;
-                    if(seen){break;}
-                }
-                if (! seen) {     
-                    var r = new GRect(x0, y0 , w, h);
-                    flash.Lib.current.addChild(r);
-                    _qbxangles.push(r);
-                    gcoords.push([ Math.round(xy0.x)
-                                 , Math.round(xy0.y)
-                                 , Math.round(xy1.x)
-                                 , Math.round(xy1.y)
-                                 , db_id
-                        ]);
-                }
+    }
 
-            }
-            lcolor = pair.color;
-        }
-
-
+    public function drawLines(?lcolor:Int){
         // draw lines between hsps.
+        if(lcolor == null){ lcolor = 0xFF6464; }
         var j = 0;
         while(j<gcoords.length){
             var h0 = gcoords[j];
@@ -181,10 +149,36 @@ class Gobe extends Sprite {
                         , db_id0
                         , db_id1
                     );
-            _lines.push(l);
-            flash.Lib.current.addChild(l);
+            if(!panel.contains(l)){
+                panel.addChild(l);
+                _lines.push(l);
+            }
         }
+    }
 
+    private function handleQueryReturn(e:Event){
+        var json:Array<Dynamic> = Json.decode(e.target.data).resultset;
+        gcoords = new Array<Array<Int>>();
+        var pair:Hash<Dynamic>;
+
+        var lcolor:Int;
+        for(pair in json){
+            qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
+            qbx.info.htmlText += "<p>" + pair.annotation + "</p>";
+            if(! pair.has_pair){ continue; }
+
+            var idx:Int = 0;
+            for(hsp in Reflect.fields(pair.features)){
+                var coords:Array<Int> = Reflect.field(pair.features, hsp);
+                // converty key2 to 2; because that's the image we need. cant use '1' as a key because of
+                // haxe bug.
+                hsp = hsp.substr(3); 
+                var img_idx = Std.parseInt(hsp) - 1;
+                drawHsp(coords, img_idx);
+            }
+            lcolor = pair.color;
+        }
+        drawLines(lcolor);
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
             qbx.info.htmlText = '<b>Not showing annotation for multiple hits.</b>';
@@ -208,29 +202,34 @@ class Gobe extends Sprite {
         //ExternalInterface.call('alert','hiiii');
         var p = flash.Lib.current.loaderInfo.parameters;
 
+        gcoords = new Array<Array<Int>>();
+
         this.QUERY_URL = p.base_url + 'query.pl?';
         this.base_url  = p.base_url;
         this.img       = p.img;
         this.tmp_dir   = p.tmp_dir;
         this.pad_gs  = p.pad_gs;
         this.n         = p.n;
+        this.db = this.tmp_dir + '/' + this.img + '.sqlite';
 
         this.genespace_id = Std.parseInt(p.gsid);
         this.freezable = p.freezable == 'false' ? false : (this.genespace_id == 0) ? false : true;
 
+        panel = new Sprite(); 
+        addChild(panel);
         _heights = [];
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
         trace(freezable);
-        qbx = new QueryBox(this.base_url, freezable);
+        qbx = new QueryBox(this.base_url, freezable, this);
         qbx.x =  1030;
         qbx.show();
-        _qbxangles = [];
+        _rectangles = [];
         _lines      = [];
         _extents    = [];
 
-        qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearGraphics);
+        qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearPanelGraphics);
         if(freezable){
         }
     }
@@ -288,9 +287,6 @@ class Gobe extends Sprite {
                 _extents[i].set('idx', exts.idx);
                 ++i;
             }
-            trace(_extents[0]);
-            trace(_extents[1]);
-            
             initImages();
     }
 
@@ -351,6 +347,7 @@ class Gobe extends Sprite {
             ttf.autoSize         = flash.text.TextFieldAutoSize.LEFT;
 
             flash.Lib.current.addChildAt(ttf, 1);
+            // TODO move this onto the Rectangles.
             img.addEventListener(MouseEvent.CLICK, onClick);
             i++;
             add_sliders(img, i, y, h);
@@ -358,6 +355,10 @@ class Gobe extends Sprite {
             img.addEventListener(MouseEvent.MOUSE_UP, imageMouseUp);
             img.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
             y+=h;
+        }
+        if(freezable){
+           qbx.anno.python_load(genespace_id);
+           trace('called python_load');
         }
     }
     public function imageMouseUp(e:MouseEvent){ 
