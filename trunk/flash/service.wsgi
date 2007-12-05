@@ -5,8 +5,7 @@ import pyamf.amf3 # for some reason, have to import this...
 import sys, os
 import sqlite3
 
-
-log = open('/tmp/tracking.log', 'a')
+dbpath = "/opt/apache/CoGe/data/sqlite/pair_tracking.db"
 
 def bagwrap(fn):
     def newfn(*args, **kwargs):
@@ -19,7 +18,7 @@ def save(*args, **kwargs):
     """called when user clicks [save] in the flash annotation swf. saves changes to db.
     args[0] looks like {'keywords':[0,2, ...], 'annos':[1,2,...], 'notes':'asdf'}
     """
-    tracking_db = sqlite3.connect("/tmp/sqlite/pair_tracking.db")
+    tracking_db = sqlite3.connect(dbpath)
     tracking_db.row_factory = sqlite3.Row
     tcur = tracking_db.cursor()
     data = args[0]
@@ -40,7 +39,8 @@ def save(*args, **kwargs):
     data = dict(list(data.iteritems()))
     if not 'user' in data: data['user'] = 'unknown'
 
-    datasets = [x[0] for x in tmp_db.execute('SELECT DISTINCT(dsid) FROM image_info ORDER BY dsid').fetchall()]
+    datasets = [x[0] for x in tmp_db.execute('SELECT DISTINCT(dsid) FROM image_info ORDER BY id').fetchall()]
+    print >>sys.stderr, datasets
 
     qsql = 'SELECT * FROM image_data WHERE id IN (' + ",".join([str(p[0]) for p in data['hsp_ids']]) + ');';
     ssql = 'SELECT * FROM image_data WHERE id IN (' + ",".join([str(p[1]) for p in data['hsp_ids']]) + ');';
@@ -73,7 +73,7 @@ def remove(genespace_id):
 @bagwrap
 def load(genespace_id, tmp_db):
     genespace_id = int(genespace_id)
-    tracking_db = sqlite3.connect("/tmp/sqlite/pair_tracking.db")
+    tracking_db = sqlite3.connect(dbpath)
     tracking_db.row_factory = sqlite3.Row
     tcur = tracking_db.cursor()
     info = tcur.execute('SELECT * FROM genespace WHERE genespace_id = ?', (genespace_id,)).fetchone()
@@ -102,11 +102,14 @@ def load(genespace_id, tmp_db):
     anns = [int(k) for k in  info['annotation'].split("|") if k]
     tracking_db.close()
     return {'notes': info['notes'] ,'annos':anns,'keywords':kwds, 'revisit':bool(info['revisit']), 'features': coordslist}
-  
+
+def new_genespace(qanchor, sanchor):
+    return [qanchor, sanchor]
 
 application = WSGIGateway({
     'save': save
     ,'remove': remove
+    ,'new_genespace': new_genespace
     ,'load': load
     })
 
