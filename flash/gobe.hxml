@@ -4,4 +4,4 @@
 --flash-strict
 -swf-lib skins/grayGlassSkin.swf
 -lib fcomponentshx
-#--no-traces
+--no-traces
