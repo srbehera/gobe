@@ -1,0 +1,191 @@
+import fcomponentshx.FComponents;
+import fcomponentshx.FLabel;
+import fcomponentshx.FTextInput;
+import fcomponentshx.FListView;
+import fcomponentshx.FCheckButton;
+import fcomponentshx.FButton;
+
+import flash.display.MovieClip;
+import flash.display.DisplayObjectContainer;
+import flash.display.Sprite;
+import flash.events.MouseEvent;
+import flash.events.Event;
+
+
+class FComboBoxHeaderArrowGFX extends MovieClip{}
+class FComboBoxHeaderGFX extends MovieClip{}
+class FListViewGFX extends MovieClip{}
+class FRadioButtonCheckedGFX extends MovieClip{}
+class FRadioButtonUncheckedGFX extends MovieClip{}
+class FCheckButtonCheckedGFX extends MovieClip{}
+class FCheckButtonUncheckedGFX extends MovieClip{}
+class FButtonGFX extends MovieClip{}
+class FTextInputGFX extends MovieClip{}
+class FProgressBarGFX extends MovieClip{}
+class FProgressBarFillGFX extends MovieClip{}
+
+class AnnoInput extends MovieClip {
+
+    static var keywords:Array<String> = ['BIGFOOT', 'APPRESSED', 'DUPLICATE HSPs', 'SPECIAL', 'NGCS NEARBY'];
+    var keywords_label          : FLabel;
+    static var keywords_cbxs    : FListView;
+    
+    static var annos:Array<String> = ['EXON NOT CALLED', 'FALSE EXON CALLED', 'SPLITS AND FUSIONS', 'USED SB MODEL FOR MASK'];
+    var anno_label              : FLabel;
+    static var anno_cbxs        : FListView;
+
+    var q_dups_label            : FLabel;
+    var q_dups_txt              : FTextInput;
+    var s_dups_label            : FLabel;
+    var s_dups_txt              : FTextInput;
+
+
+    var notes_label             : FLabel;
+    static var notes_txt        : flash.text.TextField;
+
+    var revisit_label: FLabel;
+    static var revisit          : FCheckButton;
+
+    var save_button             : FButton;
+    var remove_button           : FButton;
+
+    var new_genespace_button    : FButton;
+
+
+
+    public var gobe:Gobe;
+
+    static var python:haxe.remoting.AsyncConnection = haxe.remoting.AsyncConnection.amfConnect( 'service.wsgi' );
+    
+    var genespace_id:Int;
+
+    public function new (mc:MovieClip, genespace_id:Int, gobe:Gobe) {
+        super();
+        this.gobe = gobe;
+        this.genespace_id = genespace_id;
+        // FComponents.FTextInputGFXRect = new flash.geom.Rectangle ( 3, 3, 58, 10 );
+        // Add your own CSS style:
+        var css = FComponents.css;
+        css.setStyle( "header", { fontFamily  : "Arial", fontStyle   : "italic", fontSize    : 15, display     : "inline" });
+        css.setStyle( "title", { fontFamily  : "Arial", fontStyle   : "italic", fontSize    : 20, display     : "inline" });
+        css.setStyle( "p", { color       : "#333333", fontWeight  : "bold", fontFamily  : "Arial", fontSize    : 10 }); 
+        css.setStyle( "e", { color       : "#ff3333", fontWeight  : "bold", fontFamily  : "Arial", fontSize    : 14 }); 
+
+        var x:Float = 0.0;
+        keywords_label = new FLabel( mc, "<header>Keywords</header>", { x: x, y: null } );
+        keywords_cbxs  = new FListView( mc, keywords, keywords, { x: x, y : 20.0 }, null, true, true );
+
+        x = 150.0; 
+        anno_label = new FLabel(mc, "<header>Annotation Issues</header>", { x: x, y: null } );
+        anno_cbxs  = new FListView(mc, annos, annos, { x : x, y : 20.0 }, null, true, true );
+
+        var y = 105.0;
+        q_dups_label = new FLabel(mc, "<header>Duplicates on Query:</header>", {x: x - 25., y: y});
+        q_dups_txt = new FTextInput(mc, "0", {x: x + 170., y: y + 3}, 18, 18);
+        y += 20.0;
+        s_dups_label = new FLabel(mc, "<header>Duplicates on Subject:</header>", {x: x - 25., y: y});
+        s_dups_txt = new FTextInput(mc, "0", {x: x + 170., y: y + 3}, 18, 18);
+
+
+        x = 0.0;  
+        y += 20;
+        notes_label = new FLabel(mc, "<header>Notes</header>", { x: x, y: y } );
+        notes_txt = new ATextInput(mc, "", x, y + 20);
+
+        y += 135.0;
+        revisit = new FCheckButton(mc, "REVISIT", { x:x, y: y});
+        save_button = new FButton(mc, "<header>Save</header>", {x: 90.0 , y: y}, python_save);
+
+        remove_button = new FButton(mc, "<header>Remove Genespace</header>", {x: 150.0 , y: y}, python_remove);
+
+        new_genespace_button = new FButton(mc, "<e>New Genespace</e>", {  x: 150.0, y: y + 30.}, python_new_genespace);
+                        
+    }
+
+    public function python_new_genespace(e:MouseEvent){
+       var qanchor = 0;
+       var sanchor = 0;
+       python.new_genespace.call([qanchor, sanchor], function(s){
+            trace("TODO:" + s); 
+       });
+    }
+
+    public function python_remove(e: MouseEvent){
+        python.remove.call([genespace_id], function(s){
+            trace("TODO:" + s);
+        });
+    }
+    public function python_save(e: MouseEvent){
+        trace(genespace_id);
+
+        var hsp_ids = new Array<Array<Int>>();
+        for(gl in gobe._lines){
+            hsp_ids.push([gl.db_id1, gl.db_id2]);
+        }
+        python.save.call([{
+             genespace_id:genespace_id
+             ,keywords:keywords_cbxs.selectedIndexes
+             ,annos:anno_cbxs.selectedIndexes
+             ,notes:notes_txt.text
+             ,revisit: revisit.checked
+             ,hsp_ids: hsp_ids
+             ,tmp_db: gobe.db
+          }]
+          , function(s){trace(s);}
+       );
+    }
+
+    
+   public function python_load_callback(s:Dynamic){  
+        if(!s) { return; }
+        anno_cbxs.setSelectedIndexes(Reflect.field(s, 'annos'));
+        keywords_cbxs.setSelectedIndexes(Reflect.field(s, 'keywords'));
+        notes_txt.text = Reflect.field(s, 'notes');
+        var features:Array<Dynamic> = Reflect.field(s, 'features');
+        // TODO: only do this on the initial load. otherwise, it
+        // will overwrite the changes.
+        for(feat in features){
+            // TODO: why do i have to reverse these? bug elsewhere.
+            for(img in ['img1', 'img2']){
+                var coords:Array<Int> = Reflect.field(feat, img);
+                var img_idx:Int = Std.parseInt(img.substr(3)) - 1;
+                gobe.drawHsp(coords, img_idx);
+            }
+        }
+        gobe.drawLines();
+        revisit.setChecked(Reflect.field(s,'revisit'));
+    }
+
+    public function python_load(genespace_id:Int){
+        python.load.call([genespace_id, gobe.db], python_load_callback);
+    }
+
+    static function main() {
+        flash.Lib.current.stage.scaleMode = flash.display.StageScaleMode.NO_SCALE;
+        flash.Lib.current.stage.align     = flash.display.StageAlign.TOP_LEFT;
+        haxe.Firebug.redirectTraces();
+        var k:Int = 24;
+        var v = new AnnoInput(flash.Lib.current, k, new Gobe());
+    }
+}
+
+
+class ATextInput extends flash.text.TextField {
+    public function new(mc:MovieClip, txt:String,x:Float, y:Float){
+        super();
+        this.x = x;
+        this.y = y;
+        this.text = txt + "\n\n\n\n\n\n";
+        this.multiline = true;
+        this.type = flash.text.TextFieldType.INPUT;
+        this.autoSize = flash.text.TextFieldAutoSize.NONE;
+        this.wordWrap = true;
+        this.width = 340;
+        this.border  = true;
+        this.background = true;
+        this.backgroundColor = 0xf6f6f6;
+
+        this.defaultTextFormat = new flash.text.TextFormat("Arial", 16);
+        mc.addChild(this);
+    }
+}
