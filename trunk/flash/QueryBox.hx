@@ -144,7 +144,7 @@ class QueryBox extends Sprite {
         anno_mc = new MovieClip();
         anno_mc.y = _taper - 1;
         anno_mc.x = 10;
-        anno = new AnnoInput(anno_mc, 2, this.gobe);
+        anno = new AnnoInput(anno_mc, this.gobe.genespace_id, this.gobe);
 
         tf_size = new TextField();
         tf_size.wordWrap   = true;
