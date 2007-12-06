@@ -34,6 +34,8 @@ def save(*args, **kwargs):
                    ))
     tracking_db.commit()
     tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + data['tmp_db']
+    #tmp_db = '/var/www/gobe/trunk/' + data['tmp_db']
+    #print tmp_db
     tmp_db = sqlite3.connect(tmp_db)
     tmp_db.row_factory = sqlite3.Row
     tmp_cur = tmp_db.cursor()
@@ -50,6 +52,18 @@ def save(*args, **kwargs):
     # get rid of the old ones. but save history in genespace
     tcur.execute("UPDATE pair SET previous_genespace_id = genespace_id WHERE genespace_id = ?", (data['genespace_id'],))
     tcur.execute("UPDATE pair SET genespace_id = -1 WHERE genespace_id = ?", (data['genespace_id'],))
+
+    ##################################################################################################
+    # save the extents of the genespace.                                                             #
+    ##################################################################################################
+    tcur.execute("INSERT INTO PAIR VALUES(NULL, 'genespace', -5, ?, NULL, NULL, ?)"
+            , (data['genespace_id'], data['user']))
+    gspair_id = tcur.lastrowid
+    tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 'q', -5, ?, ?, NULL)"
+                , (datasets[0], gspair_id, data['qextents'][0], data['qextents'][1]))
+    tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 's', -5, ?, ?, NULL)"
+                , (datasets[0], gspair_id, data['sextents'][0], data['sextents'][1]))
+
 
     for qloc, sloc in zip(tmp_db.execute(qsql).fetchall(), tmp_db.execute(ssql).fetchall()):
         tcur.execute("INSERT INTO pair VALUES(NULL, ?, -5, ?, NULL, NULL, ?)"
@@ -119,6 +133,7 @@ application = WSGIGateway({
 if __name__ == "__main__":
     
 
-    #print save({'notes': u'asdfasdf\\\\rwerwer', 'annos': [1, 2], 'revisit': False, 'genespace_id': 2, 'tmp_db': u'tmpdir//GEvo_Fkdb8kIf.sqlite', 'keywords': [1, 2], 'hsp_ids': [[56, 158], [55, 159], [60, 160], [62, 161], [61, 162], [69, 163], [68, 164], [70, 165], [59, 166], [66, 167], [57, 168], [64, 169], [74, 170], [78, 171], [75, 172], [77, 173], [71, 174], [73, 175], [65, 176], [79, 177], [72, 178], [63, 179], [58, 180], [76, 181], [67, 182], [86, 183], [80, 184], [93, 185], [81, 186], [90, 187], [85, 188], [91, 189], [87, 190], [88, 191], [82, 192], [84, 193], [83, 194], [92, 195], [89, 196]]},)
+    print save({'tmp_db': u'tmpdir//GEvo_Fkdb8kIf.sqlite', 'notes': u'sfasd', 'annos': [], 'sextents': [8458456, 8489597], 'revisit': False, 'qextents': [1078486, 1098951], 'sdups': 1, 'genespace_id': 5, 'qdups': 0, 'keywords': [2], 'hsp_ids':
+        [[55, 159], [62, 161]]},)
     #print load(2, 'tmpdir/GEvo_Fkdb8kIf.sqlite')
     print
