@@ -291,8 +291,8 @@ class Gobe extends Sprite {
             initImages();
     }
 
-    public function pix2rw(px:Float, i:Int):Float {
-        return px * _extents[i].get('bpp');
+    public function pix2rw(px:Float, i:Int):Int {
+        return Math.round(_extents[i].get('bpmin') + px * _extents[i].get('bpp'));
     }
     public function rw2pix(rw:Float, i:Int):Float {
         return (rw - _extents[i].get('bpmin')) / _extents[i].get('bpp');
@@ -368,6 +368,13 @@ class Gobe extends Sprite {
             e.target.sliders[i]._buttonDown = true;
             e.target.sliders[i].dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
         }
+    }
+    public function get_slider_locs_rw(i:Int){
+        var img = imgs[i];
+        var rw0 = pix2rw(img.sliders[0].x, i);
+        var rw1 = pix2rw(img.sliders[1].x, i);
+        return [rw0, rw1];
+
     }
 
     public function add_sliders(img:GImage, i:Int, y:Int, h:Int){
