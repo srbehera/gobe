@@ -286,6 +286,7 @@ class Gobe extends Sprite {
                 _extents[i].set('xmin', exts.xmin);
                 _extents[i].set('xmax', exts.xmax);
                 _extents[i].set('idx', exts.idx);
+                trace(_extents[i]);
                 ++i;
             }
             initImages();
