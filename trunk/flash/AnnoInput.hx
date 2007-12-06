@@ -34,10 +34,10 @@ class AnnoInput extends MovieClip {
     var anno_label              : FLabel;
     static var anno_cbxs        : FListView;
 
-    var q_dups_label            : FLabel;
-    var q_dups_txt              : FTextInput;
-    var s_dups_label            : FLabel;
-    var s_dups_txt              : FTextInput;
+    var qdups_label            : FLabel;
+    var qdups_txt              : FTextInput;
+    var sdups_label            : FLabel;
+    var sdups_txt              : FTextInput;
 
 
     var notes_label             : FLabel;
@@ -80,11 +80,11 @@ class AnnoInput extends MovieClip {
         anno_cbxs  = new FListView(mc, annos, annos, { x : x, y : 20.0 }, null, true, true );
 
         var y = 105.0;
-        q_dups_label = new FLabel(mc, "<header>Duplicates on Query:</header>", {x: x - 25., y: y});
-        q_dups_txt = new FTextInput(mc, "0", {x: x + 170., y: y + 3}, 18, 18);
+        qdups_label = new FLabel(mc, "<header>Duplicates on Query:</header>", {x: x - 25., y: y});
+        qdups_txt = new FTextInput(mc, "0", {x: x + 170., y: y + 3}, 18, 18);
         y += 20.0;
-        s_dups_label = new FLabel(mc, "<header>Duplicates on Subject:</header>", {x: x - 25., y: y});
-        s_dups_txt = new FTextInput(mc, "0", {x: x + 170., y: y + 3}, 18, 18);
+        sdups_label = new FLabel(mc, "<header>Duplicates on Subject:</header>", {x: x - 25., y: y});
+        sdups_txt = new FTextInput(mc, "0", {x: x + 170., y: y + 3}, 18, 18);
 
 
         x = 0.0;  
@@ -129,10 +129,15 @@ class AnnoInput extends MovieClip {
              ,notes:notes_txt.text
              ,revisit: revisit.checked
              ,hsp_ids: hsp_ids
+             ,qdups: Std.parseInt(qdups_txt.text)
+             ,qextents:gobe.get_slider_locs_rw(0)
+             ,sextents:gobe.get_slider_locs_rw(1)
+             ,sdups: Std.parseInt(sdups_txt.text)
              ,tmp_db: gobe.db
           }]
           , function(s){trace(s);}
        );
+       trace(gobe.get_slider_locs_rw(0));
     }
 
     
@@ -141,6 +146,8 @@ class AnnoInput extends MovieClip {
         anno_cbxs.setSelectedIndexes(Reflect.field(s, 'annos'));
         keywords_cbxs.setSelectedIndexes(Reflect.field(s, 'keywords'));
         notes_txt.text = Reflect.field(s, 'notes');
+        qdups_txt.setText(Reflect.field(s, 'qdups').toString());
+        sdups_txt.setText(Reflect.field(s, 'sdups').toString());
         var features:Array<Dynamic> = Reflect.field(s, 'features');
         // TODO: only do this on the initial load. otherwise, it
         // will overwrite the changes.
