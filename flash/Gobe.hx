@@ -42,14 +42,14 @@ class Gobe extends Sprite {
 
     private var _heights:Array<Int>;
 
-    private var qbx:QueryBox;
+    public var qbx:QueryBox;
     // hold the hsps so we know if one contained a click
     public var _rectangles:Array<GRect>; 
     public var _lines:Array<GLine>; 
     public var panel:Sprite; // holds the lines.
 
     private var _all:Bool;
-    private var imgs:Array<GImage>;
+    public var imgs:Array<GImage>;
     private var gcoords:Array<Array<Int>>;
     private var QUERY_URL:String;
     private var _image_titles:Array<String>;
@@ -76,12 +76,12 @@ class Gobe extends Sprite {
         if(! e.shiftKey){
             var r:GRect; var i:Int = 0;
             for(r in _rectangles){
-               // removed the qbxangle (and pair) that was clicked on.
+               // removed the rectangle (and pair) that was clicked on.
                if(r.hitTestPoint(e.stageX, e.stageY)){
                     var pair_idx = i % 2 == 0 ? i : i - 1;
-                    var qbxs = _rectangles.splice(pair_idx, 2);
-                    panel.removeChild(qbxs[1]);
-                    panel.removeChild(qbxs[0]);
+                    var rects = _rectangles.splice(pair_idx, 2);
+                    panel.removeChild(rects[1]);
+                    panel.removeChild(rects[0]);
                     // one line per 2 rectangles.
                     var lidx = Math.floor(i/2);
                     panel.removeChild(_lines.splice(lidx, 1)[0]);
@@ -235,24 +235,6 @@ class Gobe extends Sprite {
         }
     }
 
-    public function freezeSpace(e:MouseEvent){
-        var gl: GLine;
-        var ids = new Array<Int>();
-        for(gl in _lines){
-            ids.push(gl.db_id1);
-            ids.push(gl.db_id2);
-        }
-        var ul = new URLLoader();    
-        ul.addEventListener(Event.COMPLETE, function(e:Event){
-            var str:String = e.target.data;
-            ExternalInterface.call('alert', str);
-        });
-        ul.load(new URLRequest(this.QUERY_URL +  '&db=' + this.tmp_dir + '/' + this.img + '.sqlite' 
-                                                + '&save_cns=' + ids.join(",")
-                                                + '&gsid=' + this.genespace_id
-                                                ));
-    }
-
     public function getImageInfo(){
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, imageInfoReturn);
@@ -286,7 +268,6 @@ class Gobe extends Sprite {
                 _extents[i].set('xmin', exts.xmin);
                 _extents[i].set('xmax', exts.xmax);
                 _extents[i].set('idx', exts.idx);
-                trace(_extents[i]);
                 ++i;
             }
             initImages();

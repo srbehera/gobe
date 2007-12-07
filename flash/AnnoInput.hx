@@ -10,6 +10,7 @@ import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
 import flash.events.MouseEvent;
 import flash.events.Event;
+import flash.external.ExternalInterface;
 
 
 class FComboBoxHeaderArrowGFX extends MovieClip{}
@@ -58,6 +59,7 @@ class AnnoInput extends MovieClip {
     static var python:haxe.remoting.AsyncConnection = haxe.remoting.AsyncConnection.amfConnect( 'service.wsgi' );
     
     var genespace_id:Int;
+    private var new_anchors:Array<Int>; // save the bp coords of the anchors
 
     public function new (mc:MovieClip, genespace_id:Int, gobe:Gobe) {
         super();
@@ -98,15 +100,38 @@ class AnnoInput extends MovieClip {
 
         remove_button = new FButton(mc, "<header>Remove Genespace</header>", {x: 150.0 , y: y}, python_remove);
 
-        new_genespace_button = new FButton(mc, "<e>New Genespace</e>", {  x: 150.0, y: y + 30.}, python_new_genespace);
+        new_genespace_button = new FButton(mc, "<e>New Genespace</e>", {  x: 150.0, y: y + 30.}, new_genespace);
+
                         
     }
+    public function new_genespace(e:MouseEvent){
+        new_anchors = [];
+        ExternalInterface.call('alert', 'click at the anchor point for QUERY of the new genespace');
+        gobe.imgs[0].addEventListener(MouseEvent.CLICK, called_genespace_query, false, 100 );
+    }
 
-    public function python_new_genespace(e:MouseEvent){
-       var qanchor = 0;
-       var sanchor = 0;
-       python.new_genespace.call([qanchor, sanchor], function(s){
-            trace("TODO:" + s); 
+    // so when they click the new genespace buttons, it first gets a
+    // click on the query image, converts to rw, then asks for a click
+    // on the subject image, converts to rw, then sends those coords
+    // to python and adds them as anchors to the db.
+    public function called_genespace_query(e:MouseEvent){
+            e.stopPropagation(); e.stopImmediatePropagation();
+            ExternalInterface.call('alert', 'click at the anchor point for SUBJECT of the new genespace');
+            gobe.imgs[1].addEventListener(MouseEvent.CLICK, called_genespace_subject, false, 100 );
+            e.target.removeEventListener(e.type, called_genespace_query);
+            new_anchors.push(gobe.pix2rw(e.stageX, 0));
+    }
+    public function called_genespace_subject(e:MouseEvent){
+            e.stopPropagation(); e.stopImmediatePropagation();
+            e.target.removeEventListener(e.type, called_genespace_query);
+            new_anchors.push(gobe.pix2rw(e.stageX, 1));
+            python_new_genespace(new_anchors);
+    }
+
+    public function python_new_genespace(anchors:Array<Int>){
+       python.new_genespace.call(anchors, function(s){
+            ExternalInterface.call("alert", 'new genespace added at anchors: ' + s 
+                + '\nrefresh the list of links to see the changes');
        });
     }
 
