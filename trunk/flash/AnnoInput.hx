@@ -59,7 +59,7 @@ class AnnoInput extends MovieClip {
     static var python:haxe.remoting.AsyncConnection = haxe.remoting.AsyncConnection.amfConnect( 'service.wsgi' );
     
     var genespace_id:Int;
-    private var new_anchors:Array<Int>; // save the bp coords of the anchors
+    private var new_anchors:Array<Dynamic>; // save the bp coords of the anchors, + gobe.db
 
     public function new (mc:MovieClip, genespace_id:Int, gobe:Gobe) {
         super();
@@ -125,10 +125,11 @@ class AnnoInput extends MovieClip {
             e.stopPropagation(); e.stopImmediatePropagation();
             e.target.removeEventListener(e.type, called_genespace_query);
             new_anchors.push(gobe.pix2rw(e.stageX, 1));
+            new_anchors.push(gobe.db);
             python_new_genespace(new_anchors);
     }
 
-    public function python_new_genespace(anchors:Array<Int>){
+    public function python_new_genespace(anchors:Array<Dynamic>){
        python.new_genespace.call(anchors, function(s){
             ExternalInterface.call("alert", 'new genespace added at anchors: ' + s 
                 + '\nrefresh the list of links to see the changes');
