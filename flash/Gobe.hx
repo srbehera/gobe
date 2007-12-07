@@ -276,9 +276,6 @@ class Gobe extends Sprite {
         return Math.round(_extents[i].get('bpmin') + px * _extents[i].get('bpp'));
     }
     public function rw2pix(rw:Float, i:Int):Float {
-        trace('rw2pix');
-        trace((rw - _extents[i].get('bpmin')) / _extents[i].get('bpp'));
-        trace((_extents[i].get('bpmax') - rw) / _extents[i].get('bpp'));
         return (rw - _extents[i].get('bpmin')) / _extents[i].get('bpp');
     }
 
@@ -338,7 +335,7 @@ class Gobe extends Sprite {
             add_sliders(img, i, y, h);
              
             img.addEventListener(MouseEvent.MOUSE_UP, imageMouseUp);
-            img.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
+            //img.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
             y+=h;
         }
         if(freezable){
@@ -376,7 +373,8 @@ class Gobe extends Sprite {
 
             var xmax = rw2pix(this.bpmaxs[i-1] - this.pad_gs, i - 1);
             var gs1 = new GSlider(y + 24, h - 29,'drdown' + i, 4 ,_extents[i-1].get('img_width'));
-            gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : (xmax < _extents[i-1].get('xmax') ? _extents[i-1].get('xmax') : xmax); 
+            //gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : (xmax < _extents[i-1].get('xmax') ? _extents[i-1].get('xmax') : xmax); 
+            gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : xmax; 
             gs1.i = i - 1;
             gs1.image = img;
             flash.Lib.current.addChild(gs1);
@@ -419,7 +417,9 @@ class Gobe extends Sprite {
             }
 
             var x = e.target.x;
-            if (e.target.updown == -1) { x += e.target.width; }
+            //trace('width:' + e.target.width);
+            //trace('loc:' + (x + e.target.width));
+            //if (e.target.updown == -1) { x += e.target.width; }
             var xupdown = Math.round(pix2relative(x, e.target.i, e.target.updown));
             ExternalInterface.call('set_genespace',e.target.id,xupdown);
     }

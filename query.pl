@@ -36,17 +36,12 @@ if ($q->param('get_info')){
     $sth->execute();
     my $titles = [map{$_->[0]} @{ $sth->fetchall_arrayref()}];
 
-    #print "|||";
-
     $sth = $dbh->prepare("select min(xmin),max(xmax), image_id from image_data where type='anchor' group by image_id order by image_id;");
     $sth->execute();
     my @anchors;
     while (my $row = $sth->fetchrow_arrayref){
         push(@anchors, {'xmin' => $row->[0], 'xmax' => $row->[1], idx => $row->[2] });
     }
-    #print JSON::Syck::Dump(\@results);
-
-    #print "|||";
 
     $sth = $dbh->prepare("select * from image_info order by iname;");
     $sth->execute();

@@ -168,6 +168,7 @@ class AnnoInput extends MovieClip {
 
     
    public function python_load_callback(s:Dynamic){  
+        trace(s);
         if(!s) { return; }
         anno_cbxs.setSelectedIndexes(Reflect.field(s, 'annos'));
         keywords_cbxs.setSelectedIndexes(Reflect.field(s, 'keywords'));
@@ -187,6 +188,11 @@ class AnnoInput extends MovieClip {
         }
         gobe.drawLines();
         revisit.setChecked(Reflect.field(s,'revisit'));
+        var sextents = Reflect.field(s, 'sextents');
+        var qextents = Reflect.field(s, 'qextents');
+        trace(sextents);
+        trace(qextents);
+
     }
 
     public function python_load(genespace_id:Int){

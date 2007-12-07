@@ -12,9 +12,14 @@ tcur = tracking_db.cursor()
 
 def bagwrap(fn):
     def newfn(*args, **kwargs):
-        res = fn(*args, **kwargs)
-        if isinstance(res, dict): return pyamf.Bag(res)
-        return res
+        try:
+            res = fn(*args, **kwargs)
+            if isinstance(res, dict): return pyamf.Bag(res)
+            return res
+        except Exception, e:
+            print >>sys.stderr, e
+            print >>sys.stderr, sys.exc_info()
+            return str(e) + str(sys.exc_info()) 
     return newfn
 
 def save(*args, **kwargs):
@@ -98,8 +103,18 @@ def load(genespace_id, tmp_db):
         tracking_db.close()
         return False
 
-    locs = tcur.execute("SELECT l.start, l.stop, l.q_or_s FROM location l, pair p WHERE p.pair_id = l.pair_id AND p.genespace_id = ? AND p.pair_type = 'CNS' and l.q_or_s = 'q'"
-                , (genespace_id,)).fetchall()
+    locs = tcur.execute("SELECT l.start, l.stop, l.q_or_s FROM location l, pair p WHERE p.pair_id = l.pair_id \
+                                           AND p.genespace_id = ? AND p.pair_type = 'CNS' and l.q_or_s = 'q'"
+                                        , (genespace_id,)).fetchall()
+    bars = tcur.execute("SELECT l.start, l.stop, l.q_or_s FROM location l, pair p WHERE p.pair_id = l.pair_id \
+                                           AND p.genespace_id = ? AND p.pair_type = 'genespace'"
+                                        , (genespace_id,)).fetchall()
+
+    print >>sys.stderr, bars
+    qextents = [[b['start'], b['stop']] for b in bars if b['q_or_s'] == 'q']
+    sextents = [[b['start'], b['stop']] for b in bars if b['q_or_s'] == 's']
+    print >>sys.stderr, qextents
+
     tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + tmp_db
 
     tmp_db = sqlite3.connect(tmp_db)
@@ -116,7 +131,9 @@ def load(genespace_id, tmp_db):
 
     kwds = [int(k) for k in info['keywords'].split("|") if k ]
     anns = [int(k) for k in  info['annotation'].split("|") if k]
-    return {'notes': info['notes'], 'qdups': info['qdups'], 'sdups':info['sdups'] ,'annos':anns,'keywords':kwds, 'revisit':bool(info['revisit']), 'features': coordslist}
+    return {'notes': info['notes'], 'qdups': info['qdups'], 'sdups':info['sdups'] ,'annos':anns
+            ,'keywords':kwds, 'revisit':bool(info['revisit']), 'features': coordslist
+            ,'sextents': sextents, 'qextents':qextents }
 
 
 def new_genespace(qanchor, sanchor, tmp_db):
@@ -153,5 +170,5 @@ if __name__ == "__main__":
     
 
     #print save({'tmp_db': u'tmpdir//GEvo_Fkdb8kIf.sqlite', 'notes': u'sfasd', 'annos': [], 'sextents': [8458456, 8489597], 'revisit': False, 'qextents': [1078486, 1098951], 'sdups': 1, 'genespace_id': 5, 'qdups': 0, 'keywords': [2], 'hsp_ids': [[55, 159], [62, 161]]},)
-    #print load(2, 'tmpdir/GEvo_Fkdb8kIf.sqlite')
-    print new_genespace(123, 234, 'tmpdir//GEvo_11ltNR3a.sqlite')
+    print load(2, 'tmpdir/GEvo_Fkdb8kIf.sqlite')
+    #print new_genespace(123, 234, 'tmpdir//GEvo_11ltNR3a.sqlite')
