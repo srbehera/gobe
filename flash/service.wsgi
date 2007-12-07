@@ -119,7 +119,26 @@ def load(genespace_id, tmp_db):
     return {'notes': info['notes'], 'qdups': info['qdups'], 'sdups':info['sdups'] ,'annos':anns,'keywords':kwds, 'revisit':bool(info['revisit']), 'features': coordslist}
 
 
-def new_genespace(qanchor, sanchor):
+def new_genespace(qanchor, sanchor, tmp_db):
+    print >>sys.stderr, qanchor, sanchor, tmp_db
+    gsid = tcur.execute('SELECT MAX(genespace_id) FROM genespace').fetchone()[0] + 1
+    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + tmp_db
+    tmp_db = '/var/www/gobe/trunk/tmpdir//GEvo_11ltNR3a.sqlite'
+    print >>sys.stderr, qanchor, sanchor, tmp_db
+    tmp_db = sqlite3.connect(tmp_db)
+    tmp_db.row_factory = sqlite3.Row
+    tmp_cur = tmp_db.cursor()
+    datasets = [x[0] for x in tmp_db.execute('SELECT dsid FROM image_info ORDER BY id').fetchall()]
+
+
+    tcur.execute("INSERT INTO genespace VALUES (?, 'our_additional', NULL, 'user', 'f', '', '', NULL, NULL, 'Our Additional')"
+            , (gsid,))
+    tcur.execute("INSERT INTO pair VALUES (NULL, 'anchor', 1, ?, NULL, NULL, 'user')"
+            , ( gsid,))
+    pair_id = tcur.lastrowid
+    tcur.execute("INSERT INTO location VALUES  (NULL, ?, ?, 'name', 0, 'q', -5, ?, ?, ?)"
+            ,(datasets[0],pair_id, qanchor, sanchor, 1))
+
     return [qanchor, sanchor]
 
 application = WSGIGateway({
@@ -133,7 +152,6 @@ application = WSGIGateway({
 if __name__ == "__main__":
     
 
-    print save({'tmp_db': u'tmpdir//GEvo_Fkdb8kIf.sqlite', 'notes': u'sfasd', 'annos': [], 'sextents': [8458456, 8489597], 'revisit': False, 'qextents': [1078486, 1098951], 'sdups': 1, 'genespace_id': 5, 'qdups': 0, 'keywords': [2], 'hsp_ids':
-        [[55, 159], [62, 161]]},)
+    #print save({'tmp_db': u'tmpdir//GEvo_Fkdb8kIf.sqlite', 'notes': u'sfasd', 'annos': [], 'sextents': [8458456, 8489597], 'revisit': False, 'qextents': [1078486, 1098951], 'sdups': 1, 'genespace_id': 5, 'qdups': 0, 'keywords': [2], 'hsp_ids': [[55, 159], [62, 161]]},)
     #print load(2, 'tmpdir/GEvo_Fkdb8kIf.sqlite')
-    print
+    print new_genespace(123, 234, 'tmpdir//GEvo_11ltNR3a.sqlite')
