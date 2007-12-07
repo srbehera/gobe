@@ -221,7 +221,6 @@ class Gobe extends Sprite {
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
-        trace(freezable);
         qbx = new QueryBox(this.base_url, freezable, this);
         qbx.x =  1030;
         qbx.show();
@@ -277,6 +276,9 @@ class Gobe extends Sprite {
         return Math.round(_extents[i].get('bpmin') + px * _extents[i].get('bpp'));
     }
     public function rw2pix(rw:Float, i:Int):Float {
+        trace('rw2pix');
+        trace((rw - _extents[i].get('bpmin')) / _extents[i].get('bpp'));
+        trace((_extents[i].get('bpmax') - rw) / _extents[i].get('bpp'));
         return (rw - _extents[i].get('bpmin')) / _extents[i].get('bpp');
     }
 
@@ -341,7 +343,6 @@ class Gobe extends Sprite {
         }
         if(freezable){
            qbx.anno.python_load(genespace_id);
-           trace('called python_load');
         }
     }
     public function imageMouseUp(e:MouseEvent){ 
