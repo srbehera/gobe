@@ -27,7 +27,6 @@ def save(*args, **kwargs):
     args[0] looks like {'keywords':[0,2, ...], 'annos':[1,2,...], 'notes':'asdf'}
     """
     data = args[0]
-    print >>sys.stderr, data
     tcur.execute("UPDATE genespace SET revisit = ?, qdups = ?, sdups = ?, annotation = ?, keywords = ?, notes= ? WHERE genespace_id = ?"
                 ,(  data['revisit']
                    , data['qdups']
@@ -39,6 +38,7 @@ def save(*args, **kwargs):
                    ))
     tracking_db.commit()
     tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + data['tmp_db']
+    tmp_db = '/opt/apache2/CoGe/' + data['tmp_db']
     #tmp_db = '/var/www/gobe/trunk/' + data['tmp_db']
     #print tmp_db
     tmp_db = sqlite3.connect(tmp_db)
@@ -115,7 +115,9 @@ def load(genespace_id, tmp_db):
     sextents = [[b['start'], b['stop']] for b in bars if b['q_or_s'] == 's']
     print >>sys.stderr, qextents
 
-    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + tmp_db
+    tmp_db2 = os.path.dirname(os.path.dirname(__file__)) + '/' + tmp_db
+    tmp_db = '/opt/apache2/CoGe/' + tmp_db
+    print >>sys.stderr, tmp_db
 
     tmp_db = sqlite3.connect(tmp_db)
     tmp_db.row_factory = sqlite3.Row
