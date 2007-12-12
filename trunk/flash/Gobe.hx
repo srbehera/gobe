@@ -358,23 +358,24 @@ class Gobe extends Sprite {
     }
 
     public function add_sliders(img:GImage, i:Int, y:Int, h:Int){
-            var xmin = rw2pix(this.bpmins[i - 1] + this.pad_gs, i - 1);
             //var gs0 = new GSlider(y + 24, h - 29, 'drup' + i, 0, _extents[i-1].get('xmin'));
             var gs0 = new GSlider(y + 24, h - 29, 'drup' + i, 0, _extents[i-1].get('img_width') - 4);
             gs0.i = i - 1;
             gs0.image = img;
+
             // make sure pad_gs cant cause the min to go beyond the gene
-            gs0.x = xmin < 1 ? 1: (xmin > _extents[i-1].get('xmin') ?  _extents[i-1].get('xmin') : xmin);
+            var xmin = Math.max(rw2pix(this.bpmins[i - 1] + this.pad_gs, i - 1), 1);
+            gs0.x = xmin; // < 1 ? 1: (xmin > _extents[i-1].get('xmin') ?  _extents[i-1].get('xmin') : xmin);
             img.sliders.push(gs0);
             flash.Lib.current.addChild(gs0);
 
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             //gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
 
-            var xmax = rw2pix(this.bpmaxs[i-1] - this.pad_gs, i - 1);
+            var xmax = Math.min(rw2pix(this.bpmaxs[i-1] - this.pad_gs, i - 1), _extents[i - 1].get('img_width'));
             var gs1 = new GSlider(y + 24, h - 29,'drdown' + i, 4 ,_extents[i-1].get('img_width'));
-            //gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : (xmax < _extents[i-1].get('xmax') ? _extents[i-1].get('xmax') : xmax); 
-            gs1.x = xmax > _extents[i-1].get('img_width') ?  _extents[i-1].get('img_width') : xmax; 
+
+            gs1.x = xmax; 
             gs1.i = i - 1;
             gs1.image = img;
             flash.Lib.current.addChild(gs1);
