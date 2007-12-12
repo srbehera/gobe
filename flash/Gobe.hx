@@ -37,8 +37,6 @@ class Gobe extends Sprite {
     public var db:String; // path to database
     private var freezable:Bool; // does the user have permission to freeze this genespace?
     public var genespace_id:Int; // the id to link the cns's when freezing
-    private var bpmins:Array<Int>; //the left most bp of the image
-    private var bpmaxs:Array<Int>; //the left most bp of the image
 
     private var _heights:Array<Int>;
 
@@ -50,10 +48,10 @@ class Gobe extends Sprite {
 
     private var _all:Bool;
     public var imgs:Array<GImage>;
+    public var image_info:Hash<Dynamic>;
     private var gcoords:Array<Array<Int>>;
     private var QUERY_URL:String;
     private var _image_titles:Array<String>;
-    private var _extents:Array<Hash<Float>>;
 
 
     public function onClick(e:MouseEvent) {
@@ -69,7 +67,7 @@ class Gobe extends Sprite {
     private function query(e:MouseEvent){
         var img = e.target.url;
         var sqlite = img.substr(0, img.lastIndexOf('_')) + '.sqlite';
-        var idx:Int = e.target.i + 1;
+        var idx:Int = image_info.get(_image_titles[e.target.i]).get('anchors').get('idx');
         var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + idx + '&db=' + sqlite;
 
         var removed = false;
@@ -98,7 +96,7 @@ class Gobe extends Sprite {
             url      += '&all=1';
             this._all = true;
         }
-
+        trace(url);
         var queryLoader = new URLLoader();
         queryLoader.addEventListener(Event.COMPLETE, handleQueryReturn);
         queryLoader.load(new URLRequest(url));
@@ -226,7 +224,6 @@ class Gobe extends Sprite {
         qbx.show();
         _rectangles = [];
         _lines      = [];
-        _extents    = [];
 
         qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearPanelGraphics);
         if(freezable){
@@ -242,41 +239,39 @@ class Gobe extends Sprite {
     }
     public function imageInfoReturn(e:Event){
             var strdata:String = e.target.data;
-            this.bpmins = [];
-            this.bpmaxs = [];
+            image_info = new Hash<Dynamic>();
             var json = Json.decode(strdata);
-            _image_titles = json.titles;
-            json.extents[0];// let the compiler know it's an array
-            json.anchors[0];// let the compiler know it's an array
-
-            var i = 0;
-            for(exts in json.extents){
-                _extents[i] = new Hash<Float>();
-                _extents[i].set('bpmin', exts.bpmin);
-                _extents[i].set('bpmax', exts.bpmax);
-                _extents[i].set('img_width', exts.img_width);
-                // base pairs per pixel.
-                _extents[i].set('bpp', (exts.bpmax - exts.bpmin)/exts.img_width);
-                this.bpmins[i] = Math.round(exts.bpmin);
-                this.bpmaxs[i] = Math.round(exts.bpmax);
-                ++i;
-            }   
-
-            i = 0;
-            for(exts in json.anchors){
-                _extents[i].set('xmin', exts.xmin);
-                _extents[i].set('xmax', exts.xmax);
-                _extents[i].set('idx', exts.idx);
-                ++i;
+            // CONVERT THE JSON data into a HASH: sigh.
+            _image_titles = ['a','b'];
+            for( title in Reflect.fields(json)){
+                var info = Reflect.field(json, title);
+                image_info.set(title, new Hash<Hash<Int>>());
+                for (group_key in Reflect.fields(info)){
+                    var group:Dynamic = Reflect.field(info, group_key);
+                    if(group_key == 'i' || group_key == 'title'){
+                        image_info.get(title).set(group_key, group);
+                        if(group_key == 'i'){
+                            _image_titles[group] = title;
+                        }
+                        continue;
+                    }
+                    image_info.get(title).set(group_key, new Hash<Int>());
+                    for(sub_group_key in Reflect.fields(group)){
+                        image_info.get(title).get(group_key).set(sub_group_key, Reflect.field(group, sub_group_key));
+                    }
+                }
             }
+            trace(image_info);
             initImages();
     }
 
     public function pix2rw(px:Float, i:Int):Int {
-        return Math.round(_extents[i].get('bpmin') + px * _extents[i].get('bpp'));
+        var ext = image_info.get(_image_titles[i]).get('extents');
+        return Math.round(ext.get('bpmin') + px * ext.get('bpp'));
     }
     public function rw2pix(rw:Float, i:Int):Float {
-        return (rw - _extents[i].get('bpmin')) / _extents[i].get('bpp');
+        var exts = image_info.get(imgs[i].title).get('extents');
+        return (rw - exts.get('bpmin')) / exts.get('bpp');
     }
 
     // find the up or down stream basepairs given a mouse click
@@ -284,7 +279,7 @@ class Gobe extends Sprite {
     // it determines whether to use up/downstream based on which side
     // of the anchor the click falls on.
     public function pix2relative(px:Float, i:Int, updown:Int):Float{
-        var ext = _extents[i];
+        var ext = image_info.get(_image_titles[i]).get('extents');
         var click_bp =  px * ext.get('bpp');
         if(updown == -1) {
             var end_of_anchor_bp = ext.get('xmin') * ext.get('bpp');
@@ -295,11 +290,10 @@ class Gobe extends Sprite {
 
     public function initImages(){
         imgs = new Array<GImage>();
-        var i:Int;
-        for(i in 0...n){
-            var url = this.tmp_dir + this.img + '_' + (i + 1) + '.png';
-            imgs[i] = new GImage(url,i);
-            imgs[i].addEventListener(GEvent.LOADED, imageLoaded);
+        for(k in 0...n){
+            var title:String = _image_titles[k];
+            imgs[k] = new GImage(title, this.tmp_dir + title, k);
+            imgs[k].addEventListener(GEvent.LOADED, imageLoaded);
         }
     }
 
@@ -317,7 +311,7 @@ class Gobe extends Sprite {
             flash.Lib.current.addChildAt(img, 0);
 
             var ttf = new TextField();
-            ttf.text   = _image_titles[i];
+            ttf.text   = image_info.get(_image_titles[i]).get('title');
             ttf.y      = y ; 
             ttf.x      = 15;
             ttf.border = true; 
@@ -359,12 +353,13 @@ class Gobe extends Sprite {
 
     public function add_sliders(img:GImage, i:Int, y:Int, h:Int){
             //var gs0 = new GSlider(y + 24, h - 29, 'drup' + i, 0, _extents[i-1].get('xmin'));
-            var gs0 = new GSlider(y + 24, h - 29, 'drup' + i, 0, _extents[i-1].get('img_width') - 4);
+            var exts = image_info.get(img.title).get('extents');
+            var gs0 = new GSlider(y + 24, h - 29, 'drup' + i, 0, exts.get('img_width') - 4);
             gs0.i = i - 1;
             gs0.image = img;
 
             // make sure pad_gs cant cause the min to go beyond the gene
-            var xmin = Math.max(rw2pix(this.bpmins[i - 1] + this.pad_gs, i - 1), 1);
+            var xmin = Math.max(rw2pix(exts.get('bpmin') + this.pad_gs, i - 1), 1);
             gs0.x = xmin; // < 1 ? 1: (xmin > _extents[i-1].get('xmin') ?  _extents[i-1].get('xmin') : xmin);
             img.sliders.push(gs0);
             flash.Lib.current.addChild(gs0);
@@ -372,8 +367,8 @@ class Gobe extends Sprite {
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
             //gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
 
-            var xmax = Math.min(rw2pix(this.bpmaxs[i-1] - this.pad_gs, i - 1), _extents[i - 1].get('img_width'));
-            var gs1 = new GSlider(y + 24, h - 29,'drdown' + i, 4 ,_extents[i-1].get('img_width'));
+            var xmax = Math.min(rw2pix(exts.get('bpmax') - this.pad_gs, i - 1), exts.get('img_width'));
+            var gs1 = new GSlider(y + 24, h - 29,'drdown' + i, 4 , exts.get('img_width'));
 
             gs1.x = xmax; 
             gs1.i = i - 1;
@@ -383,7 +378,6 @@ class Gobe extends Sprite {
             //gs1.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
 
             img.sliders.push(gs1);
-
 
             gs1.other = gs0;
             gs0.other = gs1;
@@ -518,14 +512,16 @@ class GImage extends Sprite {
 
     public  var sliders:Array<GSlider>;
     public  var image:Bitmap;
+    public  var title:String;
     public  var url:String;
     public  var i:Int;
 
 
 
-    public function new(url:String,i:Int){
+    public function new(title:String, url:String, i:Int){
         super();
         this.url = url;
+        this.title = title;
         this.i   = i;
         sliders = new Array<GSlider>();
         _imageLoader = new Loader();
