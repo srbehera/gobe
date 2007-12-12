@@ -270,11 +270,13 @@ class Gobe extends Sprite {
     }
 
     public function pix2rw(px:Float, i:Int):Int {
-        var ext = image_info.get(image_titles[i]).get('extents');
-        return Math.round(ext.get('bpmin') + px * ext.get('bpp'));
+        var exts = image_info.get(image_titles[i]).get('extents');
+        trace(exts);
+        return Math.round(exts.get('bpmin') + px * exts.get('bpp'));
     }
     public function rw2pix(rw:Float, i:Int):Float {
         var exts = image_info.get(imgs[i].title).get('extents');
+        trace(exts);
         return (rw - exts.get('bpmin')) / exts.get('bpp');
     }
 
@@ -283,8 +285,8 @@ class Gobe extends Sprite {
     // it determines whether to use up/downstream based on which side
     // of the anchor the click falls on.
     public function pix2relative(px:Float, i:Int, updown:Int):Float{
-        var ext = image_info.get(image_titles[i]).get('extents');
-        var anchor = image_info.get(image_titles[i]).get('anchors');
+        var ext:Hash<Int> = image_info.get(image_titles[i]).get('extents');
+        var anchor:Hash<Int> = image_info.get(image_titles[i]).get('anchors');
         var click_bp =  px * ext.get('bpp');
         if(updown == -1) {
             var end_of_anchor_bp = anchor.get('xmin') * ext.get('bpp');
