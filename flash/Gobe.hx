@@ -364,7 +364,7 @@ class Gobe extends Sprite {
             trace(exts);
             var anchors = image_info.get(img.title).get('anchors');
             var idx:Int = anchors.get('idx');
-            var gs0 = new GSlider(y + 24, h - 29, 'drup' + idx, 0, exts.get('img_width') - 4);
+            var gs0 = new GSlider(y + 24, h - 29, -1 , idx, 0, exts.get('img_width') - 4);
             gs0.i = i - 1;
             gs0.image = img;
 
@@ -378,7 +378,7 @@ class Gobe extends Sprite {
             //gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
 
             var xmax = Math.min(rw2pix(exts.get('bpmax') - this.pad_gs, i - 1), exts.get('img_width'));
-            var gs1 = new GSlider(y + 24, h - 29,'drdown' + idx, 4 , exts.get('img_width'));
+            var gs1 = new GSlider(y + 24, h - 29, 1 , idx, 4 , exts.get('img_width'));
 
             trace('xmax: ' + xmax);
             gs1.x = xmax; 
@@ -423,11 +423,8 @@ class Gobe extends Sprite {
             }
 
             var x = e.target.x;
-            //trace('width:' + e.target.width);
-            //trace('loc:' + (x + e.target.width));
-            //if (e.target.updown == -1) { x += e.target.width; }
             var xupdown = Math.round(pix2relative(x, e.target.i, e.target.updown));
-            ExternalInterface.call('set_genespace',e.target.id,xupdown);
+            ExternalInterface.call('set_genespace',(e.target.updown == -1) ? 'up' : 'down' , e.target.idx,xupdown);
     }
 
 }
@@ -468,7 +465,7 @@ class GLine extends Shape {
 
 class GSlider extends Sprite {
     // id is the string (drup1,drdown1, drup2, or drdown2)
-    public var id:String;
+    public var idx:Int;
     public var updown:Int;
     public var bounds:Rectangle;
     public var other:GSlider;
@@ -477,13 +474,10 @@ class GSlider extends Sprite {
     public var lastX:Float;
     public var i:Int; // the index of the image it's on
     public var gobe:Gobe;
-    public function new(y0:Float, h:Float, id:String, bounds_min:Float, bounds_max:Float) {
+    public function new(y0:Float, h:Float, updown:Int, idx:Int, bounds_min:Float, bounds_max:Float) {
         super();
-        this.id = id;
-        this.updown = 1;
-        if(id.indexOf('up') == 2){ //drup
-            this.updown = -1;
-        }
+        this.idx = idx;
+        this.updown = updown;
             
         var g = this.graphics;
         _buttonDown = true;

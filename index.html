@@ -2,8 +2,11 @@
 <head>
 <script src="static/swfobject.js"></script>
 <script>
-function set_genespace(drid,value){
-    document.getElementById(drid).value = value;
+/* e.g.  ('up', 1, 330) becomes: byId('drup1').value = 330; */
+/* so up is the 'left', down is the 'right' bar.   */
+function set_genespace(updown, idx, value){
+    var eid = 'dr' + updown + idx;
+    document.getElementById(eid).value = value;
 }
 
 function call_flash(){
