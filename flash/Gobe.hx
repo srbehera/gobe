@@ -425,8 +425,10 @@ class Gobe extends Sprite {
             var x = e.target.x;
             var xupdown = Math.round(pix2relative(x, e.target.i, e.target.updown));
             var exts:Hash<Int> = image_info.get(image_titles[e.target.i]).get('extents');
-            var len = exts.get('bpmax') - exts.get('bpmin') + 1;
-            ExternalInterface.call('set_genespace',(e.target.updown == -1) ? 'up' : 'down' , e.target.idx,xupdown, len);
+            var anchs:Hash<Int> = image_info.get(image_titles[e.target.i]).get('anchors');
+            var elen = exts.get('bpmax') - exts.get('bpmin') + 1;
+            var alen = (anchs.get('xmax') - anchs.get('xmin') + 1) * exts.get('bpp');
+            ExternalInterface.call('set_genespace',(e.target.updown == -1) ? 'up' : 'down' , e.target.idx,xupdown, elen, alen);
     }
 
 }
