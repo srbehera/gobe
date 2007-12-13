@@ -263,7 +263,7 @@ class Gobe extends Sprite {
             }
             for(t in image_titles){
                 var ext = image_info.get(t).get('extents');
-                ext.set('bpp', (ext.get('bpmax') - ext.get('bpmin'))/ext.get('img_width'));
+                ext.set('bpp', (ext.get('bpmax') - ext.get('bpmin') + 1)/ext.get('img_width'));
             }
             trace(image_info);
             initImages();
@@ -425,7 +425,7 @@ class Gobe extends Sprite {
             var x = e.target.x;
             var xupdown = Math.round(pix2relative(x, e.target.i, e.target.updown));
             var exts:Hash<Int> = image_info.get(image_titles[e.target.i]).get('extents');
-            var len = exts.get('bpmax') - exts.get('bpmin');
+            var len = exts.get('bpmax') - exts.get('bpmin') + 1;
             ExternalInterface.call('set_genespace',(e.target.updown == -1) ? 'up' : 'down' , e.target.idx,xupdown, len);
     }
 
