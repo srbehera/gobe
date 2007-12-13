@@ -424,7 +424,9 @@ class Gobe extends Sprite {
 
             var x = e.target.x;
             var xupdown = Math.round(pix2relative(x, e.target.i, e.target.updown));
-            ExternalInterface.call('set_genespace',(e.target.updown == -1) ? 'up' : 'down' , e.target.idx,xupdown);
+            var exts:Hash<Int> = image_info.get(image_titles[e.target.i]).get('extents');
+            var len = exts.get('bpmax') - exts.get('bpmin');
+            ExternalInterface.call('set_genespace',(e.target.updown == -1) ? 'up' : 'down' , e.target.idx,xupdown, len);
     }
 
 }
