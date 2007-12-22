@@ -48,7 +48,7 @@ if ($q->param('get_info')){
          $result{$title->[0]}{'extents'} = {'bpmin' => $info->{bpmin}, 'bpmax' => $info->{bpmax}, 'img_width' => $info->{px_width} };
     }
 
-    print STDERR Dumper %result;
+    #print STDERR Dumper %result;
     print JSON::Syck::Dump(\%result);
     exit();
 }
