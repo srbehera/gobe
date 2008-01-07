@@ -167,12 +167,16 @@ class Gobe extends Sprite {
 
             var idx:Int = 0;
             for(hsp in Reflect.fields(pair.features)){
+                trace("***************************************************************");
                 var coords:Array<Int> = Reflect.field(pair.features, hsp);
                 // converty key2 to 2; because that's the image we need. cant use '1' as a key because of
                 // haxe bug.
-                hsp = hsp.substr(3); 
-                var img_idx = Std.parseInt(hsp) - 1;
-                drawHsp(coords, img_idx);
+                // then create the image name e.g. : GEvo_asdf_2.png
+                var img_key = img + '_' + hsp.substr(3) + ".png";
+                // and use that to look up the image index.
+                var idx:Int = image_info.get(img_key).get('i');
+                trace(img_key + ", " + idx);
+                drawHsp(coords, idx);
             }
             lcolor = pair.color;
         }
@@ -276,7 +280,6 @@ class Gobe extends Sprite {
     }
     public function rw2pix(rw:Float, i:Int):Float {
         var exts = image_info.get(imgs[i].title).get('extents');
-        trace(exts);
         return (rw - exts.get('bpmin')) / exts.get('bpp');
     }
 
@@ -361,7 +364,6 @@ class Gobe extends Sprite {
     public function add_sliders(img:GImage, i:Int, y:Int, h:Int){
             //var gs0 = new GSlider(y + 24, h - 29, 'drup' + i, 0, _extents[i-1].get('xmin'));
             var exts = image_info.get(img.title).get('extents');
-            trace(exts);
             var anchors = image_info.get(img.title).get('anchors');
             var idx:Int = anchors.get('idx');
             var gs0 = new GSlider(y + 24, h - 29, -1 , idx, 0, exts.get('img_width') - 4);
@@ -380,7 +382,6 @@ class Gobe extends Sprite {
             var xmax = Math.min(rw2pix(exts.get('bpmax') - this.pad_gs, i - 1), exts.get('img_width'));
             var gs1 = new GSlider(y + 24, h - 29, 1 , idx, 4 , exts.get('img_width'));
 
-            trace('xmax: ' + xmax);
             gs1.x = xmax; 
             gs1.i = i - 1;
             gs1.image = img;
@@ -405,7 +406,6 @@ class Gobe extends Sprite {
     }
 
     public function sliderMouseUp(e:MouseEvent){
-            //trace(e.target + ", " +  e.target.updown);
             e.target.stopDrag();
             if(!Reflect.hasField(e.target, '_buttonDown')){ return; }
             if(!e.target._buttonDown){ return; }
