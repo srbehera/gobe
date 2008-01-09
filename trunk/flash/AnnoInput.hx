@@ -148,7 +148,7 @@ class AnnoInput extends MovieClip {
         for(gl in gobe._lines){
             hsp_ids.push([gl.db_id1, gl.db_id2]);
         }
-        python.save.call([{
+        var args = [{
              genespace_id:genespace_id
              ,keywords:keywords_cbxs.selectedIndexes
              ,annos:anno_cbxs.selectedIndexes
@@ -160,10 +160,9 @@ class AnnoInput extends MovieClip {
              ,sextents:gobe.get_slider_locs_rw(1)
              ,sdups: Std.parseInt(sdups_txt.text)
              ,tmp_db: gobe.db
-          }]
-          , function(s){trace(s);}
-       );
-       trace(gobe.get_slider_locs_rw(0));
+          }];
+        trace('calling save with: ' + args);
+        python.save.call(args, function(s){trace(s);});
     }
 
     
@@ -180,9 +179,13 @@ class AnnoInput extends MovieClip {
         // will overwrite the changes.
         for(feat in features){
             // TODO: why do i have to reverse these? bug elsewhere.
+            trace("feat:" + feat);
             for(img in ['img1', 'img2']){
+                trace("img:" + img);
                 var coords:Array<Int> = Reflect.field(feat, img);
+                trace("coords:" + coords);
                 var img_idx:Int = Std.parseInt(img.substr(3)) - 1;
+                trace("img_idx:" + img_idx);
                 gobe.drawHsp(coords, img_idx);
             }
         }

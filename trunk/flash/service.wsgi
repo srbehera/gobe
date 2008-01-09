@@ -22,6 +22,8 @@ def bagwrap(fn):
             return str(e) + str(sys.exc_info()) 
     return newfn
 
+
+@bagwrap
 def save(*args, **kwargs):
     """called when user clicks [save] in the flash annotation swf. saves changes to db.
     args[0] looks like {'keywords':[0,2, ...], 'annos':[1,2,...], 'notes':'asdf'}
@@ -38,7 +40,7 @@ def save(*args, **kwargs):
                    ))
     tracking_db.commit()
     tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + data['tmp_db']
-    tmp_db = '/opt/apache2/CoGe/' + data['tmp_db']
+    #tmp_db = '/opt/apache2/CoGe/' + data['tmp_db']
     #tmp_db = '/var/www/gobe/trunk/' + data['tmp_db']
     #print tmp_db
     tmp_db = sqlite3.connect(tmp_db)
@@ -67,16 +69,20 @@ def save(*args, **kwargs):
     tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 'q', -5, ?, ?, NULL)"
                 , (datasets[0], gspair_id, data['qextents'][0], data['qextents'][1]))
     tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 's', -5, ?, ?, NULL)"
-                , (datasets[0], gspair_id, data['sextents'][0], data['sextents'][1]))
+                , (datasets[1], gspair_id, data['sextents'][0], data['sextents'][1]))
 
 
     for qloc, sloc in zip(tmp_db.execute(qsql).fetchall(), tmp_db.execute(ssql).fetchall()):
+        print >>sys.stderr, sloc['bpmin']
+
+        #assert sloc['bpmin'] == 442076, sloc['bpmin']
         tcur.execute("INSERT INTO pair VALUES(NULL, ?, -5, ?, NULL, NULL, ?)"
                             ,('CNS', data['genespace_id'], data['user'] ))
 
         pair_id = tcur.lastrowid
         tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 'q', -5, ?, ?, NULL)"
                 , (datasets[0], pair_id, qloc['bpmin'], qloc['bpmax']))
+
         tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 's', -5, ?, ?, NULL)"
                 , (datasets[1], pair_id, sloc['bpmin'], sloc['bpmax']))
 
@@ -115,22 +121,25 @@ def load(genespace_id, tmp_db):
     sextents = [[b['start'], b['stop']] for b in bars if b['q_or_s'] == 's']
     print >>sys.stderr, qextents
 
-    tmp_db2 = os.path.dirname(os.path.dirname(__file__)) + '/' + tmp_db
-    tmp_db = '/opt/apache2/CoGe/' + tmp_db
-    print >>sys.stderr, tmp_db
+    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + tmp_db
+    #tmp_db = '/opt/apache2/CoGe/' + tmp_db
+    print >>sys.stderr, "TEMP_DB:" +  tmp_db
 
     tmp_db = sqlite3.connect(tmp_db)
     tmp_db.row_factory = sqlite3.Row
     tmp_cur = tmp_db.cursor()
     coordslist = []
     for l in locs:
-        qbps = tmp_cur.execute('SELECT xmin, ymin, xmax, ymax, id, pair_id  FROM image_data WHERE bpmin = ? AND bpmax = ? AND ABS(image_track) > 1', (l['start'], l['stop'])).fetchone()
+        # TODO: is order by image_id sufficient to assure we get the
+        # query?
+        qbps = tmp_cur.execute('SELECT xmin, ymin, xmax, ymax, id, pair_id  FROM image_data WHERE bpmin = ? AND bpmax = ? AND ABS(image_track) > 1 ORDER BY image_id', (l['start'], l['stop'])).fetchone()
         sbps = tmp_cur.execute('SELECT xmin, ymin, xmax, ymax, id  FROM image_data WHERE id = ?', (qbps['pair_id'],)).fetchone()
         coordslist.append({
                     'img1': [ qbps['xmin'], qbps['ymin'], qbps['xmax'], qbps['ymax'], qbps['id']]
                   , 'img2': [ sbps['xmin'], sbps['ymin'], sbps['xmax'], sbps['ymax'], sbps['id']]
                   });
-
+        print >>sys.stderr, "COORDS\n"
+        print >>sys.stderr, coordslist
     kwds = [int(k) for k in info['keywords'].split("|") if k ]
     anns = [int(k) for k in  info['annotation'].split("|") if k]
     return {'notes': info['notes'], 'qdups': info['qdups'], 'sdups':info['sdups'] ,'annos':anns
@@ -138,11 +147,12 @@ def load(genespace_id, tmp_db):
             ,'sextents': sextents, 'qextents':qextents }
 
 
+
 def new_genespace(qanchor, sanchor, tmp_db):
     print >>sys.stderr, qanchor, sanchor, tmp_db
     gsid = tcur.execute('SELECT MAX(genespace_id) FROM genespace').fetchone()[0] + 1
     tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + tmp_db
-    tmp_db = '/var/www/gobe/trunk/tmpdir//GEvo_11ltNR3a.sqlite'
+    #tmp_db = '/var/www/gobe/trunk/tmpdir//GEvo_11ltNR3a.sqlite'
     print >>sys.stderr, qanchor, sanchor, tmp_db
     tmp_db = sqlite3.connect(tmp_db)
     tmp_db.row_factory = sqlite3.Row

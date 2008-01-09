@@ -6,10 +6,9 @@ use DBI;
 use Data::Dumper;
 use POSIX;
 use JSON::Syck;
-use CoGeX;
 use File::Temp qw/ :mktemp /;
 my $connstr = 'dbi:mysql:genomes:biocon:3306';
-my $s = CoGeX->connect($connstr, 'bpederse', 'brent_cnr');
+
 
 
 my $q = new CGI;
@@ -58,50 +57,7 @@ if ($q->param('get_info')){
     exit();
 }
 
-if ($q->param('save_cns')){
-    my %seen;
-    my @ids =  grep { !$seen{$_}++ } split(/,/, $q->param('save_cns'));
-    $sth = $dbh->prepare("SELECT bpmin, bpmax, dataset_id FROM image_data");
-    print STDERR $q->param('save_cns') . "\n";
-    print STDERR $q->param('gsid') . "\n";
-    my $n = scalar(@ids)/2;
-    printf("$n cns pair%s saved.", $n == 1 ? '': 's');
-    exit();
-}
-
 if ($q->param('predict')){
-    # is ordering by id sufficent to assure the same order?
-    $sth = $dbh->prepare("select bpmin, bpmax, chromosome, dsid, title from image_info order by id");
-    $sth->execute();
-    my @tmpfiles;
-    while( my $row  = $sth->fetchrow_hashref() ){
-        my $revcomp = $row->{title} =~ /Reverse Complement/i;
-        my ($fh, $filename) = mkstemps('/tmp/GOBE_XXXXXX', '.fasta'); 
-        push(@tmpfiles, $filename);
-        print STDERR "\nFILENAME: " . $filename . "\n";
-        print $fh "> " . $row->{dsid} . "\n"; # . "||" . $row->{chromosome} .  "||". $row->{bpmin} . "||" . $row->{bpmax} . "\n";
-        print STDERR $row->{dsid} . "||" . $row->{chromosome} .  "||". $row->{bpmin} . "||" . $row->{bpmax} . "\n";
-        my $ds = $s->resultset('Dataset')->find($row->{dsid});
-
-        my $sequence = $ds->get_genomic_sequence( 
-                start=>$row->{bpmin}
-                ,stop=>$row->{bpmax}
-                ,chromosome=>$row->{chromosome}
-            );
-        if($revcomp){
-            $sequence = reverse($sequence);
-            $sequence =~ tr/ATCGatcg/TAGCtagc/;
-        }
-        print $fh $sequence;
-        close($fh);
-    }
-    my $command = '/usr/bin/bl2seq -p blastn -W 7 -D 1 -i ' . $tmpfiles[0] . ' -j ' . $tmpfiles[1] . ' -e 0.05 -S 1 ';
-    my @blast_result = grep { $_ !~ /^#/ }  split(/\n/, `$command`);
-    #print STDERR  $command;
-    #print STDERR  Dumper @blast_result;
-    my @locs = map { [($_->[6] + $_->[7])/2, ($_->[8] + $_->[9])/2 ] } map { [ split(/\t/, $_ )] } @blast_result;
-    print STDERR  Dumper @locs;
-    foreach my $fasta (@tmpfiles){ `rm $fasta`; }
     exit();
 }
 
@@ -125,9 +81,7 @@ if($all){
 }
 else{
     $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? + 3 > xmin AND ? - 3 < xmax AND ? BETWEEN ymin and ymax and image_id = ?");
-    print STDERR "SELECT * FROM image_data WHERE ? + 3 > xmin AND ? - 3 < xmax AND ? BETWEEN ymin and ymax and image_id = ?\n";
     $sth->execute($x, $x, $y, $img_id);
-    print STDERR "$x, $x, $y, $img_id\n";
 }
 
 
@@ -136,7 +90,6 @@ else{
 
 my @results;
 while( my $result = $sth->fetchrow_hashref() ){
-    print STDERR %$result; print STDERR  "\n"; 
     my $sth2 = $dbh->prepare("SELECT id, xmin, xmax, ymin, ymax, image_id, image_track, pair_id, color FROM image_data where id = ?");
     $sth2->execute( $result->{pair_id} );
     my $pair = $sth2->fetchrow_hashref();
