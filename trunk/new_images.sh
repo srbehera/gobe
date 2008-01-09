@@ -8,6 +8,8 @@ echo "adding new files to the directory"
 svn up /opt/apache/CoGe/gobe/
 svn rm /opt/apache/CoGe/gobe/tmpdir/*
 cp /opt/apache/CoGe/tmp/${1}*.png /opt/apache/CoGe/gobe/tmpdir/
+cp /opt/apache/CoGe/tmp/${1}*.faa /opt/apache/CoGe/gobe/tmpdir/
+cp /opt/apache/CoGe/tmp/${1}*.log /opt/apache/CoGe/gobe/tmpdir/
 cp /opt/apache/CoGe/tmp/${1}.sqlite /opt/apache/CoGe/gobe/tmpdir/
 svn add /opt/apache/CoGe/gobe/tmpdir/*
 

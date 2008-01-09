@@ -244,6 +244,14 @@ class Gobe extends Sprite {
     public function imageInfoReturn(e:Event){
             var strdata:String = e.target.data;
             image_info = new Hash<Dynamic>();
+
+            // ADDED
+            var ul = new URLLoader();
+            //ul.addEventListener(Event.COMPLETE, imageInfoReturn);
+            ul.load(new URLRequest(this.QUERY_URL + '&predict=1&db='
+            + this.tmp_dir +  '/' + this.img + '.sqlite'));
+            // END ADDED
+
             var json = Json.decode(strdata);
             // CONVERT THE JSON data into a HASH: sigh.
             image_titles = ['a','b'];
@@ -281,6 +289,7 @@ class Gobe extends Sprite {
     public function rw2pix(rw:Float, i:Int):Float {
         var exts = image_info.get(imgs[i].title).get('extents');
         return (rw - exts.get('bpmin')) / exts.get('bpp');
+
     }
 
     // find the up or down stream basepairs given a mouse click

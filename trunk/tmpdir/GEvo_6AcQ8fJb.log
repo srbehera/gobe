@@ -1,0 +1,24 @@
+Created sequence file for >Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR .  Length 18180
+Created sequence file for >Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI .  Length 17384
+running (1/1) /usr/bin/bl2seq -p blastn -o /opt/apache/CoGe/tmp/GEvo_6AcQ8fJb_1-2.bl2seq -i /opt/apache/CoGe/tmp/GEvo_6AcQ8fJb_1.faa -j /opt/apache/CoGe/tmp/GEvo_6AcQ8fJb_2.faa  -W 7 -G 5 -E 2 -q -2 -r 1 -e 30 -F F 
+generating image (1/2)for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.41
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.41
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.41
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.41
+generating image (2/2)for Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.41
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.41
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.41
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.41
+
+GEvo Benchmark: 2008-01-08 14:59:34
+Time to get sequence                              :  1 wallclock secs ( 0.46 usr  0.02 sys +  0.00 cusr  0.01 csys =  0.49 CPU)
+Time to run blastn                     :  0 wallclock secs ( 0.05 usr  0.01 sys +  0.04 cusr  0.02 csys =  0.12 CPU)
+Time to generate images, maps, and sqlite database:  1 wallclock secs ( 0.58 usr  0.07 sys +  0.00 cusr  0.01 csys =  0.66 CPU)
+Time to process html                              :  0 wallclock secs ( 0.02 usr +  0.00 sys =  0.02 CPU)
+
+Finished!
+
+GEvo link: http://toxic.berkeley.edu/CoGe/GEvo.pl?prog=blastn;x1=7448435;dsid1=582;chr1=1;dr1up=8827;dr1down=9292;gbstart1=1;rev1=1;x2=444503;dsid2=6049;chr2=3;dr2up=9896;dr2down=7427;gbstart2=1;rev2=1;num_seqs=2
+
