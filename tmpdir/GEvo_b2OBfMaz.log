@@ -1,0 +1,18 @@
+Created sequence file for >Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR .  Length:20061
+spike:CTAGAACCCCCGGGA
+Created sequence file for >Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI .  Length:20061
+spike:CTAGAACCCCCGGGA
+running (1/1) /usr/bin/bl2seq -p blastn -o /opt/apache/CoGe/tmp/GEvo_b2OBfMaz_1-2.bl2seq -i /opt/apache/CoGe/tmp/GEvo_b2OBfMaz_1.faa -j /opt/apache/CoGe/tmp/GEvo_b2OBfMaz_2.faa  -W 7 -G 5 -E 2 -q -2 -r 1 -e 30 -F F 
+generating image (1/2)for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.52
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.52
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.52
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.52
+generating image (2/2)for Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.52
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.52
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.52
+Found spike sequence for Oryza sativa japonica (Rice) v5:,  chr01.xml, chr: 1, source: TIGR and Sorghum bicolor v1.3:,  sorg032107.fasta.mask100, chr: 3, source: JGI: eval cutoff set to 0.52
+
+Finished!
+
