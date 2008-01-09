@@ -245,13 +245,6 @@ class Gobe extends Sprite {
             var strdata:String = e.target.data;
             image_info = new Hash<Dynamic>();
 
-            // ADDED
-            var ul = new URLLoader();
-            //ul.addEventListener(Event.COMPLETE, imageInfoReturn);
-            ul.load(new URLRequest(this.QUERY_URL + '&predict=1&db='
-            + this.tmp_dir +  '/' + this.img + '.sqlite'));
-            // END ADDED
-
             var json = Json.decode(strdata);
             // CONVERT THE JSON data into a HASH: sigh.
             image_titles = ['a','b'];
@@ -283,7 +276,6 @@ class Gobe extends Sprite {
 
     public function pix2rw(px:Float, i:Int):Int {
         var exts = image_info.get(image_titles[i]).get('extents');
-        trace(exts);
         return Math.round(exts.get('bpmin') + px * exts.get('bpp'));
     }
     public function rw2pix(rw:Float, i:Int):Float {
