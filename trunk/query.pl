@@ -58,6 +58,21 @@ if ($q->param('get_info')){
 }
 
 if ($q->param('predict')){
+    my $log = $db;
+    $log =~ s/sqlite$/log/g;
+    open(FH, "<", $log);
+    my $bl2seq = (grep { $_ =~ /bl2seq/ } <FH>)[0];
+    chomp $bl2seq;
+
+    # if necessary, fix for dev machine...
+    if( $tmpdir =~ /^\/var\/www\//){
+        $bl2seq =~ s/\/opt\/apache\/CoGe\/tmp\//$tmpdir\/tmpdir\//g;
+    }
+    $bl2seq =~ s/\.bl2seq/.blast/;
+    # use tab-delimited output, and only the top strand
+    $bl2seq .= " -D 1 -S 1 ";
+    print STDERR $bl2seq .  "\n";
+    close(FH);
     exit();
 }
 
@@ -114,5 +129,6 @@ while( my $result = $sth->fetchrow_hashref() ){
                     , color      => $color
                     , features   => {'key' . $f1name => \@f1pts,'key'. $f2name => \@f2pts}
                  });
+    #print STDERR Dumper @results;
 }
 print JSON::Syck::Dump({resultset => \@results});

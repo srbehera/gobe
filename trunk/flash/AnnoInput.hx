@@ -12,6 +12,8 @@ import flash.events.MouseEvent;
 import flash.events.Event;
 import flash.external.ExternalInterface;
 
+import flash.net.URLRequest;
+import flash.net.URLLoader;
 
 class FComboBoxHeaderArrowGFX extends MovieClip{}
 class FComboBoxHeaderGFX extends MovieClip{}
@@ -146,6 +148,10 @@ class AnnoInput extends MovieClip {
 
         var hsp_ids = new Array<Array<Int>>();
         for(gl in gobe._lines){
+            if(gl.db_id1 > gl.db_id2){
+                trace('BAD BAD BAD BAD BAD');
+                trace(gl);
+            }
             hsp_ids.push([gl.db_id1, gl.db_id2]);
         }
         var args = [{
@@ -181,11 +187,8 @@ class AnnoInput extends MovieClip {
             // TODO: why do i have to reverse these? bug elsewhere.
             trace("feat:" + feat);
             for(img in ['img1', 'img2']){
-                trace("img:" + img);
                 var coords:Array<Int> = Reflect.field(feat, img);
-                trace("coords:" + coords);
                 var img_idx:Int = Std.parseInt(img.substr(3)) - 1;
-                trace("img_idx:" + img_idx);
                 gobe.drawHsp(coords, img_idx);
             }
         }
@@ -199,6 +202,12 @@ class AnnoInput extends MovieClip {
     }
 
     public function python_load(genespace_id:Int){
+        // TODO: should only do this if it hasnt be seen before.
+        // probably in the callback ...
+        var ul = new URLLoader();
+        ul.addEventListener(Event.COMPLETE, function(e:Event){ trace(e);});
+        ul.load(new URLRequest(gobe.QUERY_URL + '&predict=1&db=' + gobe.db));
+
         python.load.call([genespace_id, gobe.db], python_load_callback);
     }
 
