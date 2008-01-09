@@ -17,6 +17,7 @@ def bagwrap(fn):
             if isinstance(res, dict): return pyamf.Bag(res)
             return res
         except Exception, e:
+            tracking_db.rollback()
             print >>sys.stderr, e
             print >>sys.stderr, sys.exc_info()
             return str(e) + str(sys.exc_info()) 
@@ -29,6 +30,7 @@ def save(*args, **kwargs):
     args[0] looks like {'keywords':[0,2, ...], 'annos':[1,2,...], 'notes':'asdf'}
     """
     data = args[0]
+    print >>sys.stderr, data
     tcur.execute("UPDATE genespace SET revisit = ?, qdups = ?, sdups = ?, annotation = ?, keywords = ?, notes= ? WHERE genespace_id = ?"
                 ,(  data['revisit']
                    , data['qdups']
@@ -51,6 +53,7 @@ def save(*args, **kwargs):
     if not 'user' in data: data['user'] = 'unknown'
 
     datasets = [x[0] for x in tmp_db.execute('SELECT dsid FROM image_info ORDER BY id').fetchall()]
+    chroms   = [x[0] for x in tmp_db.execute('SELECT chromosome FROM image_info ORDER BY id').fetchall()]
     print >>sys.stderr, datasets
 
     qsql = 'SELECT * FROM image_data WHERE id IN (' + ",".join([str(p[0]) for p in data['hsp_ids']]) + ');';
@@ -66,25 +69,27 @@ def save(*args, **kwargs):
     tcur.execute("INSERT INTO PAIR VALUES(NULL, 'genespace', -5, ?, NULL, NULL, ?)"
             , (data['genespace_id'], data['user']))
     gspair_id = tcur.lastrowid
-    tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 'q', -5, ?, ?, NULL)"
-                , (datasets[0], gspair_id, data['qextents'][0], data['qextents'][1]))
-    tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 's', -5, ?, ?, NULL)"
-                , (datasets[1], gspair_id, data['sextents'][0], data['sextents'][1]))
+    tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 'q', ? , ?, ?, NULL)"
+                , (datasets[0], gspair_id, chroms[0], data['qextents'][0], data['qextents'][1]))
+
+    tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 's', ?, ?, ?, NULL)"
+                , (datasets[1], gspair_id, chroms[1], data['sextents'][0], data['sextents'][1]))
 
 
     for qloc, sloc in zip(tmp_db.execute(qsql).fetchall(), tmp_db.execute(ssql).fetchall()):
-        print >>sys.stderr, sloc['bpmin']
 
-        #assert sloc['bpmin'] == 442076, sloc['bpmin']
+
+        assert sloc['bpmin'] < 454499, ('got query, need subject', sloc['bpmin'], ssql)
+        # TODO: orientation (-5 ???)
         tcur.execute("INSERT INTO pair VALUES(NULL, ?, -5, ?, NULL, NULL, ?)"
                             ,('CNS', data['genespace_id'], data['user'] ))
 
         pair_id = tcur.lastrowid
-        tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 'q', -5, ?, ?, NULL)"
-                , (datasets[0], pair_id, qloc['bpmin'], qloc['bpmax']))
+        tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 'q', ?, ?, ?, NULL)"
+                , (datasets[0], pair_id, chroms[0], qloc['bpmin'], qloc['bpmax']))
 
-        tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 's', -5, ?, ?, NULL)"
-                , (datasets[1], pair_id, sloc['bpmin'], sloc['bpmax']))
+        tcur.execute("INSERT INTO location VALUES (NULL, ?, ?, 'NAME', NULL, 's', ?, ?, ?, NULL)"
+                , (datasets[1], pair_id, chroms[1], sloc['bpmin'], sloc['bpmax']))
 
     tracking_db.commit()
     tmp_db.close()

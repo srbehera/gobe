@@ -50,7 +50,7 @@ class Gobe extends Sprite {
     public var imgs:Array<GImage>;
     public var image_info:Hash<Dynamic>;
     private var gcoords:Array<Array<Int>>;
-    private var QUERY_URL:String;
+    public var QUERY_URL:String;
     public var image_titles:Array<String>;
 
 
@@ -135,6 +135,10 @@ class Gobe extends Sprite {
             var h0 = gcoords[j];
             var h1 = gcoords[j+1];
             var db_id0 = h0[4];
+            if(db_id0 > 104){
+                trace("#################### BAD BAD BAD #######################");
+                trace(h0 + "," +  h1);
+            }
             var db_id1 = h1[4];
             j+=2;
             var l = new GLine(
@@ -166,9 +170,11 @@ class Gobe extends Sprite {
             if(! pair.has_pair){ continue; }
 
             var idx:Int = 0;
-            for(hsp in Reflect.fields(pair.features)){
-                trace("***************************************************************");
+            var fields:Array<String> = Reflect.fields(pair.features);
+            fields.sort(function(a:String, b:String) { return (a < b) ? -1 : 1;} );
+            for(hsp in fields){
                 var coords:Array<Int> = Reflect.field(pair.features, hsp);
+                trace(hsp + ":" + coords);
                 // converty key2 to 2; because that's the image we need. cant use '1' as a key because of
                 // haxe bug.
                 // then create the image name e.g. : GEvo_asdf_2.png
@@ -210,12 +216,13 @@ class Gobe extends Sprite {
         this.base_url  = p.base_url;
         this.img       = p.img;
         this.tmp_dir   = p.tmp_dir;
-        this.pad_gs  = p.pad_gs;
+        this.pad_gs    = p.pad_gs;
         this.n         = p.n;
+
         this.db = this.tmp_dir + '/' + this.img + '.sqlite';
 
         this.genespace_id = Std.parseInt(p.gsid);
-        this.freezable = p.freezable == 'false' ? false : (this.genespace_id == 0) ? false : true;
+        this.freezable    = p.freezable == 'false' ? false : (this.genespace_id == 0) ? false : true;
 
         panel = new Sprite(); 
         addChild(panel);
@@ -238,9 +245,9 @@ class Gobe extends Sprite {
     public function getImageInfo(){
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, imageInfoReturn);
-        ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db='
-          + this.tmp_dir +  '/' + this.img + '.sqlite'));
+        ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db=' + this.db));
     }
+
     public function imageInfoReturn(e:Event){
             var strdata:String = e.target.data;
             image_info = new Hash<Dynamic>();
