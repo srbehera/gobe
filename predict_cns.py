@@ -1,22 +1,24 @@
 
 plot = 0
 if plot:
-    import os
     os.environ['HOME'] = '/tmp/'
     import matplotlib
     matplotlib.use('Agg')
     import pylab
 
+import os
 from blast_misc import blast_array
 import sys
 import sqlite3
 from tables import numexpr
 from scipy.stats import linregress
+import re
+import commands
+
 
 def find_colinear_hits(blastfile, qeval, seval, mask='query', as_str=False):
     sqlite_file = blastfile[:blastfile.rfind(".")] + ".sqlite"
     db = sqlite3.connect(sqlite_file)
-    #db.row_factory = sqlite3.Row
     cur = db.cursor()
     
     # need these to convert the absolute coords in sqlite to match
@@ -77,14 +79,50 @@ def find_colinear_hits(blastfile, qeval, seval, mask='query', as_str=False):
     return cnss
 
 
+def predict(sqlite_file, tmpdir=None):
+    if tmpdir is None:
+        t = '/var/www/gobe/trunk/'
+        tmpdir = t if os.path.exists(t) else '/opt/apache/CoGe/'
+     
+    log = tmpdir + '/' + sqlite_file[:sqlite_file.rfind(".")] + ".log"
+    seen = 0
+    bl2seq, qeval, seval = None, None, None
+    for line in open(log):
+        print >>sys.stderr, line
+        if seen == 2: break
+        line = line[:-1]
+        if 'bl2seq' in line: bl2seq = line
+        elif 'cutoff' in line:
+            if seen == 0: qeval = line; seen += 1
+            elif seen == 1: seval = line; seen += 1
+    
+    bl2seq = bl2seq[bl2seq.find('/usr/bin/bl2seq'):].strip() # remove the comment
+    seval = float(seval[seval.rfind(" ") + 1:])
+    qeval = float(qeval[qeval.rfind(" ") + 1:])
+
+    # if necessary, fix for dev machine...
+    if '/var/www/' in tmpdir: 
+        bl2seq = bl2seq.replace('/opt/apache/CoGe/tmp/', tmpdir + '/tmpdir/')
+    # remove output file;  use tab-delimited output, and only the top strand
+    bl2seq = re.sub("\-o\s[^\s]+", "", bl2seq) + " -D 1 -S 1 ";
+
+    blast_out = log[:log.rfind(".")] + ".blast"
+    print >>sys.stderr, blast_out
+
+    commands.getoutput("%s | grep -v '#' > %s" % (bl2seq, blast_out))
+    predicted = find_colinear_hits(blast_out, qeval, seval)
+    print >>sys.stderr, predicted
+    # use tab-delimited output, and only the top strand
+    return predicted
+
+
 
 if __name__ == "__main__":
-    import sys
     blastfile = sys.argv[1]
-    qlen = float(sys.argv[2])
-    slen = float(sys.argv[3])
+    qeval = float(sys.argv[2])
+    seval = float(sys.argv[3])
 
-    colinear_starts_stops = find_colinear_hits(blastfile, qlen, slen, as_str=True)
+    colinear_starts_stops = find_colinear_hits(blastfile, qeval, seval, as_str=True)
     #print >>sys.stderr, colinear_starts_stops
     print "\n".join(colinear_starts_stops)
 
