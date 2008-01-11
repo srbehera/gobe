@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from pyamf.gateway.wsgi import WSGIGateway
+from pyamf.remoting.gateway.wsgi import WSGIGateway
 import pyamf.amf3 # for some reason, have to import this...
 import sys, os
 import sqlite3
