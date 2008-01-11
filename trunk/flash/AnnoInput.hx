@@ -150,7 +150,6 @@ class AnnoInput extends MovieClip {
         for(gl in gobe._lines){
             if(gl.db_id1 > gl.db_id2){
                 trace('BAD BAD BAD BAD BAD');
-                trace(gl);
             }
             hsp_ids.push([gl.db_id1, gl.db_id2]);
         }
@@ -173,7 +172,7 @@ class AnnoInput extends MovieClip {
 
     
    public function python_load_callback(s:Dynamic){  
-        trace(s);
+        //trace(s);
         if(!s) { return; }
         anno_cbxs.setSelectedIndexes(Reflect.field(s, 'annos'));
         keywords_cbxs.setSelectedIndexes(Reflect.field(s, 'keywords'));
@@ -196,19 +195,31 @@ class AnnoInput extends MovieClip {
         revisit.setChecked(Reflect.field(s,'revisit'));
         var sextents = Reflect.field(s, 'sextents');
         var qextents = Reflect.field(s, 'qextents');
-        trace(sextents);
-        trace(qextents);
+        //trace(sextents);
+        //trace(qextents);
 
     }
 
-    public function python_load(genespace_id:Int){
+    public function python_predict(){
         // TODO: should only do this if it hasnt be seen before.
         // probably in the callback ...
-        var ul = new URLLoader();
-        ul.addEventListener(Event.COMPLETE, function(e:Event){ trace(e);});
-        ul.load(new URLRequest(gobe.QUERY_URL + '&predict=1&db=' + gobe.db));
+        trace("CALLING PREDICT");
+        python.predict.call([gobe.db], python_predict_callback);
+    }
+
+    public function python_predict_callback(pairs:Array<Array<Array<Int>>>){
+        var pair = new Array<Array<Int>>();
+        for(pair in pairs){
+            gobe.drawHsp(pair[0], 0);
+            gobe.drawHsp(pair[1], 1);
+        }
+    }
+
+    public function python_load(genespace_id:Int){
 
         python.load.call([genespace_id, gobe.db], python_load_callback);
+
+        python_predict();
     }
 
     static function main() {

@@ -61,20 +61,48 @@ if ($q->param('predict')){
     my $log = $db;
     $log =~ s/sqlite$/log/g;
     open(FH, "<", $log);
-    my $bl2seq = (grep { $_ =~ /bl2seq/ } <FH>)[0];
+    my ($bl2seq, $eval1, $eval2);
+    my $seen = 0;
+    while (my $line = <FH>){
+        last if $seen == 2;
+        chomp $line;
+        if ($line =~ /bl2seq/){ $bl2seq = $line; }
+        elsif ($line =~ /cutoff/i){ 
+            print STDERR $line . "\n";
+            if ($seen == 0 ){ $eval1 = $line; $seen++; }
+            elsif ($seen == 1){ $eval2 = $line; $seen++; }
+        }
+    }
+
+    $bl2seq =~ s/.+(\/usr\/bin\/bl2seq.+)/$1/;
+    $eval1  =~ s/.+\s([^\s]+)$/$1/;
+    $eval2  =~ s/.+\s([^\s]+)$/$1/;
     chomp $bl2seq;
 
     # if necessary, fix for dev machine...
     if( $tmpdir =~ /^\/var\/www\//){
         $bl2seq =~ s/\/opt\/apache\/CoGe\/tmp\//$tmpdir\/tmpdir\//g;
     }
-    $bl2seq =~ s/\.bl2seq/.blast/;
+    $bl2seq =~ s/\-o\s[^\s]+//;
     # use tab-delimited output, and only the top strand
     $bl2seq .= " -D 1 -S 1 ";
-    print STDERR $bl2seq .  "\n";
+    my $outfile = $log;
+    $outfile =~ s/log$/blast/;
+    print STDERR $outfile;
+    `$bl2seq | grep -v '#' > $outfile`;
+    # use tab-delimited output, and only the top strand
+    my @res = `/usr/bin/python predict_cns.py "$outfile" $eval1 $eval2`;
+    print STDERR "FROM PYTHON:" . scalar(@res)  . " pairs\n";
     close(FH);
     exit();
 }
+
+my $x    = $q->param('x');
+my $y    = $q->param('y');
+my $all  = $q->param('all') || 0;
+my $img_id = $q->param('img');
+
+my $statement;
 
 my $x    = $q->param('x');
 my $y    = $q->param('y');

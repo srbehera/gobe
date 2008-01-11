@@ -70,12 +70,12 @@ def find_colinear_hits(blastfile, qeval, seval, mask='query', as_str=False):
     start_stops = [map(lambda p: int(p) + qmin - 1, pair) for pair in zip(b['qstart'], b['qstop'])]
 
     for qstart, qstop in start_stops:
-        res =  cur.execute('SELECT id, pair_id FROM image_data WHERE image_id = 1 AND bpmin = ? AND bpmax = ?', (qstart, qstop)).fetchone()
-        if not res: continue
-        if as_str:
-            cnss.append(",".join(map(str, res)))
-        else:
-            cnss.append(res)
+        qres =  cur.execute('SELECT xmin, ymin, xmax, ymax, id, pair_id FROM image_data WHERE image_id = 1 AND bpmin = ? AND bpmax = ?', (qstart, qstop)).fetchone()
+        this_cns = [qres[:-1]]
+        if not qres: continue
+        sres =  cur.execute('SELECT xmin, ymin, xmax, ymax, id FROM image_data WHERE id = ?', (qres[-1],)).fetchone()
+        this_cns.append(sres)
+        cnss.append(this_cns)
     return cnss
 
 
