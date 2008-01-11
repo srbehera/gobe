@@ -54,11 +54,6 @@ class Gobe extends Sprite {
     public var image_titles:Array<String>;
 
 
-    public function onClick(e:MouseEvent) {
-        // only send the query to the server if they clicked on a
-        // colored pixel or they hit the shift key.
-        query(e);
-    }
     public function clearPanelGraphics(e:MouseEvent){
         while(panel.numChildren != 0){ panel.removeChildAt(0); }
         _rectangles = [];
@@ -342,7 +337,7 @@ class Gobe extends Sprite {
 
             flash.Lib.current.addChildAt(ttf, 1);
             // TODO move this onto the Rectangles.
-            img.addEventListener(MouseEvent.CLICK, onClick);
+            img.addEventListener(MouseEvent.CLICK, query);
             i++;
             add_sliders(img, i, y, h);
              
