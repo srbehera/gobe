@@ -5,6 +5,9 @@ import pyamf.amf3 # for some reason, have to import this...
 import sys, os
 import sqlite3
 
+sys.path.extend(['/opt/apache/CoGe/gobe/', '/var/www/gobe/trunk'])
+import predict_cns
+
 dbpath = "/opt/apache/CoGe/data/sqlite/pair_tracking.db"
 tracking_db = sqlite3.connect(dbpath)
 tracking_db.row_factory = sqlite3.Row
@@ -14,14 +17,23 @@ def bagwrap(fn):
     def newfn(*args, **kwargs):
         try:
             res = fn(*args, **kwargs)
+            if not res: return 
             if isinstance(res, dict): return pyamf.Bag(res)
             return res
         except Exception, e:
-            tracking_db.rollback()
+            #import traceback
+            #rint >>sys.stderr, traceback.extract_stack()
             print >>sys.stderr, e
+            print >>sys.stderr, "*args:" + ",".join(map(str, list(args)))
             print >>sys.stderr, sys.exc_info()
+
+            tracking_db.rollback()
             return str(e) + str(sys.exc_info()) 
     return newfn
+
+@bagwrap
+def predict(sqlite_file):
+    return predict_cns.predict(sqlite_file)
 
 
 @bagwrap
@@ -79,7 +91,7 @@ def save(*args, **kwargs):
     for qloc, sloc in zip(tmp_db.execute(qsql).fetchall(), tmp_db.execute(ssql).fetchall()):
 
 
-        assert sloc['bpmin'] < 454499, ('got query, need subject', sloc['bpmin'], ssql)
+        #assert sloc['bpmin'] < 454499, ('got query, need subject', sloc['bpmin'], ssql)
         # TODO: orientation (-5 ???)
         tcur.execute("INSERT INTO pair VALUES(NULL, ?, -5, ?, NULL, NULL, ?)"
                             ,('CNS', data['genespace_id'], data['user'] ))
@@ -107,6 +119,7 @@ def remove(genespace_id):
 
 @bagwrap
 def load(genespace_id, tmp_db):
+    print >>sys.stderr, "IN LOAD" 
     genespace_id = int(genespace_id)
     info = tcur.execute('SELECT * FROM genespace WHERE genespace_id = ?', (genespace_id,)).fetchone()
 
@@ -180,8 +193,8 @@ application = WSGIGateway({
     ,'remove': remove
     ,'new_genespace': new_genespace
     ,'load': load
+    ,'predict': predict
     })
-
 
 if __name__ == "__main__":
     
