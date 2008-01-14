@@ -174,6 +174,7 @@ class AnnoInput extends MovieClip {
    public function python_load_callback(s:Dynamic){  
         //trace(s);
         if(!s) { return; }
+
         anno_cbxs.setSelectedIndexes(Reflect.field(s, 'annos'));
         keywords_cbxs.setSelectedIndexes(Reflect.field(s, 'keywords'));
         notes_txt.text = Reflect.field(s, 'notes');
@@ -208,6 +209,8 @@ class AnnoInput extends MovieClip {
     }
 
     public function python_predict_callback(pairs:Array<Array<Array<Int>>>){
+        trace(pairs);
+        if(pairs == null){ return; }
         var pair = new Array<Array<Int>>();
         for(pair in pairs){
             gobe.drawHsp(pair[0], 0);
