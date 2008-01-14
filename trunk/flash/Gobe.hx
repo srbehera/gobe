@@ -25,21 +25,20 @@ import Json;
 
 class Gobe extends Sprite {
 
-    public static var ctx = new LoaderContext(true);
+    public static  var ctx = new LoaderContext(true);
+    private static var base_url = '/CoGe/gobe/';
     //private var line_width:Int;
 
     // base_url and n are sent in on the url.
-    private var base_url:String;
     private var n:Int;
     private var pad_gs:Int; // how many bp in to put the bars from the edge of the image
     private var img:String;
-    private var tmp_dir:String;
-    public var db:String; // path to database
     private var freezable:Bool; // does the user have permission to freeze this genespace?
     public var genespace_id:Int; // the id to link the cns's when freezing
 
     private var _heights:Array<Int>;
 
+    public var base_name:String;
     public var qbx:QueryBox;
     // hold the hsps so we know if one contained a click
     public var _rectangles:Array<GRect>; 
@@ -61,7 +60,7 @@ class Gobe extends Sprite {
     }
     private function query(e:MouseEvent){
         var img = e.target.url;
-        var sqlite = img.substr(0, img.lastIndexOf('_')) + '.sqlite';
+        var sqlite = base_name + '.sqlite';
         var idx:Int = image_info.get(image_titles[e.target.i]).get('anchors').get('idx');
         var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + idx + '&db=' + sqlite;
 
@@ -207,14 +206,11 @@ class Gobe extends Sprite {
 
         gcoords = new Array<Array<Int>>();
 
-        this.QUERY_URL = p.base_url + 'query.pl?';
-        this.base_url  = p.base_url;
-        this.img       = p.img;
-        this.tmp_dir   = p.tmp_dir;
+        this.QUERY_URL = Gobe.base_url + 'query.pl?';
+        this.base_name = p.base_name;
         this.pad_gs    = p.pad_gs;
         this.n         = p.n;
 
-        this.db = this.tmp_dir + '/' + this.img + '.sqlite';
 
         this.genespace_id = Std.parseInt(p.gsid);
         this.freezable    = p.freezable == 'false' ? false : (this.genespace_id == 0) ? false : true;
@@ -225,7 +221,7 @@ class Gobe extends Sprite {
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
-        qbx = new QueryBox(this.base_url, freezable, this);
+        qbx = new QueryBox(Gobe.base_url, freezable, this);
         qbx.x =  1030;
         qbx.show();
         _rectangles = [];
@@ -240,7 +236,7 @@ class Gobe extends Sprite {
     public function getImageInfo(){
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, imageInfoReturn);
-        ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db=' + this.db));
+        ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db=' + this.base_name));
     }
 
     public function imageInfoReturn(e:Event){
@@ -305,7 +301,7 @@ class Gobe extends Sprite {
         imgs = new Array<GImage>();
         for(k in 0...n){
             var title:String = image_titles[k];
-            imgs[k] = new GImage(title, this.tmp_dir + title, k);
+            imgs[k] = new GImage(title, Gobe.base_url + '/tmp/' +  title,  k);
             imgs[k].addEventListener(GEvent.LOADED, imageLoaded);
         }
     }

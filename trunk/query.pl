@@ -15,17 +15,15 @@ my $q = new CGI;
 print "Content-Type: text/html\n\n";
 
 
-my $tmpdir;
-if($ENV{SERVER_NAME} =~ /(toxic|synteny)/){
-    $tmpdir = "/opt/apache/CoGe/";
-}
-else {
-    $tmpdir = "/var/www/gobe/trunk/";
+my $tmpdir = "/opt/apache/CoGe/tmp/";
+
+if($ENV{SERVER_NAME} !~ /(toxic|synteny)/){
+    $tmpdir = "/opt/apache/CoGe/gobe/tmp/";
 }
 
 
 
-my $db  = "$tmpdir/" . $q->param('db');
+my $db  = "$tmpdir/" . $q->param('db') . ".sqlite";
 unless (-r $db) {
     print STDERR $q->url(-query=>1),"\n";
     warn "database file $db does not exist or cannot be read!\n";
@@ -80,7 +78,7 @@ if ($q->param('predict')){
     chomp $bl2seq;
 
     # if necessary, fix for dev machine...
-    if( $tmpdir =~ /^\/var\/www\//){
+    if( $tmpdir =~ /^\/var\/www\//){ # TODO check -e (exists)
         $bl2seq =~ s/\/opt\/apache\/CoGe\/tmp\//$tmpdir\/tmpdir\//g;
     }
     $bl2seq =~ s/\-o\s[^\s]+//;
