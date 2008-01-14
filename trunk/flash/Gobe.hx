@@ -205,7 +205,7 @@ class Gobe extends Sprite {
         var p = flash.Lib.current.loaderInfo.parameters;
 
         gcoords = new Array<Array<Int>>();
-
+        Gobe.base_url  = p.base_url;
         this.QUERY_URL = Gobe.base_url + 'query.pl?';
         this.base_name = p.base_name;
         this.pad_gs    = p.pad_gs;
