@@ -137,6 +137,9 @@ def load(genespace_id, base_name):
     print >>sys.stderr, qextents
 
     tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/tmp/' + base_name + ".sqlite"
+    if not os.path.exists(tmp_db):
+        tmp_db = tmp_db.replace('gobe','')
+
     #tmp_db = '/opt/apache2/CoGe/' + tmp_db
     print >>sys.stderr, "TEMP_DB:" +  tmp_db
 
@@ -157,6 +160,10 @@ def load(genespace_id, base_name):
     print >>sys.stderr, coordslist
     kwds = [int(k) for k in info['keywords'].split("|") if k ]
     anns = [int(k) for k in  info['annotation'].split("|") if k]
+    print >>sys.stderr, {'notes': info['notes'], 'qdups': info['qdups'], 'sdups':info['sdups'] ,'annos':anns
+            ,'keywords':kwds, 'revisit':bool(info['revisit']), 'features': coordslist
+            ,'sextents': sextents, 'qextents':qextents }
+
     return {'notes': info['notes'], 'qdups': info['qdups'], 'sdups':info['sdups'] ,'annos':anns
             ,'keywords':kwds, 'revisit':bool(info['revisit']), 'features': coordslist
             ,'sextents': sextents, 'qextents':qextents }
