@@ -5,7 +5,7 @@ import pyamf.amf3 # for some reason, have to import this...
 import sys, os
 import sqlite3
 
-sys.path.extend(['/opt/apache/CoGe/gobe/', '/var/www/gobe/trunk'])
+sys.path.extend(['/opt/apache/CoGe/gobe/'])
 import predict_cns
 
 dbpath = "/opt/apache/CoGe/data/sqlite/pair_tracking.db"
@@ -32,8 +32,8 @@ def bagwrap(fn):
     return newfn
 
 @bagwrap
-def predict(sqlite_file):
-    return predict_cns.predict(sqlite_file)
+def predict(base_name):
+    return predict_cns.predict(base_name)
 
 
 @bagwrap
@@ -53,10 +53,8 @@ def save(*args, **kwargs):
                    , data['genespace_id']
                    ))
     tracking_db.commit()
-    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + data['tmp_db']
-    #tmp_db = '/opt/apache2/CoGe/' + data['tmp_db']
-    #tmp_db = '/var/www/gobe/trunk/' + data['tmp_db']
-    #print tmp_db
+    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/tmp/' + data['base_name'] + ".sqlite"
+
     tmp_db = sqlite3.connect(tmp_db)
     tmp_db.row_factory = sqlite3.Row
     tmp_cur = tmp_db.cursor()
@@ -118,7 +116,7 @@ def remove(genespace_id):
 
 
 @bagwrap
-def load(genespace_id, tmp_db):
+def load(genespace_id, base_name):
     print >>sys.stderr, "IN LOAD" 
     genespace_id = int(genespace_id)
     info = tcur.execute('SELECT * FROM genespace WHERE genespace_id = ?', (genespace_id,)).fetchone()
@@ -134,12 +132,11 @@ def load(genespace_id, tmp_db):
                                            AND p.genespace_id = ? AND p.pair_type = 'genespace'"
                                         , (genespace_id,)).fetchall()
 
-    print >>sys.stderr, bars
     qextents = [[b['start'], b['stop']] for b in bars if b['q_or_s'] == 'q']
     sextents = [[b['start'], b['stop']] for b in bars if b['q_or_s'] == 's']
     print >>sys.stderr, qextents
 
-    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + tmp_db
+    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/tmp/' + base_name + ".sqlite"
     #tmp_db = '/opt/apache2/CoGe/' + tmp_db
     print >>sys.stderr, "TEMP_DB:" +  tmp_db
 
@@ -156,8 +153,8 @@ def load(genespace_id, tmp_db):
                     'img1': [ qbps['xmin'], qbps['ymin'], qbps['xmax'], qbps['ymax'], qbps['id']]
                   , 'img2': [ sbps['xmin'], sbps['ymin'], sbps['xmax'], sbps['ymax'], sbps['id']]
                   });
-        print >>sys.stderr, "COORDS\n"
-        print >>sys.stderr, coordslist
+    print >>sys.stderr, "COORDS\n"
+    print >>sys.stderr, coordslist
     kwds = [int(k) for k in info['keywords'].split("|") if k ]
     anns = [int(k) for k in  info['annotation'].split("|") if k]
     return {'notes': info['notes'], 'qdups': info['qdups'], 'sdups':info['sdups'] ,'annos':anns
@@ -166,10 +163,10 @@ def load(genespace_id, tmp_db):
 
 
 
-def new_genespace(qanchor, sanchor, tmp_db):
+def new_genespace(qanchor, sanchor, base_name):
     print >>sys.stderr, qanchor, sanchor, tmp_db
     gsid = tcur.execute('SELECT MAX(genespace_id) FROM genespace').fetchone()[0] + 1
-    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/' + tmp_db
+    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/tmp/' + base_name + ".sqlite"
     #tmp_db = '/var/www/gobe/trunk/tmpdir//GEvo_11ltNR3a.sqlite'
     print >>sys.stderr, qanchor, sanchor, tmp_db
     tmp_db = sqlite3.connect(tmp_db)

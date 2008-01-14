@@ -61,7 +61,7 @@ class AnnoInput extends MovieClip {
     static var python:haxe.remoting.AsyncConnection = haxe.remoting.AsyncConnection.amfConnect( 'service.wsgi' );
     
     var genespace_id:Int;
-    private var new_anchors:Array<Dynamic>; // save the bp coords of the anchors, + gobe.db
+    private var new_anchors:Array<Dynamic>; // save the bp coords of the anchors, + gobe.base_name
 
     public function new (mc:MovieClip, genespace_id:Int, gobe:Gobe) {
         super();
@@ -127,7 +127,7 @@ class AnnoInput extends MovieClip {
             e.stopPropagation(); e.stopImmediatePropagation();
             e.target.removeEventListener(e.type, called_genespace_query);
             new_anchors.push(gobe.pix2rw(e.stageX, 1));
-            new_anchors.push(gobe.db);
+            new_anchors.push(gobe.base_name);
             python_new_genespace(new_anchors);
     }
 
@@ -164,7 +164,7 @@ class AnnoInput extends MovieClip {
              ,qextents:gobe.get_slider_locs_rw(0)
              ,sextents:gobe.get_slider_locs_rw(1)
              ,sdups: Std.parseInt(sdups_txt.text)
-             ,tmp_db: gobe.db
+             ,base_name: gobe.base_name
           }];
         trace('calling save with: ' + args);
         python.save.call(args, function(s){trace(s);});
@@ -204,7 +204,7 @@ class AnnoInput extends MovieClip {
         // TODO: should only do this if it hasnt be seen before.
         // probably in the callback ...
         trace("CALLING PREDICT");
-        python.predict.call([gobe.db], python_predict_callback);
+        python.predict.call([gobe.base_name], python_predict_callback);
     }
 
     public function python_predict_callback(pairs:Array<Array<Array<Int>>>){
@@ -217,7 +217,7 @@ class AnnoInput extends MovieClip {
 
     public function python_load(genespace_id:Int){
 
-        python.load.call([genespace_id, gobe.db], python_load_callback);
+        python.load.call([genespace_id, gobe.base_name], python_load_callback);
 
         python_predict();
     }
