@@ -62,9 +62,8 @@ class Gobe extends Sprite {
     }
     private function query(e:MouseEvent){
         var img = e.target.url;
-        var sqlite = base_name + '.sqlite';
         var idx:Int = image_info.get(image_titles[e.target.i]).get('anchors').get('idx');
-        var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + idx + '&db=' + sqlite;
+        var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + idx + '&db=' + base_name;
 
         var removed = false;
         if(! e.shiftKey){
@@ -161,6 +160,7 @@ class Gobe extends Sprite {
 
         var lcolor:Int;
         for(pair in json){
+            trace(pair);
             qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
             qbx.info.htmlText += "<p>" + pair.annotation + "</p>";
             if(! pair.has_pair){ continue; }
@@ -174,7 +174,8 @@ class Gobe extends Sprite {
                 // converty key2 to 2; because that's the image we need. cant use '1' as a key because of
                 // haxe bug.
                 // then create the image name e.g. : GEvo_asdf_2.png
-                var img_key = img + '_' + hsp.substr(3) + ".png";
+                var img_key = base_name + '_' + hsp.substr(3) + ".png";
+                trace(img_key);
                 // and use that to look up the image index.
                 var idx:Int = image_info.get(img_key).get('i');
                 trace(img_key + ", " + idx);
