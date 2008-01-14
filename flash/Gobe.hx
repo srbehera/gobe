@@ -27,6 +27,7 @@ class Gobe extends Sprite {
 
     public static  var ctx = new LoaderContext(true);
     private static var base_url = '/CoGe/gobe/';
+    private static var gobe_url = '/CoGe/gobe/';
     private static var img_url = '/CoGe/gobe/tmp/';
     //private var line_width:Int;
 
@@ -224,7 +225,7 @@ class Gobe extends Sprite {
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
-        qbx = new QueryBox(Gobe.base_url, freezable, this);
+        qbx = new QueryBox(Gobe.gobe_url, freezable, this);
         qbx.x =  1030;
         qbx.show();
         _rectangles = [];

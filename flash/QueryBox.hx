@@ -78,7 +78,7 @@ class QueryBox extends Sprite {
     }
 
 
-    public function new(base_url:String, freezable:Bool, gobe:Gobe){
+    public function new(gobe_url:String, freezable:Bool, gobe:Gobe){
         super();
         this.gobe = gobe;
         this.freezable =freezable;
@@ -158,7 +158,7 @@ class QueryBox extends Sprite {
 
         var loader = new URLLoader();
         loader.addEventListener(Event.COMPLETE, handleHtmlLoaded);
-        loader.load(new URLRequest(base_url + "docs/textfield.html"));
+        loader.load(new URLRequest(gobe_url + "docs/textfield.html"));
         plus = new Sprite();
         minus = new Sprite();
         plus.addEventListener(MouseEvent.CLICK, plusClick);
@@ -171,25 +171,25 @@ class QueryBox extends Sprite {
             save_sprite = new Sprite();
             _ilsave = new Loader();
             _ilsave.contentLoaderInfo.addEventListener(Event.COMPLETE, handleSaveLoaded);
-            _ilsave.load(new URLRequest(base_url + "static/save.gif"));
+            _ilsave.load(new URLRequest(gobe_url + "static/save.gif"));
             save_sprite.addEventListener(MouseEvent.CLICK, viewClick);
         }
 
         
         _ilplus = new Loader();
         _ilplus.contentLoaderInfo.addEventListener(Event.COMPLETE, handlePlusLoaded);
-        _ilplus.load(new URLRequest(base_url + "static/plus.gif"));
+        _ilplus.load(new URLRequest(gobe_url + "static/plus.gif"));
 
 
 
         _ilminus = new Loader();
         _ilminus.contentLoaderInfo.addEventListener(Event.COMPLETE, handleMinusLoaded);
-        _ilminus.load(new URLRequest(base_url + "static/minus.gif"));
+        _ilminus.load(new URLRequest(gobe_url + "static/minus.gif"));
 
        
         _ilclear = new Loader();
         _ilclear.contentLoaderInfo.addEventListener(Event.COMPLETE, handleClearLoaded);
-        _ilclear.load(new URLRequest(base_url + "static/clear_button.gif"));
+        _ilclear.load(new URLRequest(gobe_url + "static/clear_button.gif"));
 
         flash.Lib.current.addChild(this);
 
