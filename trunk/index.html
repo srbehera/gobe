@@ -39,6 +39,7 @@ function call_flash(){
         so.addVariable('pad_gs', getQueryParamValue('pad_gs') || '10000'); 
         so.addVariable('gsid', getQueryParamValue('gsid') || getQueryParamValue('genespace_id') || '0'); 
         so.addVariable('base_url', getQueryParamValue('base_url')|| '/CoGe/gobe/');
+        so.addVariable('img_url', getQueryParamValue('img_url')|| '/CoGe/gobe/tmp/');
         so.addVariable('base_name', getQueryParamValue('base_name')|| 'GEvo_b2OBfMaz');
         so.write("flashcontent");
         

@@ -27,6 +27,7 @@ class Gobe extends Sprite {
 
     public static  var ctx = new LoaderContext(true);
     private static var base_url = '/CoGe/gobe/';
+    private static var img_url = '/CoGe/gobe/tmp/';
     //private var line_width:Int;
 
     // base_url and n are sent in on the url.
@@ -206,8 +207,10 @@ class Gobe extends Sprite {
 
         gcoords = new Array<Array<Int>>();
         Gobe.base_url  = p.base_url;
+            
         this.QUERY_URL = Gobe.base_url + 'query.pl?';
         this.base_name = p.base_name;
+        Gobe.img_url   = p.img_url;
         this.pad_gs    = p.pad_gs;
         this.n         = p.n;
 
@@ -301,7 +304,7 @@ class Gobe extends Sprite {
         imgs = new Array<GImage>();
         for(k in 0...n){
             var title:String = image_titles[k];
-            imgs[k] = new GImage(title, Gobe.base_url + '/tmp/' +  title,  k);
+            imgs[k] = new GImage(title, Gobe.img_url +  title,  k);
             imgs[k].addEventListener(GEvent.LOADED, imageLoaded);
         }
     }
