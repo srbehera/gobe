@@ -197,5 +197,5 @@ if __name__ == "__main__":
     
 
     #print save({'tmp_db': u'tmpdir//GEvo_Fkdb8kIf.sqlite', 'notes': u'sfasd', 'annos': [], 'sextents': [8458456, 8489597], 'revisit': False, 'qextents': [1078486, 1098951], 'sdups': 1, 'genespace_id': 5, 'qdups': 0, 'keywords': [2], 'hsp_ids': [[55, 159], [62, 161]]},)
-    print load(2, 'tmpdir/GEvo_Fkdb8kIf.sqlite')
+    print load(2, 'GEvo_Fkdb8kIf')
     #print new_genespace(123, 234, 'tmpdir//GEvo_11ltNR3a.sqlite')
