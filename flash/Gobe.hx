@@ -209,7 +209,7 @@ class Gobe extends Sprite {
         gcoords = new Array<Array<Int>>();
         Gobe.base_url  = p.base_url;
             
-        this.QUERY_URL = Gobe.base_url + 'query.pl?';
+        this.QUERY_URL = Gobe.gobe_url + 'query.pl?';
         this.base_name = p.base_name;
         Gobe.img_url   = p.img_url;
         this.pad_gs    = p.pad_gs;
