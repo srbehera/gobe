@@ -50,6 +50,7 @@ def find_colinear_hits(blastfile, qeval, seval, mask='query', as_str=False):
         b = b[numexpr.evaluate("(((bstart < cds_start) & (bstop < cds_start)) | ((bstop  > cds_stop ) & (bstart > cds_stop)))")]
                                
     r = 0 
+    if not b.shape[0]: return None
     delta = 0.2 * b['sstart'].max()
 
     # here, try to find a sort of line, and keep removing outliers to only get linear cnss
