@@ -8,7 +8,7 @@ import sqlite3
 sys.path.extend(['/opt/apache/CoGe/gobe/'])
 import predict_cns
 
-tmpdbs = ['/opt/apache/CoGe/gobe/tmp', '/opt/apache/CoGe/tmp/GEvo/']
+tmpdbs = ['/opt/apache/CoGe/gobe/tmp/', '/opt/apache/CoGe/tmp/GEvo/']
 
 dbpath = "/opt/apache/CoGe/data/sqlite/pair_tracking.db"
 tracking_db = sqlite3.connect(dbpath)
@@ -33,16 +33,21 @@ def bagwrap(fn):
             return str(e) + str(sys.exc_info()) 
     return newfn
 
+
+
+def get_temp_db(base_name, ext=".sqlite"):
+    for t in tmpdbs:
+        path = t + base_name + ext
+        if os.path.exists(path):
+            if ext == ".sqlite":
+                return sqlite3.connect(path)
+            else:
+                return path
+
 @bagwrap
 def predict(base_name):
+    logfile = get_temp_db(base_name, ".log")
     return predict_cns.predict(base_name)
-
-
-def get_temp_db(base_name):
-    for t in tmpdbs:
-         path = t + '/tmp/' + data['base_name'] + '.sqlite'
-         if os.path.exists(path)
-         return sqlite3.connect(path)
 
 @bagwrap
 def save(*args, **kwargs):

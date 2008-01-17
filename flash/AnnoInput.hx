@@ -172,7 +172,7 @@ class AnnoInput extends MovieClip {
 
     
    public function python_load_callback(s:Dynamic){  
-        //trace(s);
+        trace(s);
         if(!s) { return; }
 
         anno_cbxs.setSelectedIndexes(Reflect.field(s, 'annos'));
