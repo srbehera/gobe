@@ -25,7 +25,7 @@ def bagwrap(fn):
         except Exception, e:
             #import traceback
             #rint >>sys.stderr, traceback.extract_stack()
-            print >>sys.stderr, e
+            print >>sys.stderr, "function:" + fn.func_name
             print >>sys.stderr, "*args:" + ",".join(map(str, list(args)))
             print >>sys.stderr, sys.exc_info()
 
@@ -47,7 +47,7 @@ def get_temp_db(base_name, ext=".sqlite"):
 @bagwrap
 def predict(base_name):
     logfile = get_temp_db(base_name, ".log")
-    return predict_cns.predict(base_name)
+    return predict_cns.predict(base_name, logfile)
 
 @bagwrap
 def save(*args, **kwargs):
@@ -55,7 +55,6 @@ def save(*args, **kwargs):
     args[0] looks like {'keywords':[0,2, ...], 'annos':[1,2,...], 'notes':'asdf'}
     """
     data = args[0]
-    print >>sys.stderr, data
     tcur.execute("UPDATE genespace SET revisit = ?, qdups = ?, sdups = ?, annotation = ?, keywords = ?, notes= ? WHERE genespace_id = ?"
                 ,(  data['revisit']
                    , data['qdups']
@@ -66,6 +65,9 @@ def save(*args, **kwargs):
                    , data['genespace_id']
                    ))
     tracking_db.commit()
+    if not os.path.exists(tmp_db):
+        tmp_db = tmp_db.replace('gobe','')
+    print >>sys.stderr, "TEMP_DB:", tmp_db
 
     tmp_db = get_temp_db(data['base_name'])
     tmp_db.row_factory = sqlite3.Row
@@ -157,6 +159,7 @@ def load(genespace_id, base_name):
         # query?
         qbps = tmp_cur.execute('SELECT xmin, ymin, xmax, ymax, id, pair_id  FROM image_data WHERE bpmin = ? AND bpmax = ? AND ABS(image_track) > 1 ORDER BY image_id', (l['start'], l['stop'])).fetchone()
         sbps = tmp_cur.execute('SELECT xmin, ymin, xmax, ymax, id  FROM image_data WHERE id = ?', (qbps['pair_id'],)).fetchone()
+        print >>sys.stderr,  qbps, sbps
         coordslist.append({
                     'img1': [ qbps['xmin'], qbps['ymin'], qbps['xmax'], qbps['ymax'], qbps['id']]
                   , 'img2': [ sbps['xmin'], sbps['ymin'], sbps['xmax'], sbps['ymax'], sbps['id']]

@@ -98,9 +98,9 @@ def predict(base_name, logfile=None):
     # remove output file;  use tab-delimited output, and only the top strand
     bl2seq = re.sub("\-o\s[^\s]+", "", bl2seq) + " -D 1 -S 1 ";
 
-    blast_out = log[:log.rfind(".")] + ".blast"
+    blast_out = logfile[:logfile.rfind(".")] + ".blast"
 
-    print  >>sys.stderr, "%s | grep -v '#' > %s" % (bl2seq, blast_out)
+    #print  >>sys.stderr, "%s | grep -v '#' > %s" % (bl2seq, blast_out)
     print >>sys.stderr, commands.getoutput("%s | grep -v '#' > %s" % (bl2seq, blast_out))
     predicted = find_colinear_hits(blast_out, qeval, seval)
     print >>sys.stderr, "PREDICTED:", predicted
