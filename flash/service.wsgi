@@ -8,6 +8,8 @@ import sqlite3
 sys.path.extend(['/opt/apache/CoGe/gobe/'])
 import predict_cns
 
+tmpdbs = ['/opt/apache/CoGe/gobe/tmp', '/opt/apache/CoGe/tmp/GEvo/']
+
 dbpath = "/opt/apache/CoGe/data/sqlite/pair_tracking.db"
 tracking_db = sqlite3.connect(dbpath)
 tracking_db.row_factory = sqlite3.Row
@@ -36,6 +38,12 @@ def predict(base_name):
     return predict_cns.predict(base_name)
 
 
+def get_temp_db(base_name):
+    for t in tmpdbs:
+         path = t + '/tmp/' + data['base_name'] + '.sqlite'
+         if os.path.exists(path)
+         return sqlite3.connect(path)
+
 @bagwrap
 def save(*args, **kwargs):
     """called when user clicks [save] in the flash annotation swf. saves changes to db.
@@ -53,9 +61,8 @@ def save(*args, **kwargs):
                    , data['genespace_id']
                    ))
     tracking_db.commit()
-    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/tmp/' + data['base_name'] + ".sqlite"
 
-    tmp_db = sqlite3.connect(tmp_db)
+    tmp_db = get_temp_db(data['base_name'])
     tmp_db.row_factory = sqlite3.Row
     tmp_cur = tmp_db.cursor()
 
@@ -136,14 +143,7 @@ def load(genespace_id, base_name):
     sextents = [[b['start'], b['stop']] for b in bars if b['q_or_s'] == 's']
     print >>sys.stderr, qextents
 
-    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/tmp/' + base_name + ".sqlite"
-    if not os.path.exists(tmp_db):
-        tmp_db = tmp_db.replace('gobe','')
-
-    #tmp_db = '/opt/apache2/CoGe/' + tmp_db
-    print >>sys.stderr, "TEMP_DB:" +  tmp_db
-
-    tmp_db = sqlite3.connect(tmp_db)
+    tmp_db =  get_temp_db( base_name )
     tmp_db.row_factory = sqlite3.Row
     tmp_cur = tmp_db.cursor()
     coordslist = []
@@ -173,10 +173,9 @@ def load(genespace_id, base_name):
 def new_genespace(qanchor, sanchor, base_name):
     print >>sys.stderr, qanchor, sanchor, tmp_db
     gsid = tcur.execute('SELECT MAX(genespace_id) FROM genespace').fetchone()[0] + 1
-    tmp_db = os.path.dirname(os.path.dirname(__file__)) + '/tmp/' + base_name + ".sqlite"
-    #tmp_db = '/var/www/gobe/trunk/tmpdir//GEvo_11ltNR3a.sqlite'
+
     print >>sys.stderr, qanchor, sanchor, tmp_db
-    tmp_db = sqlite3.connect(tmp_db)
+    tmp_db = get_temp_db(base_name)
     tmp_db.row_factory = sqlite3.Row
     tmp_cur = tmp_db.cursor()
     datasets = [x[0] for x in tmp_db.execute('SELECT dsid FROM image_info ORDER BY id').fetchall()]
