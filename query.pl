@@ -35,7 +35,7 @@ my $sth;
 
 if ($q->param('get_info')){
     my %result; 
-    $sth = $dbh->prepare("SELECT iname, title FROM image_info order by id");
+    $sth = $dbh->prepare("SELECT iname, title, id FROM image_info order by id");
     my $sth2 = $dbh->prepare("select min(xmin), max(xmax), image_id from image_data where type='anchor' group by image_id order by image_id;");
     my $sth3 = $dbh->prepare("select * from image_info order by iname;");
     $sth->execute();
@@ -46,11 +46,11 @@ if ($q->param('get_info')){
          $result{$title->[0]} =  {'title' => $title->[1], 'i' => $i++};
          my $anchors = $sth2->fetchrow_arrayref();
          my $info = $sth3->fetchrow_hashref();
-         $result{$title->[0]}{'anchors'} = {'xmin' => $anchors->[0], 'xmax' => $anchors->[1], 'idx' => $anchors->[2]};
+         $result{$title->[0]}{'anchors'} = {'xmin' => $anchors->[0], 'xmax' => $anchors->[1], 'idx' => $title->[2]};
          $result{$title->[0]}{'extents'} = {'bpmin' => $info->{bpmin}, 'bpmax' => $info->{bpmax}, 'img_width' => $info->{px_width} };
     }
 
-    #print STDERR Dumper %result;
+#    print STDERR Dumper %result;
     print JSON::Syck::Dump(\%result);
     exit();
 }
@@ -121,8 +121,12 @@ if($all){
     $sth->execute($track, $track, $img_id);
 }
 else{
-    $sth = $dbh->prepare("SELECT * FROM image_data WHERE ? + 3 > xmin AND ? - 3 < xmax AND ? BETWEEN ymin and ymax and image_id = ?");
-    $sth->execute($x, $x, $y, $img_id);
+  my $query ="SELECT * FROM image_data WHERE ? + 3 > xmin AND ? - 3 < xmax AND ? BETWEEN ymin and ymax and image_id = ?";
+    $sth = $dbh->prepare($query);
+  my @params = ($x, $x, $y, $img_id);
+#  print STDERR $query,"\n";
+#  print STDERR Dumper \@params;
+    $sth->execute(@params);
 }
 
 
