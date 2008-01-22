@@ -34,20 +34,44 @@ my $dbh = DBI->connect("dbi:SQLite:dbname=$db") || die "cant connect to db";
 my $sth;
 
 if ($q->param('get_info')){
-    my %result; 
-    $sth = $dbh->prepare("SELECT iname, title, id FROM image_info order by id");
+    my %result;
+    my %data;
+    $sth = $dbh->prepare("SELECT * FROM image_info order by id");
     my $sth2 = $dbh->prepare("select min(xmin), max(xmax), image_id from image_data where type='anchor' group by image_id order by image_id;");
-    my $sth3 = $dbh->prepare("select * from image_info order by iname;");
+#    my $sth3 = $dbh->prepare("select * from image_info order by iname;");
     $sth->execute();
+    while( my $title = $sth->fetchrow_hashref() )
+      {
+	$data{$title->{id}}{img}{image_name}=$title->{iname};
+	$data{$title->{id}}{img}{title}=$title->{title};
+	$data{$title->{id}}{img}{width}=$title->{px_width};
+	$data{$title->{id}}{img}{bpmin}=$title->{bpmin};
+	$data{$title->{id}}{img}{bpmax}=$title->{bpmax};
+      }
     $sth2->execute();
-    $sth3->execute();
+    foreach my $anchor (@{$sth2->fetchall_arrayref()})
+      {
+	$data{$anchor->[2]}{anchor}{max}=$anchor->[0];
+	$data{$anchor->[2]}{anchor}{min}=$anchor->[1];
+      }
     my $i = 0;
-    foreach my $title (@{$sth->fetchall_arrayref()}){
-         $result{$title->[0]} =  {'title' => $title->[1], 'i' => $i++};
-         my $anchors = $sth2->fetchrow_arrayref();
-         my $info = $sth3->fetchrow_hashref();
-         $result{$title->[0]}{'anchors'} = {'xmin' => $anchors->[0], 'xmax' => $anchors->[1], 'idx' => $title->[2]};
-         $result{$title->[0]}{'extents'} = {'bpmin' => $info->{bpmin}, 'bpmax' => $info->{bpmax}, 'img_width' => $info->{px_width} };
+    foreach my $id (sort keys %data)
+      {
+	my $img = $data{$id}{img};
+	my $name = $img->{image_name};
+	$result{$name}{title} = $img->{title};
+	$result{$name}{i}=$i;
+	$result{$name}{extents} = {img_width=>$img->{width},
+				    bpmin=>$img->{bpmin},
+				    bpmax=>$img->{bpmax}
+				   };
+	my $anc = $data{$id}{anchor};
+	$result{$name}{anchors} = {
+				    idx=>$id,
+				    xmax=>$anc->{min},
+				    xmin=>$anc->{max},
+				   };
+	$i++;
     }
 
 #    print STDERR Dumper %result;
