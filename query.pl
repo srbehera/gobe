@@ -55,7 +55,7 @@ if ($q->param('get_info')){
 	$data{$anchor->[2]}{anchor}{min}=$anchor->[1];
       }
     my $i = 0;
-    foreach my $id (sort keys %data)
+    foreach my $id (sort {$a<=>$b} keys %data)
       {
 	my $img = $data{$id}{img};
 	my $name = $img->{image_name};
