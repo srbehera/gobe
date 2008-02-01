@@ -1,0 +1,78 @@
+Created sequence file 1 for >AT1G19510 .  Length:201092
+Created sequence file 2 for >AT1G45130 .  Length:204011
+Created sequence file 3 for >AT1G63810 .  Length:206367
+Created sequence file 4 for >AT1G75420 .  Length:202207
+Created sequence file 5 for >AT3G51050 .  Length:204034
+Created sequence file 6 for >AT4G36360 .  Length:204920
+Created sequence file 7 for >AT5G17760 .  Length:202002
+Created sequence file 8 for >AT5G66420 .  Length:203408
+Created sequence file 9 for >Arabidopsis thaliana v7: chr, 2 .  Length:200001
+Created sequence file 10 for >GSVIV00036757001 .  Length:1031145
+running (1/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1-2.blastz
+running (2/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1-3.blastz
+running (3/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1-4.blastz
+running (4/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1-5.blastz
+running (5/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1-6.blastz
+running (6/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1-7.blastz
+running (7/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1-8.blastz
+running (8/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_9.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1-9.blastz
+running (9/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_10.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_1-10.blastz
+running (10/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2-3.blastz
+running (11/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2-4.blastz
+running (12/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2-5.blastz
+running (13/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2-6.blastz
+running (14/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2-7.blastz
+running (15/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2-8.blastz
+running (16/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_9.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2-9.blastz
+running (17/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_10.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_2-10.blastz
+running (18/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3-4.blastz
+running (19/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3-5.blastz
+running (20/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3-6.blastz
+running (21/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3-7.blastz
+running (22/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3-8.blastz
+running (23/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_9.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3-9.blastz
+running (24/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_10.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_3-10.blastz
+running (25/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4-5.blastz
+running (26/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4-6.blastz
+running (27/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4-7.blastz
+running (28/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4-8.blastz
+running (29/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_9.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4-9.blastz
+running (30/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_10.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_4-10.blastz
+running (31/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5-6.blastz
+running (32/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5-7.blastz
+running (33/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5-8.blastz
+running (34/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_9.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5-9.blastz
+running (35/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_10.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_5-10.blastz
+running (36/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6-7.blastz
+running (37/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6-8.blastz
+running (38/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_9.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6-9.blastz
+running (39/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_10.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_6-10.blastz
+running (40/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7-8.blastz
+running (41/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_9.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7-9.blastz
+running (42/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_10.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_7-10.blastz
+running (43/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_9.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8-9.blastz
+running (44/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_10.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_8-10.blastz
+running (45/45) /usr/bin/blastz  /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_9.faa /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_10.faa  W=8 K=3000 O=400 E=30 > /opt/apache/CoGe/tmp/GEvo/GEvo_O1iH1VOg_9-10.blastz
+generating image (1/10)for AT1G19510
+generating image (2/10)for AT1G45130
+generating image (3/10)for AT1G63810
+generating image (4/10)for AT1G75420
+generating image (5/10)for AT3G51050
+generating image (6/10)for AT4G36360
+generating image (7/10)for AT5G17760
+generating image (8/10)for AT5G66420
+generating image (9/10)for Arabidopsis thaliana v7: chr, 2
+generating image (10/10)for GSVIV00036757001
+
+GEvo Benchmark: 2008-01-29 15:48:27
+Time to get sequence                              : 51 wallclock secs (34.37 usr  0.39 sys +  0.00 cusr  0.06 csys = 34.82 CPU)
+Time to run blastz                     : 20 wallclock secs ( 5.06 usr  0.51 sys + 65.44 cusr  7.85 csys = 78.86 CPU)
+Time to generate images, maps, and sqlite database: 60 wallclock secs (55.96 usr  1.24 sys +  0.00 cusr  0.01 csys = 57.21 CPU)
+Time to find and update sqlite database for HSPs  :  2 wallclock secs ( 0.83 usr +  0.32 sys =  1.15 CPU)
+Time to process html                              :  2 wallclock secs ( 0.24 usr +  0.00 sys =  0.24 CPU)
+
+Finished!
+
+GEvo link: http://toxic.berkeley.edu/CoGe/GEvo.pl?prog=blastz;accn1=AT1G19510;fid1=4083636;dsid1=556;chr1=1;dr1up=100000;dr1down=100000;gbstart1=1;accn2=AT1G45130;fid2=14421607;dsid2=34474;chr2=1;dr2up=100000;dr2down=100000;gbstart2=1;accn3=AT1G63810;fid3=14460440;dsid3=34474;chr3=1;dr3up=100000;dr3down=100000;gbstart3=1;accn4=AT1G75420;fid4=14278021;dsid4=34474;chr4=1;dr4up=100000;dr4down=100000;gbstart4=1;accn5=AT3G51050;fid5=14287121;dsid5=34474;chr5=3;dr5up=100000;dr5down=100000;gbstart5=1;accn6=AT4G36360;fid6=14253564;dsid6=34474;chr6=4;dr6up=100000;dr6down=100000;gbstart6=1;accn7=AT5G17760;fid7=14360199;dsid7=34474;chr7=5;dr7up=100000;dr7down=100000;gbstart7=1;accn8=AT5G66420;fid8=14199930;dsid8=34474;chr8=5;dr8up=100000;dr8down=100000;gbstart8=1;x9=7956569;dsid9=557;chr9=2;dr9up=100000;dr9down=100000;gbstart9=1;accn10=GSVIV00036757001;fid10=14673539;dsid10=34473;chr10=4;dr10up=1867833;dr10down=-840525;gbstart10=1;num_seqs=10
+
+Tiny url: http://tinyurl.com/yq7ufs
