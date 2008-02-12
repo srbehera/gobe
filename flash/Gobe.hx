@@ -37,6 +37,7 @@ class Gobe extends Sprite {
     private var img:String;
     private var freezable:Bool; // does the user have permission to freeze this genespace?
     public var genespace_id:Int; // the id to link the cns's when freezing
+    public var cnss:Array<Int>;
 
     private var _heights:Array<Int>;
 
@@ -99,12 +100,14 @@ class Gobe extends Sprite {
 
     public function drawHsp(coords:Array<Int>, img_idx:Int){
         var img:GImage = imgs[img_idx];
+        trace("image:" + img.url );
         var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
         var xy1 = img.localToGlobal(new flash.geom.Point(coords[2],coords[3]));
 
         var db_id = coords[4]; // this links to the id in the image_data table
         var x0 = xy0.x;
         var y0 = xy0.y;
+        trace("y:" + y0);
         var w = coords[2] - coords[0];
         var h = coords[3] - coords[1];
         var pr:GRect;
@@ -252,6 +255,7 @@ class Gobe extends Sprite {
             // CONVERT THE JSON data into a HASH: sigh.
             image_titles = ['a','b'];
             for( title in Reflect.fields(json)){
+                if (title == "CNS"){ continue; }
                 var info = Reflect.field(json, title);
                 image_info.set(title, new Hash<Hash<Int>>());
                 for (group_key in Reflect.fields(info)){
@@ -273,8 +277,23 @@ class Gobe extends Sprite {
                 var ext = image_info.get(t).get('extents');
                 ext.set('bpp', (ext.get('bpmax') - ext.get('bpmin') + 1)/ext.get('img_width'));
             }
-            trace(image_info);
             initImages();
+            cnss = Reflect.field(json, "CNS");
+            addEventListener(GEvent.ALL_LOADED, draw_cns);
+            //trace(image_info);
+    }
+
+    public function draw_cns(e:Event){
+        for(feat in cnss){
+            trace(feat);
+            for (img in ['img1', 'img2']){
+                var coords:Array<Int> = Reflect.field(feat, img);
+                var img_idx:Int = Std.parseInt(img.substr(3)) - 1;
+                trace(img_idx);
+                drawHsp(coords, img_idx);
+            }
+        }
+        drawLines();
     }
 
     public function pix2rw(px:Float, i:Int):Int {
@@ -349,6 +368,7 @@ class Gobe extends Sprite {
         if(freezable){
            qbx.anno.python_load(genespace_id);
         }
+        dispatchEvent(new GEvent(GEvent.ALL_LOADED));
     }
     public function imageMouseUp(e:MouseEvent){ 
         var i:Int;
@@ -554,6 +574,7 @@ class GImage extends Sprite {
 
 class GEvent extends Event {
     public static var LOADED = "LOADED";
+    public static var ALL_LOADED = "ALL_LOADED";
     public function new(type:String){
         super(type);
     }
