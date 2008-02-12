@@ -8,6 +8,7 @@ use POSIX;
 use JSON::Syck;
 
 
+
 my $q = new CGI;
 print "Content-Type: text/html\n\n";
 
@@ -18,17 +19,57 @@ if($ENV{SERVER_NAME} !~ /(toxic|synteny)/){
     $tmpdir = "/opt/apache/CoGe/gobe/tmp/";
 }
 
-
-
-my $db  = "$tmpdir/" . $q->param('db') . ".sqlite";
+my $db = "$tmpdir/" . $q->param('db') . ".sqlite";
 unless (-r $db) {
     print STDERR $q->url(-query=>1),"\n";
     warn "database file $db does not exist or cannot be read!\n";
     exit;
 }
 
-my $dbh = DBI->connect("dbi:SQLite:dbname=$db") || die "cant connect to db";
+our $dbh = DBI->connect("dbi:SQLite:dbname=$db") || die "cant connect to db";
 my $sth;
+
+
+sub get_cns {
+    # get all the stuff that had been saved in the mysql db as CNS
+    # (and here as well). use those with image_id == 1 to find pair in
+    # image_id == 2, if we cant find the pair, then it must be
+    # off-screen.
+    $sth = $dbh->prepare(qq! SELECT xmin, xmax, ymin, ymax, id, pair_id, image_id  
+                             FROM image_data WHERE bpmin || "," || bpmax IN
+                            (SELECT bpmin || "," || bpmax 
+                                FROM image_data WHERE type = "CNS") 
+                            AND type = "HSP"; !);
+    $sth->execute();
+    my @cnss;
+    my %seen_ids;
+    while (my $cns  = $sth->fetchrow_hashref()) {
+        push(@cnss, $cns);
+        $seen_ids{$cns->{id}}=1;
+    }
+
+    #print STDERR "CNS: " .  scalar(@cnss) . "\n";
+    # remove any that dont have their partner in the visible window.
+    @cnss = grep { $seen_ids{$_->{pair_id}} } @cnss;
+
+    # make it easier to look up the pair.
+    my %cnss; map { $cnss{$_->{id}} = $_ } @cnss;
+    my @coordslist;
+
+    foreach my $cns (values %cnss){
+        # we'll get anything iwth image_id == 2 as a pair.
+        if ($cns->{image_id} != 1) { next;}
+        my $pair = $cnss{$cns->{pair_id}};
+        push(@coordslist, {
+             'img1' => [$cns->{xmin},  $cns->{ymin},  $cns->{xmax},  $cns->{ymax},  $cns->{id}]
+            ,'img2' => [$pair->{xmin}, $pair->{ymin}, $pair->{xmax}, $pair->{ymax}, $pair->{id}]
+
+        });
+    }
+    #print STDERR "CNS: " .  scalar(@cnss) . "\n";
+    #print STDERR "coords: " .  Dumper @coordslist;
+    return \@coordslist;
+}
 
 if ($q->param('get_info')){
     my %result;
@@ -71,51 +112,11 @@ if ($q->param('get_info')){
     }
 
 #    print STDERR Dumper %result;
-    my @coordslist = &get_cns();
-    $result{'CNS'} = \@coordslist;
+    my ($coordslist, $rand)  = &get_cns();
+    $result{'CNS'} = $coordslist;
     print JSON::Syck::Dump(\%result);
+    undef $coordslist ;
     exit();
-}
-
-sub get_cns {
-    # get all the stuff that had been saved in the mysql db as CNS
-    # (and here as well). use those with image_id == 1 to find pair in
-    # image_id == 2, if we cant find the pair, then it must be
-    # off-screen.
-    $sth = $dbh->prepare(qq! SELECT xmin, xmax, ymin, ymax, id, pair_id, image_id  
-                             FROM image_data WHERE bpmin || "," || bpmax IN
-                            (SELECT bpmin || "," || bpmax 
-                                FROM image_data WHERE type = "CNS") 
-                            AND type = "HSP"; !);
-    $sth->execute();
-    my @cnss;
-    my %seen_ids;
-    while (my $cns  = $sth->fetchrow_hashref()) {
-        push(@cnss, $cns);
-        $seen_ids{$cns->{id}}=1;
-    }
-
-    #print STDERR "CNS: " .  scalar(@cnss) . "\n";
-    # remove any that dont have their partner in the visible window.
-    @cnss = grep { $seen_ids{$_->{pair_id}} } @cnss;
-
-    # make it easier to look up the pair.
-    my %cnss; map { $cnss{$_->{id}} = $_ } @cnss;
-    my @coordslist;
-
-    foreach my $cns (values %cnss){
-        # we'll get anything iwth image_id == 2 as a pair.
-        if ($cns->{image_id} != 1) { next;}
-        my $pair = $cnss{$cns->{pair_id}};
-        push(@coordslist, {
-             'img1' => [$cns->{xmin},  $cns->{ymin},  $cns->{xmax},  $cns->{ymax},  $cns->{id}]
-            ,'img2' => [$pair->{xmin}, $pair->{ymin}, $pair->{xmax}, $pair->{ymax}, $pair->{id}]
-
-        });
-    }
-    #print STDERR "CNS: " .  scalar(@cnss) . "\n";
-    #print STDERR "coords: " .  Dumper @coordslist;
-    return @coordslist;
 }
 
 if ($q->param('predict')){
