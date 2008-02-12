@@ -6,9 +6,6 @@ use DBI;
 use Data::Dumper;
 use POSIX;
 use JSON::Syck;
-use File::Temp qw/ :mktemp /;
-my $connstr = 'dbi:mysql:genomes:biocon:3306';
-
 
 
 my $q = new CGI;
@@ -40,43 +37,81 @@ if ($q->param('get_info')){
     my $sth2 = $dbh->prepare("select min(xmin), max(xmax), image_id from image_data where type='anchor' group by image_id order by image_id;");
 #    my $sth3 = $dbh->prepare("select * from image_info order by iname;");
     $sth->execute();
-    while( my $title = $sth->fetchrow_hashref() )
-      {
-	$data{$title->{id}}{img}{image_name}=$title->{iname};
-	$data{$title->{id}}{img}{title}=$title->{title};
-	$data{$title->{id}}{img}{width}=$title->{px_width};
-	$data{$title->{id}}{img}{bpmin}=$title->{bpmin};
-	$data{$title->{id}}{img}{bpmax}=$title->{bpmax};
-      }
+    while( my $title = $sth->fetchrow_hashref() ) {
+        $data{$title->{id}}{img}{image_name}=$title->{iname};
+        $data{$title->{id}}{img}{title}=$title->{title};
+        $data{$title->{id}}{img}{width}=$title->{px_width};
+        $data{$title->{id}}{img}{bpmin}=$title->{bpmin};
+        $data{$title->{id}}{img}{bpmax}=$title->{bpmax};
+    }
+
     $sth2->execute();
-    foreach my $anchor (@{$sth2->fetchall_arrayref()})
-      {
-	$data{$anchor->[2]}{anchor}{max}=$anchor->[0];
-	$data{$anchor->[2]}{anchor}{min}=$anchor->[1];
-      }
+    foreach my $anchor (@{$sth2->fetchall_arrayref()}) {
+        $data{$anchor->[2]}{anchor}{max}=$anchor->[0];
+        $data{$anchor->[2]}{anchor}{min}=$anchor->[1];
+    }
+
     my $i = 0;
-    foreach my $id (sort {$a<=>$b} keys %data)
-      {
-	my $img = $data{$id}{img};
-	my $name = $img->{image_name};
-	$result{$name}{title} = $img->{title};
-	$result{$name}{i}=$i;
-	$result{$name}{extents} = {img_width=>$img->{width},
-				    bpmin=>$img->{bpmin},
-				    bpmax=>$img->{bpmax}
-				   };
-	my $anc = $data{$id}{anchor};
-	$result{$name}{anchors} = {
-				    idx=>$id,
-				    xmax=>$anc->{min},
-				    xmin=>$anc->{max},
-				   };
-	$i++;
+    foreach my $id (sort {$a<=>$b} keys %data) {
+        my $img = $data{$id}{img};
+        my $name = $img->{image_name};
+        $result{$name}{title} = $img->{title};
+        $result{$name}{i}=$i;
+        $result{$name}{extents} = {img_width=>$img->{width},
+                        bpmin=>$img->{bpmin},
+                        bpmax=>$img->{bpmax}
+                       };
+        my $anc = $data{$id}{anchor};
+        $result{$name}{anchors} = {
+                        idx=>$id,
+                        xmax=>$anc->{min},
+                        xmin=>$anc->{max},
+                       };
+        $i++;
     }
 
 #    print STDERR Dumper %result;
+    my @coordslist = &get_cns();
+    $result{'CNS'} = \@coordslist;
     print JSON::Syck::Dump(\%result);
     exit();
+}
+
+sub get_cns {
+    # get all the stuff that had been saved in the mysql db as CNS
+    # (and here as well). use those with image_id == 1 to find pair in
+    # image_id == 2, if we cant find the pair, then it must be
+    # off-screen.
+    $sth = $dbh->prepare(qq! SELECT xmin, xmax, ymin, ymax, id, pair_id, image_id  FROM image_data WHERE bpmin IN (SELECT bpmin FROM image_data WHERE type = "CNS") AND bpmax IN (SELECT bpmax FROM image_data WHERE type = "CNS")  AND type = "HSP"; !);
+    $sth->execute();
+    my @cnss;
+    my %seen_ids;
+    while (my $cns  = $sth->fetchrow_hashref()) {
+        push(@cnss, $cns);
+        $seen_ids{$cns->{id}}=1;
+    }
+
+    #print STDERR "CNS: " .  scalar(@cnss) . "\n";
+    # remove any that dont have their partner in the visible window.
+    @cnss = grep { $seen_ids{$_->{pair_id}} } @cnss;
+
+    # make it easier to look up the pair.
+    my %cnss; map { $cnss{$_->{id}} = $_ } @cnss;
+    my @coordslist;
+
+    foreach my $cns (values %cnss){
+        # we'll get anything iwth image_id == 2 as a pair.
+        if ($cns->{image_id} != 1) { next;}
+        my $pair = $cnss{$cns->{pair_id}};
+        push(@coordslist, {
+             'img1' => [$cns->{xmin},  $cns->{ymin},  $cns->{xmax},  $cns->{ymax},  $cns->{id}]
+            ,'img2' => [$pair->{xmin}, $pair->{ymin}, $pair->{xmax}, $pair->{ymax}, $pair->{id}]
+
+        });
+    }
+    #print STDERR "CNS: " .  scalar(@cnss) . "\n";
+    #print STDERR "coords: " .  Dumper @coordslist;
+    return @coordslist;
 }
 
 if ($q->param('predict')){
