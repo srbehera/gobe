@@ -82,7 +82,11 @@ sub get_cns {
     # (and here as well). use those with image_id == 1 to find pair in
     # image_id == 2, if we cant find the pair, then it must be
     # off-screen.
-    $sth = $dbh->prepare(qq! SELECT xmin, xmax, ymin, ymax, id, pair_id, image_id  FROM image_data WHERE bpmin IN (SELECT bpmin FROM image_data WHERE type = "CNS") AND bpmax IN (SELECT bpmax FROM image_data WHERE type = "CNS")  AND type = "HSP"; !);
+    $sth = $dbh->prepare(qq! SELECT xmin, xmax, ymin, ymax, id, pair_id, image_id  
+                             FROM image_data WHERE bpmin || "," || bpmax IN
+                            (SELECT bpmin || "," || bpmax 
+                                FROM image_data WHERE type = "CNS") 
+                            AND type = "HSP"; !);
     $sth->execute();
     my @cnss;
     my %seen_ids;
