@@ -71,7 +71,11 @@ class Gobe extends Sprite {
             var r:GRect; var i:Int = 0;
             for(r in _rectangles){
                // removed the rectangle (and pair) that was clicked on.
-               if(r.hitTestPoint(e.stageX, e.stageY)){
+               var rb = r.getBounds(panel);
+               rb.inflate(3.0, 0.0);
+               rb.offset(-1.5, 0.0);
+               if( rb.contains( e.stageX, e.stageY)) {
+               //if(r.hitTestPoint(e.stageX, e.stageY)){
                     var pair_idx = i % 2 == 0 ? i : i - 1;
                     var rects = _rectangles.splice(pair_idx, 2);
                     panel.removeChild(rects[1]);
@@ -100,14 +104,12 @@ class Gobe extends Sprite {
 
     public function drawHsp(coords:Array<Int>, img_idx:Int){
         var img:GImage = imgs[img_idx];
-        trace("image:" + img.url );
         var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
         var xy1 = img.localToGlobal(new flash.geom.Point(coords[2],coords[3]));
 
         var db_id = coords[4]; // this links to the id in the image_data table
         var x0 = xy0.x;
         var y0 = xy0.y;
-        trace("y:" + y0);
         var w = coords[2] - coords[0];
         var h = coords[3] - coords[1];
         var pr:GRect;
@@ -173,15 +175,12 @@ class Gobe extends Sprite {
             fields.sort(function(a:String, b:String) { return (a < b) ? -1 : 1;} );
             for(hsp in fields){
                 var coords:Array<Int> = Reflect.field(pair.features, hsp);
-                trace(hsp + ":" + coords);
                 // converty key2 to 2; because that's the image we need. cant use '1' as a key because of
                 // haxe bug.
                 // then create the image name e.g. : GEvo_asdf_2.png
                 var img_key = base_name + '_' + hsp.substr(3) + ".png";
-                trace(img_key);
                 // and use that to look up the image index.
                 var idx:Int = image_info.get(img_key).get('i');
-                trace(img_key + ", " + idx);
                 drawHsp(coords, idx);
             }
             lcolor = pair.color;
@@ -285,11 +284,9 @@ class Gobe extends Sprite {
 
     public function draw_cns(e:Event){
         for(feat in cnss){
-            trace(feat);
             for (img in ['img1', 'img2']){
                 var coords:Array<Int> = Reflect.field(feat, img);
                 var img_idx:Int = Std.parseInt(img.substr(3)) - 1;
-                trace(img_idx);
                 drawHsp(coords, img_idx);
             }
         }
@@ -357,11 +354,11 @@ class Gobe extends Sprite {
 
             flash.Lib.current.addChildAt(ttf, 1);
             // TODO move this onto the Rectangles.
-            img.addEventListener(MouseEvent.CLICK, query);
+            img.addEventListener(MouseEvent.CLICK, query, false);
             i++;
             add_sliders(img, i, y, h);
              
-            img.addEventListener(MouseEvent.MOUSE_UP, imageMouseUp);
+            img.addEventListener(MouseEvent.MOUSE_UP, imageMouseUp, false);
             //img.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
             y+=h;
         }
@@ -400,7 +397,7 @@ class Gobe extends Sprite {
             img.sliders.push(gs0);
             flash.Lib.current.addChild(gs0);
 
-            gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp);
+            gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp, false);
             //gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
 
             var xmax = Math.min(rw2pix(exts.get('bpmax') - this.pad_gs, i - 1), exts.get('img_width'));
@@ -459,20 +456,32 @@ class Gobe extends Sprite {
 
 // instead of just drawing on the stage, we add a lightweight shape.
 class GRect extends Shape {
-    public var x0:Float;
-    public var y0:Float;
+    //public var x0:Float;
+    //public var y0:Float;
     public var w:Float;
     public var h:Float;
 
     public function new(x:Float, y:Float, w:Float, h:Float) {
         super();
-        this.x0 = x;
-        this.y0 = y;
+        x -= 1.15;
+        w += 1.0;
+
+        this.x = x;
+        this.y = y;
+
+        //this.width  = 15;
+        //this.height = h;
+        trace(this.x + "," + this.y + "," + w + "," + h);
+
+        //this.x0 = x;
+        //this.y0 = y;
         this.w  = w;
         this.h  = h;
         var g = this.graphics;
-        g.lineStyle(2,0x00000);
-        g.drawRect(x, y, w, h);
+        g.lineStyle(0,0x00000);
+        //g.drawRect(x, y, w, h);
+        g.drawRect(0, 0, w, h);
+
     }
 }
 
