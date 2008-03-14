@@ -79,36 +79,6 @@ def find_colinear_hits(blastfile, qeval, seval, mask='query', as_str=False):
         cnss.append(this_cns)
     return cnss
 
-
-def predict(base_name, logfile=None):
-    seen = 0
-    bl2seq, qeval, seval = None, None, None
-    for line in open(logfile):
-        if seen == 2: break
-        line = line[:-1]
-        if 'bl2seq' in line: bl2seq = line
-        elif 'cutoff' in line:
-            if seen == 0: qeval = line; seen += 1
-            elif seen == 1: seval = line; seen += 1
-    
-    bl2seq = bl2seq[bl2seq.find('/usr/bin/bl2seq'):].strip() # remove the comment
-    seval = float(seval[seval.rfind(" ") + 1:])
-    qeval = float(qeval[qeval.rfind(" ") + 1:])
-
-    # remove output file;  use tab-delimited output, and only the top strand
-    bl2seq = re.sub("\-o\s[^\s]+", "", bl2seq) + " -D 1 -S 1 ";
-
-    blast_out = logfile[:logfile.rfind(".")] + ".blast"
-
-    #print  >>sys.stderr, "%s | grep -v '#' > %s" % (bl2seq, blast_out)
-    print >>sys.stderr, commands.getoutput("%s | grep -v '#' > %s" % (bl2seq, blast_out))
-    predicted = find_colinear_hits(blast_out, qeval, seval)
-    print >>sys.stderr, "PREDICTED:", predicted
-    # use tab-delimited output, and only the top strand
-    return predicted
-
-
-
 if __name__ == "__main__":
     blastfile = sys.argv[1]
     qeval = float(sys.argv[2])
