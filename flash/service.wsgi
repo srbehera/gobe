@@ -19,9 +19,10 @@ def bagwrap(fn):
     def newfn(*args, **kwargs):
         try:
             res = fn(*args, **kwargs)
-            if not res: return 
-            if isinstance(res, dict): return pyamf.Bag(res)
             return res
+            #if not res: return 
+            #if isinstance(res, dict): return pyamf.Bag(res)
+            #return res
         except Exception, e:
             #import traceback
             #rint >>sys.stderr, traceback.extract_stack()
@@ -40,14 +41,10 @@ def get_temp_db(base_name, ext=".sqlite"):
         path = t + base_name + ext
         if os.path.exists(path):
             if ext == ".sqlite":
+                print >>sys.stderr, path
                 return sqlite3.connect(path)
             else:
                 return path
-
-@bagwrap
-def predict(base_name):
-    logfile = get_temp_db(base_name, ".log")
-    return predict_cns.predict(base_name, logfile)
 
 @bagwrap
 def save(*args, **kwargs):
@@ -204,7 +201,6 @@ application = WSGIGateway({
     ,'remove': remove
     ,'new_genespace': new_genespace
     ,'load': load
-    ,'predict': predict
     })
 
 if __name__ == "__main__":
