@@ -1,6 +1,6 @@
 <html>
 <head>
-<script src="static/swfobject.js"></script>
+<script src="static/swfobject/swfobject.js"></script>
 <script>
 /* e.g.  ('up', 1, 330) becomes: byId('drup1').value = 330; */
 /* so up is the 'left', down is the 'right' bar.   */
@@ -25,23 +25,26 @@ function call_flash(){
 <input  name="pad_gs" id="pad_gs" size="10" value="5000" type="text">
 
     <div id="flashcontent" style="z-index=0;position:absolute">
-        <strong>You need to upgrade your Flash Player</strong>
+        <strong>You need to install <a href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash">Flash Player</a> (or turn it back on in your browser settings).</strong>
     </div>
 
     <script type="text/javascript">
         // <![CDATA[
+        var getQueryParamValue = swfobject.getQueryParamValue;
         var width = getQueryParamValue('w') || "1400"; 
         var height = getQueryParamValue('h') || "1400"; 
-        var so = new SWFObject("flash/gobe.swf", "gobe", width, height, "9", "#FFFFFF");
-        so.useExpressInstall('flash/expressinstall.swf');
-        so.addVariable('n', getQueryParamValue('n') || 2); 
-        so.addVariable('freezable', getQueryParamValue('freezable') || 'false'); 
-        so.addVariable('pad_gs', getQueryParamValue('pad_gs') || '10000'); 
-        so.addVariable('gsid', getQueryParamValue('gsid') || getQueryParamValue('genespace_id') || '0'); 
-        so.addVariable('base_url', getQueryParamValue('base_url')|| '/CoGe/gobe/');
-        so.addVariable('img_url', getQueryParamValue('img_url')|| '/CoGe/gobe/tmp/');
-        so.addVariable('base_name', getQueryParamValue('base_name')|| 'GEvo_7gJ0z9pm');
-        so.write("flashcontent");
+        var params = {'bgcolor': '#FFFFFF'};
+        var flashVars = {
+            'n'        : getQueryParamValue('n') || 2,
+            'freezable': getQueryParamValue('freezable') || 'false',
+            'pad_gs'   : getQueryParamValue('pad_gs') || '10000', 
+            'gsid'     : getQueryParamValue('gsid') || getQueryParamValue('genespace_id') || '0',
+            'base_url' : getQueryParamValue('base_url')|| '/CoGe/gobe/',
+            'img_url'  : getQueryParamValue('img_url')|| '/CoGe/gobe/tmp/',
+            'base_name': getQueryParamValue('base_name')|| 'GEvo_7gJ0z9pm'
+        };
+        swfobject.embedSWF("flash/gobe.swf", "flashcontent", width, height, "9.0.0"
+                , "static/swfobject/expresssinstall.swf", flashVars, params, {});
         
         // ]]>
     </script>
