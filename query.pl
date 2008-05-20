@@ -29,7 +29,6 @@ unless (-r $db) {
 our $dbh = DBI->connect("dbi:SQLite:dbname=$db") || die "cant connect to db";
 my $sth;
 
-
 sub get_cns {
     # get all the stuff that had been saved in the mysql db as CNS
     # (and here as well). use those with image_id == 1 to find pair in
@@ -74,16 +73,17 @@ sub get_cns {
 if ($q->param('get_info')){
     my %result;
     my %data;
-    $sth = $dbh->prepare("SELECT * FROM image_info order by id");
+    $sth = $dbh->prepare("SELECT * FROM image_info order by display_id");
     my $sth2 = $dbh->prepare("select min(xmin), max(xmax), image_id from image_data where type='anchor' group by image_id order by image_id;");
 #    my $sth3 = $dbh->prepare("select * from image_info order by iname;");
     $sth->execute();
     while( my $title = $sth->fetchrow_hashref() ) {
-        $data{$title->{id}}{img}{image_name}=$title->{iname};
-        $data{$title->{id}}{img}{title}=$title->{title};
-        $data{$title->{id}}{img}{width}=$title->{px_width};
-        $data{$title->{id}}{img}{bpmin}=$title->{bpmin};
-        $data{$title->{id}}{img}{bpmax}=$title->{bpmax};
+        $data{$title->{display_id}}{img}{image_name}=$title->{iname};
+        $data{$title->{display_id}}{img}{title}=$title->{title};
+        $data{$title->{display_id}}{img}{width}=$title->{px_width};
+        $data{$title->{display_id}}{img}{bpmin}=$title->{bpmin};
+        $data{$title->{display_id}}{img}{bpmax}=$title->{bpmax};
+        $data{$title->{display_id}}{img}{id}=$title->{id};
     }
 
     $sth2->execute();
@@ -93,8 +93,9 @@ if ($q->param('get_info')){
     }
 
     my $i = 0;
-    foreach my $id (sort {$a<=>$b} keys %data) {
-        my $img = $data{$id}{img};
+    foreach my $item (sort {$a<=>$b} keys %data) {
+        
+        my $img = $data{$item}{img};
         my $name = $img->{image_name};
         $result{$name}{title} = $img->{title};
         $result{$name}{i}=$i;
@@ -102,9 +103,9 @@ if ($q->param('get_info')){
                         bpmin=>$img->{bpmin},
                         bpmax=>$img->{bpmax}
                        };
-        my $anc = $data{$id}{anchor};
+        my $anc = $data{$item}{anchor};
         $result{$name}{anchors} = {
-                        idx=>$id,
+                        idx=>$data{$item}{img}{id},
                         xmax=>$anc->{min},
                         xmin=>$anc->{max},
                        };
