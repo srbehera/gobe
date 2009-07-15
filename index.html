@@ -35,13 +35,12 @@ function call_flash(){
         var height = getQueryParamValue('h') || "1400"; 
         var params = {'bgcolor': '#FFFFFF'};
         var flashVars = {
-            'n'        : getQueryParamValue('n') || 2,
-            'freezable': getQueryParamValue('freezable') || 'false',
+            'n'        : getQueryParamValue('n') || 3            'freezable': getQueryParamValue('freezable') || 'false',
             'pad_gs'   : getQueryParamValue('pad_gs') || '10000', 
             'gsid'     : getQueryParamValue('gsid') || getQueryParamValue('genespace_id') || '0',
             'base_url' : getQueryParamValue('base_url')|| '/CoGe/gobe/',
             'img_url'  : getQueryParamValue('img_url')|| '/CoGe/gobe/tmp/',
-            'base_name': getQueryParamValue('base_name')|| 'GEvo_7gJ0z9pm'
+            'base_name': getQueryParamValue('base_name')|| 'GEvo_WxUonWBr'
         };
         swfobject.embedSWF("flash/gobe.swf", "flashcontent", width, height, "9.0.0"
                 , "static/swfobject/expresssinstall.swf", flashVars, params, {});
