@@ -20,7 +20,7 @@ import flash.text.TextField;
 import flash.text.TextFormat;
 import flash.text.StyleSheet;
 import flash.utils.Timer;
-import Json;
+import hxjson2.JSON;
 
 
 class Gobe extends Sprite {
@@ -156,7 +156,8 @@ class Gobe extends Sprite {
     }
 
     private function handleQueryReturn(e:Event){
-        var json:Array<Dynamic> = Json.decode(e.target.data).resultset;
+        var json:Array<Dynamic> = JSON.decode(e.target.data).resultset;
+	trace(json);
         gcoords = new Array<Array<Int>>();
         var pair:Hash<Dynamic>;
 
@@ -237,7 +238,6 @@ class Gobe extends Sprite {
     public function getImageInfo(){
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, imageInfoReturn);
-	trace(this.QUERY_URL);
         ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db=' + this.base_name));
     }
 
@@ -245,7 +245,7 @@ class Gobe extends Sprite {
             var strdata:String = e.target.data;
             image_info = new Hash<Dynamic>();
 
-            var json = Json.decode(strdata);
+            var json = JSON.decode(strdata);
             // CONVERT THE JSON data into a HASH: sigh.
             image_titles = ['a','b'];
             for( title in Reflect.fields(json)){
