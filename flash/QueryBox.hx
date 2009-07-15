@@ -10,7 +10,6 @@ import flash.net.URLLoader;
 import flash.text.TextFormat;
 import flash.text.StyleSheet;
 import flash.display.Bitmap;
-import AnnoInput;
 
 
 
@@ -24,16 +23,13 @@ class QueryBox extends Sprite {
     private var _height:Int;
     private var _taper:Int;
     private var _if:Loader;
-    //private var _close:Sprite;
     
 
     public  var view:String;
     public  var gobe:Gobe;
-    public  var freezable:Bool;
     public  var  container:MovieClip;
     public  var info:TextField;
-    public  var anno:AnnoInput;
-    public  var anno_mc:MovieClip;
+
     public  var plus:Sprite;
     public  var clear_sprite:Sprite;
     public  var save_sprite:Sprite;
@@ -50,11 +46,10 @@ class QueryBox extends Sprite {
             g.beginFill(0xcccccc);
             g.drawRoundRect(0, 0, _width + 1, _height + 2 * _taper, _taper);
             g.endFill();
-            //this.addChild(_close);
+
             this.addChild(plus);
             this.addChild(clear_sprite);
         
-            if(freezable){ this.addChild(save_sprite); }
             this.addChild(minus);
             this.addChild(tf_size);
             this.container.addChild(info);
@@ -73,20 +68,19 @@ class QueryBox extends Sprite {
         flash.Lib.current.stage.align     = flash.display.StageAlign.TOP_LEFT;
         haxe.Firebug.redirectTraces();
 
-        var qbx = new QueryBox('../../', true, new Gobe());
+        var qbx = new QueryBox('../../', new Gobe());
         qbx.show();
     }
 
 
-    public function new(gobe_url:String, freezable:Bool, gobe:Gobe){
+    public function new(gobe_url:String, gobe:Gobe){
         super();
         this.gobe = gobe;
-        this.freezable =freezable;
         _width  = 360;
         _height = 630;
         view = "INFO";
         _taper  = 20;
-        line_width = 1;
+        line_width = 3;
 
         var css = new StyleSheet();
         css.setStyle( "a", {
@@ -141,39 +135,25 @@ class QueryBox extends Sprite {
         info.background      = true;
         info.backgroundColor = 0xFFFFFF;
                                
-        anno_mc = new MovieClip();
-        anno_mc.y = _taper - 1;
-        anno_mc.x = 10;
-        anno = new AnnoInput(anno_mc, this.gobe.genespace_id, this.gobe);
-
         tf_size = new TextField();
         tf_size.wordWrap   = true;
         tf_size.border     = false;
         tf_size.width      = 65;
         tf_size.height     = 30;
-        tf_size.htmlText   = "line width: <b>1</b>";
+        tf_size.htmlText = 'line width: <b>' + line_width + '</b>';
         tf_size.x          = _width - 100;
         tf_size.y          = 0;
 
 
         var loader = new URLLoader();
         loader.addEventListener(Event.COMPLETE, handleHtmlLoaded);
-        loader.load(new URLRequest(gobe_url + "docs/textfield.html"));
+        loader.load(new URLRequest(gobe_url + "/docs/textfield.html"));
         plus = new Sprite();
         minus = new Sprite();
         plus.addEventListener(MouseEvent.CLICK, plusClick);
         minus.addEventListener(MouseEvent.CLICK, minusClick);
 
         clear_sprite = new Sprite();
-
-
-        if(freezable){
-            save_sprite = new Sprite();
-            _ilsave = new Loader();
-            _ilsave.contentLoaderInfo.addEventListener(Event.COMPLETE, handleSaveLoaded);
-            _ilsave.load(new URLRequest(gobe_url + "static/save.gif"));
-            save_sprite.addEventListener(MouseEvent.CLICK, viewClick);
-        }
 
         
         _ilplus = new Loader();
@@ -220,15 +200,6 @@ class QueryBox extends Sprite {
         info.htmlText =  e.target.data;
     }
     
-    public function viewClick(e:MouseEvent){
-        if(view == "INFO") { view = "ANNO"; }
-        while(this.container.numChildren != 0){
-            this.container.removeChildAt(0);
-        }
-        this.container.addChild(anno_mc);
-
-    }
-
     public function plusClick(e:MouseEvent){
         if( line_width > 6){ return; }
         line_width += 1;

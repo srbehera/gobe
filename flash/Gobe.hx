@@ -29,14 +29,11 @@ class Gobe extends Sprite {
     private static var base_url = '/CoGe/gobe/';
     private static var gobe_url = '/CoGe/gobe/';
     private static var img_url = '/CoGe/gobe/tmp/';
-    //private var line_width:Int;
 
     // base_url and n are sent in on the url.
     private var n:Int;
     private var pad_gs:Int; // how many bp in to put the bars from the edge of the image
     private var img:String;
-    private var freezable:Bool; // does the user have permission to freeze this genespace?
-    public var genespace_id:Int; // the id to link the cns's when freezing
     public var cnss:Array<Int>;
 
     private var _heights:Array<Int>;
@@ -163,7 +160,7 @@ class Gobe extends Sprite {
         gcoords = new Array<Array<Int>>();
         var pair:Hash<Dynamic>;
 
-        var lcolor:Int;
+        var lcolor:Int = 0xffffff;
         for(pair in json){
             trace(pair);
             qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
@@ -211,6 +208,8 @@ class Gobe extends Sprite {
 
         gcoords = new Array<Array<Int>>();
         Gobe.base_url  = p.base_url;
+	Gobe.gobe_url  = p.base_url;
+	trace(Gobe.gobe_url);
             
         this.QUERY_URL = Gobe.gobe_url + 'query.pl?';
         this.base_name = p.base_name;
@@ -219,8 +218,6 @@ class Gobe extends Sprite {
         this.n         = p.n;
 
 
-        this.genespace_id = Std.parseInt(p.gsid);
-        this.freezable    = p.freezable == 'false' ? false : (this.genespace_id == 0) ? false : true;
 
         panel = new Sprite(); 
         addChild(panel);
@@ -228,21 +225,19 @@ class Gobe extends Sprite {
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
-        qbx = new QueryBox(Gobe.gobe_url, freezable, this);
+        qbx = new QueryBox(Gobe.gobe_url, this);
         qbx.x =  1030;
         qbx.show();
         _rectangles = [];
         _lines      = [];
 
         qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearPanelGraphics);
-        if(freezable){
-            ExternalInterface.call('setheight');
-        }
     }
 
     public function getImageInfo(){
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, imageInfoReturn);
+	trace(this.QUERY_URL);
         ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db=' + this.base_name));
     }
 
@@ -319,6 +314,7 @@ class Gobe extends Sprite {
     }
 
     public function initImages(){
+	trace('loading images');
         imgs = new Array<GImage>();
         for(k in 0...n){
             var title:String = image_titles[k];
@@ -361,9 +357,6 @@ class Gobe extends Sprite {
             img.addEventListener(MouseEvent.MOUSE_UP, imageMouseUp, false);
             //img.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
             y+=h;
-        }
-        if(freezable){
-           qbx.anno.python_load(genespace_id);
         }
         dispatchEvent(new GEvent(GEvent.ALL_LOADED));
     }
