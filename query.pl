@@ -16,8 +16,9 @@ print "Content-Type: text/html\n\n";
 
 my $tmpdir = "/opt/apache/CoGe/tmp/GEvo/";
 
+
 if($ENV{SERVER_NAME} !~ /(toxic|synteny)/){
-    $tmpdir = "/opt/apache/CoGe/gobe/tmp/";
+    $tmpdir = "tmp/";
 }
 
 my $db = "$tmpdir/" . $q->param('db') . ".sqlite";
