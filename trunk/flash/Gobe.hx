@@ -26,11 +26,10 @@ import hxjson2.JSON;
 class Gobe extends Sprite {
 
     public static  var ctx = new LoaderContext(true);
-    private static var base_url = '/CoGe/gobe/';
     private static var gobe_url = '/CoGe/gobe/';
     private static var img_url = '/CoGe/gobe/tmp/';
 
-    // base_url and n are sent in on the url.
+    // gobe_url and n are sent in on the url.
     private var n:Int;
     private var pad_gs:Int; // how many bp in to put the bars from the edge of the image
     private var img:String;
@@ -210,8 +209,7 @@ class Gobe extends Sprite {
         var p = flash.Lib.current.loaderInfo.parameters;
 
         gcoords = new Array<Array<Int>>();
-        Gobe.base_url  = p.base_url;
-	Gobe.gobe_url  = p.base_url;
+	Gobe.gobe_url  = p.gobe_url;
 	trace(Gobe.gobe_url);
             
         this.QUERY_URL = Gobe.gobe_url + 'query.pl?';
