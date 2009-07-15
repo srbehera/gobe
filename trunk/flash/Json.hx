@@ -189,18 +189,18 @@ private class Decode {
 	}
 
 	function white() {
-		while (Std.bool(ch)) {
+		while (ch != '0') {
 			if (ch <= ' ') {
 				next();
 			} else if (ch == '/') {
 				switch (next()) {
 					case '/':
-						while (Std.bool(next()) && ch != '\n' && ch != '\r') {}
+						while (ch != '0' && ch != '\n' && ch != '\r') {}
 						break;
 					case '*':
 						next();
 						while (true) {
-							if (Std.bool(ch)) {
+							if (ch != '0') {
 								if (ch == '*') {
 									if (next() == '/') {
 										next();
@@ -228,7 +228,7 @@ private class Decode {
 		var outer:Bool = false;
 
 		if (ch == '"') {
-			while (Std.bool(next())) {
+			while (next() != '') {
 				if (ch == '"') {
 					next();
 					return s;
@@ -294,7 +294,7 @@ private class Decode {
 				next();
 				return a;
 			}
-			while (Std.bool(ch)) {
+			while (ch != '0') {
 			    a.push(value());
 				white();
 				if (ch == ']') {
@@ -312,7 +312,7 @@ private class Decode {
 	}
 
     function obj() {
-		var k, o = Reflect.empty();
+		var k, o = {};
 
 		if (ch == '{') {
 			next();
@@ -321,7 +321,7 @@ private class Decode {
 				next();
 				return o;
 			}
-			while (Std.bool(ch)) {
+			while (ch != '0') {
 				k = str();
 				white();
 				if (ch != ':') {
