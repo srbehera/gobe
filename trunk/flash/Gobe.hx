@@ -65,13 +65,15 @@ class Gobe extends Sprite {
 
         var removed = false;
         if(! e.shiftKey){
-            var r:GRect; var i:Int = 0;
+            var r:GRect; 
+            var i:Int = 0;
+
             for(r in _rectangles){
                // removed the rectangle (and pair) that was clicked on.
                var rb = r.getBounds(panel);
                rb.inflate(3.0, 0.0);
                rb.offset(-1.5, 0.0);
-               if( rb.contains( e.stageX, e.stageY)) {
+               if(rb.contains(e.stageX, e.stageY)) {
                //if(r.hitTestPoint(e.stageX, e.stageY)){
                     var pair_idx = i % 2 == 0 ? i : i - 1;
                     var rects = _rectangles.splice(pair_idx, 2);
