@@ -35,6 +35,9 @@ class Gobe extends Sprite {
     private var img:String;
     public var cnss:Array<Int>;
 
+    public var mouse_down:Bool;
+    public var drag_sprite:DragSprite;
+
     private var _heights:Array<Int>;
 
     public var base_name:String;
@@ -57,38 +60,46 @@ class Gobe extends Sprite {
         _rectangles = [];
         _lines = [];
     }
+    private function query_single(e:MouseEvent, img:String, idx:Int):String {
+        var r:GRect; 
+        var i:Int = 0;
+	var turl:String;
+    
+        var removed = false;
+        for(r in _rectangles){
+           // removed the rectangle (and pair) that was clicked on.
+           var rb = r.getBounds(panel);
+           rb.inflate(3.0, 0.0);
+           rb.offset(-1.5, 0.0);
+           if(rb.contains(e.stageX, e.stageY)) {
+           //if(r.hitTestPoint(e.stageX, e.stageY)){
+    	    var pair_idx = i % 2 == 0 ? i : i - 1;
+    	    var rects = _rectangles.splice(pair_idx, 2);
+    	    panel.removeChild(rects[1]);
+    	    panel.removeChild(rects[0]);
+    	    // one line per 2 rectangles.
+    	    var lidx = Math.floor(i/2);
+    	    panel.removeChild(_lines.splice(lidx, 1)[0]);
+    	    removed = true;
+    	    i--;
+           } else { i++;  }
+        }
+        if(removed) { return ''; }
+        qbx.info.text = '';
+        turl = '&x=' + e.localX;
+        this._all = false;
+	return turl;
+    }
+
     private function query(e:MouseEvent){
         var img = e.target.url;
         var idx:Int = image_info.get(image_titles[e.target.i]).get('anchors').get('idx');
         var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + idx + '&db=' + base_name;
 
-        var removed = false;
         if(! e.shiftKey){
-            var r:GRect; 
-            var i:Int = 0;
-
-            for(r in _rectangles){
-               // removed the rectangle (and pair) that was clicked on.
-               var rb = r.getBounds(panel);
-               rb.inflate(3.0, 0.0);
-               rb.offset(-1.5, 0.0);
-               if(rb.contains(e.stageX, e.stageY)) {
-               //if(r.hitTestPoint(e.stageX, e.stageY)){
-                    var pair_idx = i % 2 == 0 ? i : i - 1;
-                    var rects = _rectangles.splice(pair_idx, 2);
-                    panel.removeChild(rects[1]);
-                    panel.removeChild(rects[0]);
-                    // one line per 2 rectangles.
-                    var lidx = Math.floor(i/2);
-                    panel.removeChild(_lines.splice(lidx, 1)[0]);
-                    removed = true;
-                    i--;
-               } else { i++;  }
-            }
-            if(removed) { return; }
-            qbx.info.text = '';
-            url += '&x=' + e.localX;
-            this._all = false;
+	    var turl = query_single(e, img, idx);
+            if(turl == ""){ return; }
+	    url += turl;
         } 
         else {
             url      += '&all=1';
@@ -218,6 +229,7 @@ class Gobe extends Sprite {
         this.pad_gs    = p.pad_gs;
         this.n         = p.n;
 
+	this.drag_sprite = new DragSprite();
 
 
         panel = new Sprite(); 
@@ -351,15 +363,63 @@ class Gobe extends Sprite {
             flash.Lib.current.addChildAt(ttf, 1);
             // TODO move this onto the Rectangles.
             img.addEventListener(MouseEvent.CLICK, query, false);
+            //var stage = flash.Lib.current;
+            img.addEventListener(MouseEvent.MOUSE_DOWN, mouseDown);
+            img.addEventListener(MouseEvent.MOUSE_UP, mouseUp);
+            img.addEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
             i++;
             add_sliders(img, i, y, h);
              
-            img.addEventListener(MouseEvent.MOUSE_UP, imageMouseUp, false);
+            img.addEventListener(MouseEvent.MOUSE_UP, imageMouseUp, true);
             //img.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
             y+=h;
         }
         dispatchEvent(new GEvent(GEvent.ALL_LOADED));
     }
+    public function mouseDown(e:MouseEvent){
+	this.mouse_down = true;
+        var d = this.drag_sprite;
+        d.graphics.lineStyle(3, 0xcccccc);
+        d.startx = e.stageX;
+        d.starty = e.stageY;
+	
+	flash.Lib.current.addChild(d);
+    }
+    public function mouseMove(e:MouseEvent){
+        if(! this.mouse_down){ return; }
+	if (!e.buttonDown){
+		var e2 = new MouseEvent(MouseEvent.MOUSE_UP, false, false, e.localX, e.localY);
+		this.dispatchEvent(e2);
+		return;
+	}
+	var d = this.drag_sprite;
+	d.graphics.clear();
+        d.graphics.lineStyle(3, 0xcccccc);
+	//d.graphics.beginFill(0xaaaaaa, 0.5);
+	
+	var xmin = Math.min(d.startx, e.stageX);
+	var xmax = Math.max(d.startx, e.stageX);
+	var ymin = Math.min(d.starty, e.stageY);
+	var ymax = Math.max(d.starty, e.stageY);
+
+	d.graphics.drawRect(xmin, ymin, xmax - xmin, ymax - ymin);
+	//d.graphics.endFill();
+	
+    }
+    public function mouseUp(e:MouseEvent){
+        if(! this.mouse_down){ return; }
+	this.mouse_down = false;
+	var d = this.drag_sprite;
+	d.graphics.clear();
+	var xmin = Math.min(d.startx, e.stageX);
+	var xmax = Math.max(d.startx, e.stageX);
+	var ymin = Math.min(d.starty, e.stageY);
+	var ymax = Math.max(d.starty, e.stageY);
+	trace("getting stuff for" + xmin + " to " + xmax);
+	flash.Lib.current.removeChild(this.drag_sprite);
+    }
+
+
     public function imageMouseUp(e:MouseEvent){ 
         var i:Int;
         for( i in 0 ... 2){
@@ -573,6 +633,14 @@ class GImage extends Sprite {
 
 }
 
+class DragSprite extends Sprite {
+    public var startx:Float;
+    public var starty:Float;
+    public function new(){
+    	super();
+    }
+}
+
 
 class GEvent extends Event {
     public static var LOADED = "LOADED";
@@ -581,3 +649,4 @@ class GEvent extends Event {
         super(type);
     }
 }
+
