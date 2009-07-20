@@ -72,6 +72,9 @@ sub get_cns {
     return \@coordslist;
 }
 
+
+
+
 if ($q->param('get_info')){
     my %result;
     my %data;
@@ -169,13 +172,15 @@ my $img_id = $q->param('img');
 
 my $statement;
 
-my $x    = $q->param('x');
-my $y    = $q->param('y');
-my $all  = $q->param('all') || 0;
-my $img_id = $q->param('img');
-
-my $statement;
-if($all){
+if ($q->param('bbox')) {
+    my @bbox = split(/,/, $q->param('bbox'));
+    my $query ="SELECT * FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND ? - 1 > ymin AND ? + 1 < ymax AND image_id = ? and pair_id != -99 and type = 'HSP'";
+    $sth = $dbh->prepare($query);
+    print STDERR $query . "\n";
+    print STDERR join("\t", ($bbox[2], $bbox[0], $bbox[3], $bbox[1], $img_id)) . "\n";
+    $sth->execute($bbox[2], $bbox[0], $bbox[3], $bbox[1], $img_id);
+} 
+elsif($all){
     $sth = $dbh->prepare("SELECT distinct(image_track) FROM image_data WHERE ? BETWEEN ymin and ymax and image_id = ? order by abs(image_track) DESC");
     $sth->execute($y, $img_id);
     my ($track) = $sth->fetchrow_array();
