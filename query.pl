@@ -220,8 +220,8 @@ while( my $result = $sth->fetchrow_hashref() ){
     my $f2name = $pair->{image_id};
 
     # TODO: clean this up. we should know if there's a pair or not.
-    my @f1pts = map {floor  $result->{$_} + 0.5 } qw/xmin ymin xmax ymax/; push(@f1pts, $result->{'id'});
-    my @f2pts = map { floor $pair->{$_} + 0.5 } qw/xmin ymin xmax ymax/;   push(@f2pts, $pair->{'id'});
+    my @f1pts = map {floor  $result->{$_} + 0.5 } qw/xmin ymin xmax ymax/; push(@f1pts, $result->{'id'}); push(@f1pts, $result->{'image_track'});
+    my @f2pts = map { floor $pair->{$_} + 0.5 } qw/xmin ymin xmax ymax/;   push(@f2pts, $pair->{'id'}); push(@f2pts, $pair->{'image_track'});
     my $has_pair = 0;
     map { $has_pair += $_ } @f2pts;
 
