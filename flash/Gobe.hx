@@ -92,6 +92,7 @@ class Gobe extends Sprite {
     }
     public function query_bbox(e:MouseEvent, String, idx:Int, bbox:Array<Float>):String {
 	var turl:String = '&bbox=' + bbox.join(",");
+	this._all = true;
 	return turl;
     }
     // needed because cant use default args like in query() 
@@ -205,7 +206,8 @@ class Gobe extends Sprite {
         drawLines();
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
-            qbx.info.htmlText = '<b>Not showing annotation for multiple hits.</b>';
+            qbx.info.htmlText = '<b>Not showing annotation for multiple hits.</b>&#10;';
+            qbx.info.htmlText += '<b>Click [clear] or empty space to clear box as needed.</b>';
             return;
         }
         qbx.show();
@@ -360,6 +362,7 @@ class Gobe extends Sprite {
             ttf.text   = image_info.get(image_titles[i]).get('title');
             ttf.y      = y ; 
             ttf.x      = 15;
+	    ttf.multiline = true;
             ttf.border = true; 
             if(ttf.text.indexOf('Reverse Complement') != -1  ) {
                 ttf.textColor = 0xff0000;
