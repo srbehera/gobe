@@ -21,6 +21,7 @@ import flash.text.TextFormat;
 import flash.text.StyleSheet;
 import flash.utils.Timer;
 import hxjson2.JSON;
+import HSP;
 
 
 class Gobe extends Sprite {
@@ -42,63 +43,68 @@ class Gobe extends Sprite {
     public var base_name:String;
     public var qbx:QueryBox;
     // hold the hsps so we know if one contained a click
-    public var _rectangles:Array<GRect>; 
-    public var _lines:Array<GLine>; 
+    public var hsps:Array<HSP>;
     public var panel:Sprite; // holds the lines.
 
     private var _all:Bool;
     public var imgs:Array<GImage>;
     public var image_info:Hash<Dynamic>;
-    private var gcoords:Array<Array<Int>>;
     public var QUERY_URL:String;
     public var image_titles:Array<String>;
 
 
     public function clearPanelGraphics(e:MouseEvent){
-        while(panel.numChildren != 0){ panel.removeChildAt(0); }
-        _rectangles = [];
-        _lines = [];
-	this.drag_sprite.graphics.clear();
+        
+        //while(panel.numChildren != 0){ panel.removeChildAt(0); }
+        this.drag_sprite.graphics.clear();
+        //var hsp:HSP;
+        for(hsp in this.hsps){
+            this.panel.removeChild(hsp);
+        }
+        this.hsps = [];
+
     }
     private function query_single(e:MouseEvent, img:String, idx:Int):String {
-        var r:GRect; 
         var i:Int = 0;
-	var turl:String;
-    
+        var turl:String;
+        /*
         var removed = false;
         for(r in _rectangles){
            // removed the rectangle (and pair) that was clicked on.
            var rb = r.getBounds(panel);
            rb.inflate(3.0, 0.0);
            rb.offset(-1.5, 0.0);
-           if(rb.contains(e.stageX, e.stageY)) {
-           //if(r.hitTestPoint(e.stageX, e.stageY)){
-    	    var pair_idx = i % 2 == 0 ? i : i - 1;
-    	    var rects = _rectangles.splice(pair_idx, 2);
-    	    panel.removeChild(rects[1]);
-    	    panel.removeChild(rects[0]);
-    	    // one line per 2 rectangles.
-    	    var lidx = Math.floor(i/2);
-    	    panel.removeChild(_lines.splice(lidx, 1)[0]);
-    	    removed = true;
-    	    i--;
+           if (rb.contains(e.stageX, e.stageY)) {
+               //if(r.hitTestPoint(e.stageX, e.stageY)){
+               var pair_idx = i % 2 == 0 ? i : i - 1;
+               var rects = _rectangles.splice(pair_idx, 2);
+               panel.removeChild(rects[1]);
+               panel.removeChild(rects[0]);
+               // one line per 2 rectangles.
+               var lidx = Math.floor(i/2);
+               panel.removeChild(_lines.splice(lidx, 1)[0]);
+               removed = true;
+               i--;
            } else { i++;  }
         }
         if(removed) { return ''; }
         qbx.info.text = '';
         turl = '&x=' + e.localX;
         this._all = false;
-	return turl;
+        return turl;
+        */
+        return 'query_single() called';
     }
+
     public function query_bbox(e:MouseEvent, String, idx:Int, bbox:Array<Float>):String {
-	var turl:String = '&bbox=' + bbox.join(",");
-	this._all = true;
-	return turl;
+        var turl:String = '&bbox=' + bbox.join(",");
+        this._all = true;
+        return turl;
     }
     // needed because cant use default args like in query() 
     // with addEventListener expecting a different sig.
     private function _query(e:MouseEvent){
-	query(e);
+        query(e);
     }
 
     private function query(e:MouseEvent, ?bbox:Array<Float>){
@@ -106,19 +112,18 @@ class Gobe extends Sprite {
         var idx:Int = image_info.get(image_titles[e.target.i]).get('anchors').get('idx');
         var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + idx + '&db=' + base_name;
 
-	if (bbox != null){
-	        trace("getting stuff for" + bbox[0] + " to " + bbox[2]);
-		url += query_bbox(e, img, idx, bbox);
-	}
-        else if(! e.shiftKey){
-	    var turl = query_single(e, img, idx);
-            if(turl == ""){ return; }
-	    url += turl;
-        } 
-        else {
+        if (bbox != null){
+            url += query_bbox(e, img, idx, bbox);
+        }
+        else if(e.shiftKey){
             url      += '&all=1';
             this._all = true;
         }
+        else if(! e.shiftKey){
+            var turl = query_single(e, img, idx);
+            if(turl == ""){ return; }
+            url += turl;
+        } 
 
         trace(url);
         var queryLoader = new URLLoader();
@@ -126,84 +131,55 @@ class Gobe extends Sprite {
         queryLoader.load(new URLRequest(url));
     }
 
-    // TODO: make an HSP class.
-    public function drawHsp(coords:Array<Int>, img_idx:Int, lcolor:Int){
-        var img:GImage = imgs[img_idx];
-        var xy0 = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
-        var xy1 = img.localToGlobal(new flash.geom.Point(coords[2],coords[3]));
-
-        var db_id = coords[4]; // this links to the id in the image_data table
-        var x0 = xy0.x;
-        var y0 = xy0.y;
-        var w = coords[2] - coords[0];
-        var h = coords[3] - coords[1];
-        var pr:GRect;
-        // dont add a rectangle that's already drawn (doesn't seem to work...)
-        var r = new GRect(x0, y0 , w, h);
-        if(panel.contains(r)){ return; }
-        panel.addChild(r);
-        _rectangles.push(r);
-        gcoords.push([ Math.round(xy0.x)
-                        , Math.round(xy0.y)
-                        , Math.round(xy1.x)
-                        , Math.round(xy1.y)
-                        , db_id
-                        , lcolor
-            ]);
-
-    }
-
-    public function drawLines(){
-        // draw lines between hsps.
-        var j = 0;
-        while(j<gcoords.length){
-            var h0 = gcoords[j];
-            var h1 = gcoords[j+1];
-            var db_id0 = h0[4];
-            var db_id1 = h1[4];
-            j+=2;
-            var l = new GLine(
-                        (h0[0] + h0[2])/2
-                        , (h0[1] + h0[3])/2
-                        , (h1[0] + h1[2])/2
-                        , (h1[1] + h1[3])/2
-                        , qbx.line_width
-                        , h0[5] // color
-                        , db_id0
-                        , db_id1
-                    );
-            if(!panel.contains(l)){
-                panel.addChild(l);
-                _lines.push(l);
-            }
-        }
-    }
 
     private function handleQueryReturn(e:Event){
         var json:Array<Dynamic> = JSON.decode(e.target.data).resultset;
-        gcoords = new Array<Array<Int>>();
         var pair:Hash<Dynamic>;
-
         for(pair in json){
-            qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
-            qbx.info.htmlText += "<p>" + pair.annotation + "</p>";
             if(! pair.has_pair){ continue; }
+            if(!this._all){
+                qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
+                qbx.info.htmlText += "<p>" + pair.annotation + "</p>";
+            }
 
             var idx:Int = 0;
             var fields:Array<String> = Reflect.fields(pair.features);
             fields.sort(function(a:String, b:String) { return (a < b) ? -1 : 1;} );
-            for(hsp in fields){
-                var coords:Array<Int> = Reflect.field(pair.features, hsp);
+            var l = fields.length;
+            while (idx < l){
+                var fhsp1 = fields[idx++];
+                var fhsp2 = fields[idx++];
+                var coords1:Array<Int> = Reflect.field(pair.features, fhsp1);
+                var coords2:Array<Int> = Reflect.field(pair.features, fhsp2);
+                trace(coords1 + "       " + coords2);
+
+                var img1_key = base_name + '_' + fhsp1.substr(3) + ".png";
+                var img1:GImage = this.imgs[image_info.get(img1_key).get('i')];
+
+                var img2_key = base_name + '_' + fhsp2.substr(3) + ".png";
+                var img2:GImage = this.imgs[image_info.get(img2_key).get('i')];
+
+                var hsp = new HSP(this.panel, coords1, coords2, img1, img2, pair.color, false);
+                this.hsps.push(hsp);
+        
+            }
+            /*
+            for(fhsp in fields){
+                idx += 1;
+                // coords is [xmin, ymin, xmax, ymax, db_id]
+                var coords:Array<Int> = Reflect.field(pair.features, fhsp);
                 // converty key2 to 2; because that's the image we need. cant use '1' as a key because of
                 // haxe bug.
                 // then create the image name e.g. : GEvo_asdf_2.png
-                var img_key = base_name + '_' + hsp.substr(3) + ".png";
+                var img_key = base_name + '_' + fhsp.substr(3) + ".png";
+                
                 // and use that to look up the image index.
-                var idx:Int = image_info.get(img_key).get('i');
-                drawHsp(coords, idx, pair.color);
-            }
+                var img_idx:Int = image_info.get(img_key).get('i');
+ 
+                // gets added to panel in the constructor.
+                var hsp = new HSP(this.panel, coords, this.imgs[img_idx], pair.color, false);
+            }*/
         }
-        drawLines();
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
             qbx.info.htmlText = '<b>Not showing annotation for multiple hits.</b>&#10;';
@@ -227,34 +203,28 @@ class Gobe extends Sprite {
         super();
         //ExternalInterface.call('alert','hiiii');
         var p = flash.Lib.current.loaderInfo.parameters;
-
-        gcoords = new Array<Array<Int>>();
-	Gobe.gobe_url  = p.gobe_url;
-	trace(Gobe.gobe_url);
-            
+        Gobe.gobe_url  = p.gobe_url;
         this.QUERY_URL = Gobe.gobe_url + 'query.pl?';
         this.base_name = p.base_name;
         Gobe.img_url   = p.img_url;
         this.pad_gs    = p.pad_gs;
         this.n         = p.n;
 
-	this.drag_sprite = new DragSprite();
-
+        this.drag_sprite = new DragSprite();
 
         panel = new Sprite(); 
         addChild(panel);
-	addChild(this.drag_sprite);
+        addChild(this.drag_sprite);
         _heights = [];
+        this.hsps = [];
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
         qbx = new QueryBox(Gobe.gobe_url, this);
         qbx.x =  1030;
         qbx.show();
-        _rectangles = [];
-        _lines      = [];
-
         qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearPanelGraphics);
+
     }
 
     public function getImageInfo(){
@@ -294,21 +264,8 @@ class Gobe extends Sprite {
                 ext.set('bpp', (ext.get('bpmax') - ext.get('bpmin') + 1)/ext.get('img_width'));
             }
             initImages();
-            cnss = Reflect.field(json, "CNS");
-            addEventListener(GEvent.ALL_LOADED, draw_cns);
-            //trace(image_info);
     }
 
-    public function draw_cns(e:Event){
-        for(feat in cnss){
-            for (img in ['img1', 'img2']){
-                var coords:Array<Int> = Reflect.field(feat, img);
-                var img_idx:Int = Std.parseInt(img.substr(3)) - 1;
-                drawHsp(coords, img_idx, 0x000000);
-            }
-        }
-        drawLines();
-    }
 
     public function pix2rw(px:Float, i:Int):Int {
         var exts = image_info.get(image_titles[i]).get('extents');
@@ -336,7 +293,6 @@ class Gobe extends Sprite {
     }
 
     public function initImages(){
-	trace('loading images');
         imgs = new Array<GImage>();
         for(k in 0...n){
             var title:String = image_titles[k];
@@ -362,7 +318,7 @@ class Gobe extends Sprite {
             ttf.text   = image_info.get(image_titles[i]).get('title');
             ttf.y      = y ; 
             ttf.x      = 15;
-	    ttf.multiline = true;
+        ttf.multiline = true;
             ttf.border = true; 
             if(ttf.text.indexOf('Reverse Complement') != -1  ) {
                 ttf.textColor = 0xff0000;
@@ -386,68 +342,62 @@ class Gobe extends Sprite {
             y+=h;
         }
         this.addEventListener(MouseEvent.MOUSE_UP, stageMouseUp);
-        this.dispatchEvent(new GEvent(GEvent.ALL_LOADED));
+        //this.dispatchEvent(new GEvent(GEvent.ALL_LOADED));
     }
     public function mouseDown(e:MouseEvent){
-	e.target.mouse_down = true;
+        e.target.mouse_down = true;
         var d = this.drag_sprite;
-	d.graphics.clear();
+        d.graphics.clear();
         d.graphics.lineStyle(3, 0xcccccc);
         d.startx = e.stageX;
         d.starty = e.stageY;
-	
-	//flash.Lib.current.addChild(d);
+    
+    //flash.Lib.current.addChild(d);
     }
     public function mouseMove(e:MouseEvent){
         if(! e.target.mouse_down){ return; }
-	if (!e.buttonDown){
-		var e2 = new MouseEvent(MouseEvent.MOUSE_UP, false, false, e.localX, e.localY);
-		this.dispatchEvent(e2);
-		return;
-	}
-	var d = this.drag_sprite;
-	d.graphics.clear();
+        if (!e.buttonDown){
+            var e2 = new MouseEvent(MouseEvent.MOUSE_UP, false, false, e.localX, e.localY);
+            this.dispatchEvent(e2);
+            return;
+        }
+        var d = this.drag_sprite;
+        d.graphics.clear();
         d.graphics.lineStyle(3, 0xcccccc);
-	//d.graphics.beginFill(0xaaaaaa, 0.5);
-	
-	var xmin = Math.min(d.startx, e.stageX);
-	var xmax = Math.max(d.startx, e.stageX);
-	var ymin = Math.min(d.starty, e.stageY);
-	var ymax = Math.max(d.starty, e.stageY);
+    
+        var xmin = Math.min(d.startx, e.stageX);
+        var xmax = Math.max(d.startx, e.stageX);
+        var ymin = Math.min(d.starty, e.stageY);
+        var ymax = Math.max(d.starty, e.stageY);
 
-	d.graphics.drawRect(xmin, ymin, xmax - xmin, ymax - ymin);
-	//d.graphics.endFill();
-	
+        d.graphics.drawRect(xmin, ymin, xmax - xmin, ymax - ymin);
     }
 
     public function stageMouseUp(e:MouseEvent){
-	var img:GImage;
-	for (img in this.imgs){
-	    img.dispatchEvent(e);
+        var img:GImage;
+        for (img in this.imgs){
+            img.dispatchEvent(e);
         }
-	
+    
     }
     public function mouseUp(e:MouseEvent){
         if(! e.target.mouse_down){ return; }
-	e.target.mouse_down = false;
-	trace(this);
-	var d = this.drag_sprite;
-	if (Math.abs(e.stageX - d.startx) < 4){
-		d.graphics.clear();
-		return;
-	}
-	//d.graphics.clear();
-	var xmin = Math.min(d.startx, e.stageX);
-	var xmax = Math.max(d.startx, e.stageX);
-	var ymin = Math.min(d.starty, e.stageY);
-	var ymax = Math.max(d.starty, e.stageY);
-	for(i in 0... e.target.i){
-            ymin -= _heights[i];
-	    ymax -= _heights[i];
+        e.target.mouse_down = false;
+        var d = this.drag_sprite;
+        if (Math.abs(e.stageX - d.startx) < 4){
+            d.graphics.clear();
+            return;
         }
-	
-	query(e, [xmin, ymin, xmax, ymax]);
-	//flash.Lib.current.removeChild(this.drag_sprite);
+        var xmin = Math.min(d.startx, e.stageX);
+        var xmax = Math.max(d.startx, e.stageX);
+        var ymin = Math.min(d.starty, e.stageY);
+        var ymax = Math.max(d.starty, e.stageY);
+        for(i in 0... e.target.i){
+            ymin -= _heights[i];
+            ymax -= _heights[i];
+        }
+    
+        query(e, [xmin, ymin, xmax, ymax]);
     }
 
 
@@ -538,51 +488,7 @@ class Gobe extends Sprite {
 
 }
 
-// instead of just drawing on the stage, we add a lightweight shape.
-class GRect extends Shape {
-    //public var x0:Float;
-    //public var y0:Float;
-    public var w:Float;
-    public var h:Float;
 
-    public function new(x:Float, y:Float, w:Float, h:Float) {
-        super();
-        x -= 1.15;
-        w += 1.0;
-
-        this.x = x;
-        this.y = y;
-
-        //this.width  = 15;
-        //this.height = h;
-        trace(this.x + "," + this.y + "," + w + "," + h);
-
-        //this.x0 = x;
-        //this.y0 = y;
-        this.w  = w;
-        this.h  = h;
-        var g = this.graphics;
-        g.lineStyle(0,0x00000);
-        //g.drawRect(x, y, w, h);
-        g.drawRect(0, 0, w, h);
-
-    }
-}
-
-class GLine extends Shape {
-    public var db_id1:Int;
-    public var db_id2:Int;
-
-    public function new(x0:Float, y0:Float, x1:Float, y1:Float, lwidth:Int, lcolor:Int, db_id1, db_id2) {
-        super();
-        var g = this.graphics;    
-        g.lineStyle(lwidth, lcolor);
-        g.moveTo(x0,y0);
-        g.lineTo(x1,y1);
-        this.db_id1 = db_id1;
-        this.db_id2 = db_id2;
-    }
-}
 
 class GSlider extends Sprite {
     // id is the string (drup1,drdown1, drup2, or drdown2)
@@ -654,7 +560,7 @@ class GImage extends Sprite {
         _imageLoader = new Loader();
         _imageLoader.load(new URLRequest(url));
         _imageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, onComplete);
-	this.mouse_down = false;
+    this.mouse_down = false;
     }
 
     private function onComplete(event:Event) {
@@ -670,14 +576,14 @@ class DragSprite extends Sprite {
     public var startx:Float;
     public var starty:Float;
     public function new(){
-    	super();
+        super();
     }
 }
 
 
 class GEvent extends Event {
     public static var LOADED = "LOADED";
-    public static var ALL_LOADED = "ALL_LOADED";
+    //public static var ALL_LOADED = "ALL_LOADED";
     public function new(type:String){
         super(type);
     }
