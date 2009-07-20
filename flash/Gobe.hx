@@ -67,33 +67,10 @@ class Gobe extends Sprite {
     private function query_single(e:MouseEvent, img:String, idx:Int):String {
         var i:Int = 0;
         var turl:String;
-        /*
-        var removed = false;
-        for(r in _rectangles){
-           // removed the rectangle (and pair) that was clicked on.
-           var rb = r.getBounds(panel);
-           rb.inflate(3.0, 0.0);
-           rb.offset(-1.5, 0.0);
-           if (rb.contains(e.stageX, e.stageY)) {
-               //if(r.hitTestPoint(e.stageX, e.stageY)){
-               var pair_idx = i % 2 == 0 ? i : i - 1;
-               var rects = _rectangles.splice(pair_idx, 2);
-               panel.removeChild(rects[1]);
-               panel.removeChild(rects[0]);
-               // one line per 2 rectangles.
-               var lidx = Math.floor(i/2);
-               panel.removeChild(_lines.splice(lidx, 1)[0]);
-               removed = true;
-               i--;
-           } else { i++;  }
-        }
-        if(removed) { return ''; }
         qbx.info.text = '';
         turl = '&x=' + e.localX;
         this._all = false;
         return turl;
-        */
-        return 'query_single() called';
     }
 
     public function query_bbox(e:MouseEvent, String, idx:Int, bbox:Array<Float>):String {
