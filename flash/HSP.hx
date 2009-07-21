@@ -177,7 +177,7 @@ class Wedge extends MouseOverableSprite {
             var x2mid = (xy2a.x + xy2b.x) / 2;
             var y2mid = (xy2a.y + xy2b.y) / 2;
 
-            this.graphics.lineStyle(this.line_width, this.line_color);
+            this.graphics.lineStyle(this.line_width, this.line_color, 0.65);
             this.graphics.moveTo(x1mid, y1mid);
             this.graphics.lineTo(x2mid, y2mid);
     }
