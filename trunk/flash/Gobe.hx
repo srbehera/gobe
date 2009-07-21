@@ -10,7 +10,6 @@ import flash.display.BitmapData;
 import flash.events.Event;
 import flash.events.KeyboardEvent;
 import flash.events.MouseEvent;
-import flash.events.TimerEvent;
 import flash.geom.Point;
 import flash.geom.Rectangle;
 import flash.net.URLRequest;
@@ -20,6 +19,7 @@ import flash.text.TextField;
 import flash.text.TextFormat;
 import flash.text.StyleSheet;
 import flash.utils.Timer;
+import flash.events.TimerEvent;
 import hxjson2.JSON;
 import HSP;
 
@@ -54,14 +54,14 @@ class Gobe extends Sprite {
 
 
     public function clearPanelGraphics(e:MouseEvent){
-        
-        //while(panel.numChildren != 0){ panel.removeChildAt(0); }
+        trace(this.hsps.length + " , " + this.panel.numChildren); 
         this.drag_sprite.graphics.clear();
+        while(panel.numChildren != 0){ panel.removeChildAt(0); }
         //var hsp:HSP;
-        for(hsp in this.hsps){
-            this.panel.removeChild(hsp);
-        }
-        this.hsps = [];
+        //for(hsp in this.hsps){
+        //    this.panel.removeChild(hsp);
+        //}
+        //this.hsps = [];
 
     }
     private function query_single(e:MouseEvent, img:String, idx:Int):String {
@@ -141,8 +141,11 @@ class Gobe extends Sprite {
                 var existing:Bool = false;
                 for(ehsp in this.hsps){
                     // can do this by checking the image_id
-                    if(coords1[4] == ehsp.coords1[4]){
+                    if(coords1[4] == ehsp.coords1[4] || coords2[4] == ehsp.coords1[4]){
                         existing = true;
+                        if(ehsp.stage == null){
+                            this.panel.addChild(ehsp);
+                        } 
                         break;
                     } 
                 }
@@ -150,19 +153,21 @@ class Gobe extends Sprite {
                 if(! existing){
                     var hsp = new HSP(this.panel, coords1, coords2, img1, img2, pair.color, this.qbx.line_width, true);
                     this.hsps.push(hsp);
+                    hsp.gobe = this;
                 }
         
             }
         }
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
-            qbx.info.htmlText = '<b>Not showing annotation for multiple hits.</b>&#10;';
-            qbx.info.htmlText += '<b>Click [clear] or empty space to clear box as needed.</b>';
+            qbx.info.htmlText = '<b>Not showing annotation for multiple hits.</b>';
             return;
         }
         qbx.show();
     }
-
+    public function removeHSP(hsp:HSP){
+        this.panel.removeChild(hsp);
+    }
 
     public static function main(){
         haxe.Firebug.redirectTraces();
@@ -322,12 +327,10 @@ class Gobe extends Sprite {
         e.target.mouse_down = true;
         var d = this.drag_sprite;
         d.graphics.clear();
-        d.graphics.lineStyle(3, 0xcccccc);
         d.startx = e.stageX;
         d.starty = e.stageY;
-    
-    //flash.Lib.current.addChild(d);
     }
+
     public function mouseMove(e:MouseEvent){
         if(! e.target.mouse_down){ return; }
         if (!e.buttonDown){
@@ -335,16 +338,7 @@ class Gobe extends Sprite {
             this.dispatchEvent(e2);
             return;
         }
-        var d = this.drag_sprite;
-        d.graphics.clear();
-        d.graphics.lineStyle(3, 0xcccccc);
-    
-        var xmin = Math.min(d.startx, e.stageX);
-        var xmax = Math.max(d.startx, e.stageX);
-        var ymin = Math.min(d.starty, e.stageY);
-        var ymax = Math.max(d.starty, e.stageY);
-
-        d.graphics.drawRect(xmin, ymin, xmax - xmin, ymax - ymin);
+        this.drag_sprite.draw(e.stageX, e.stageY);
     }
 
     public function stageMouseUp(e:MouseEvent){
@@ -372,6 +366,11 @@ class Gobe extends Sprite {
         }
     
         query(e, [xmin, ymin, xmax, ymax]);
+        var t = new Timer(400);
+        t.addEventListener(TimerEvent.TIMER, function(e:TimerEvent){ d.graphics.clear(); } );
+        t.start();
+        
+        
     }
 
 
@@ -551,6 +550,18 @@ class DragSprite extends Sprite {
     public var starty:Float;
     public function new(){
         super();
+    }
+    public function draw(eX:Float, eY:Float){ 
+        this.graphics.clear();
+        this.graphics.lineStyle(1, 0xcccccc);
+        var xmin = Math.min(this.startx, eX);
+        var xmax = Math.max(this.startx, eX);
+        var ymin = Math.min(this.starty, eY);
+        var ymax = Math.max(this.starty, eY);
+
+        this.graphics.beginFill(0xcccccc, 0.2);
+        this.graphics.drawRect(xmin, ymin, xmax - xmin, ymax - ymin);
+        this.graphics.endFill();
     }
 }
 
