@@ -70,7 +70,12 @@ class HSP extends Sprite {
         r.hsp = this;
         return r;
     }
-
+    public function redraw(){
+        this.pair[0].draw();
+        this.pair[1].draw();
+        this.wedge.as_wedge = this.as_wedge;
+        this.wedge.draw();
+    }
 }
 
 class MouseOverableSprite extends Sprite {
