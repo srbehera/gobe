@@ -54,16 +54,9 @@ class Gobe extends Sprite {
 
 
     public function clearPanelGraphics(e:MouseEvent){
-        trace(this.hsps.length + " , " + this.panel.numChildren); 
-        this.drag_sprite.graphics.clear();
         while(panel.numChildren != 0){ panel.removeChildAt(0); }
-        //var hsp:HSP;
-        //for(hsp in this.hsps){
-        //    this.panel.removeChild(hsp);
-        //}
-        //this.hsps = [];
-
     }
+
     private function query_single(e:MouseEvent, img:String, idx:Int):String {
         var i:Int = 0;
         var turl:String;
@@ -113,11 +106,12 @@ class Gobe extends Sprite {
         var json:Array<Dynamic> = JSON.decode(e.target.data).resultset;
         var pair:Hash<Dynamic>;
         for(pair in json){
-            if(! pair.has_pair){ continue; }
             if(!this._all){
+                //trace(pair);
                 qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
                 qbx.info.htmlText += "<p>" + pair.annotation + "</p>";
             }
+            if(! pair.has_pair){ continue; }
 
             var idx:Int = 0;
             var fields:Array<String> = Reflect.fields(pair.features);
@@ -128,7 +122,6 @@ class Gobe extends Sprite {
                 var fhsp2 = fields[idx++];
                 var coords1:Array<Int> = Reflect.field(pair.features, fhsp1);
                 var coords2:Array<Int> = Reflect.field(pair.features, fhsp2);
-                trace(coords1 + "       " + coords2);
 
                 var img1_key = base_name + '_' + fhsp1.substr(3) + ".png";
                 var img1:GImage = this.imgs[image_info.get(img1_key).get('i')];
@@ -180,7 +173,7 @@ class Gobe extends Sprite {
 
     public function new(){
         super();
-        //ExternalInterface.call('alert','hiiii');
+        ExternalInterface.call('Gobe.set_html','hiiii');
         var p = flash.Lib.current.loaderInfo.parameters;
         Gobe.gobe_url  = p.gobe_url;
         this.QUERY_URL = Gobe.gobe_url + 'query.pl?';
@@ -321,6 +314,7 @@ class Gobe extends Sprite {
             y+=h;
         }
         this.addEventListener(MouseEvent.MOUSE_UP, stageMouseUp);
+        this.addEventListener(MouseEvent.MOUSE_MOVE, stageMouseMove);
         //this.dispatchEvent(new GEvent(GEvent.ALL_LOADED));
     }
     public function mouseDown(e:MouseEvent){
@@ -338,7 +332,14 @@ class Gobe extends Sprite {
             this.dispatchEvent(e2);
             return;
         }
-        this.drag_sprite.draw(e.stageX, e.stageY);
+        this.drag_sprite.do_draw(e.stageX, e.stageY);
+    }
+    public function stageMouseMove(e:MouseEvent){
+        var img:GImage;
+        for (img in this.imgs){
+            img.dispatchEvent(e);
+        }
+    
     }
 
     public function stageMouseUp(e:MouseEvent){
@@ -366,7 +367,7 @@ class Gobe extends Sprite {
         }
     
         query(e, [xmin, ymin, xmax, ymax]);
-        var t = new Timer(400);
+        var t = new Timer(600);
         t.addEventListener(TimerEvent.TIMER, function(e:TimerEvent){ d.graphics.clear(); } );
         t.start();
         
@@ -551,7 +552,7 @@ class DragSprite extends Sprite {
     public function new(){
         super();
     }
-    public function draw(eX:Float, eY:Float){ 
+    public function do_draw(eX:Float, eY:Float){ 
         this.graphics.clear();
         this.graphics.lineStyle(1, 0xcccccc);
         var xmin = Math.min(this.startx, eX);
