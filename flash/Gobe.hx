@@ -136,26 +136,23 @@ class Gobe extends Sprite {
                 var img2_key = base_name + '_' + fhsp2.substr(3) + ".png";
                 var img2:GImage = this.imgs[image_info.get(img2_key).get('i')];
 
-                var hsp = new HSP(this.panel, coords1, coords2, img1, img2, pair.color, false);
-                this.hsps.push(hsp);
+                // make sure were not adding an hsp that's already drawn.
+                var ehsp:HSP;
+                var existing:Bool = false;
+                for(ehsp in this.hsps){
+                    // can do this by checking the image_id
+                    if(coords1[4] == ehsp.coords1[4]){
+                        existing = true;
+                        break;
+                    } 
+                }
+
+                if(! existing){
+                    var hsp = new HSP(this.panel, coords1, coords2, img1, img2, pair.color, this.qbx.line_width, true);
+                    this.hsps.push(hsp);
+                }
         
             }
-            /*
-            for(fhsp in fields){
-                idx += 1;
-                // coords is [xmin, ymin, xmax, ymax, db_id]
-                var coords:Array<Int> = Reflect.field(pair.features, fhsp);
-                // converty key2 to 2; because that's the image we need. cant use '1' as a key because of
-                // haxe bug.
-                // then create the image name e.g. : GEvo_asdf_2.png
-                var img_key = base_name + '_' + fhsp.substr(3) + ".png";
-                
-                // and use that to look up the image index.
-                var img_idx:Int = image_info.get(img_key).get('i');
- 
-                // gets added to panel in the constructor.
-                var hsp = new HSP(this.panel, coords, this.imgs[img_idx], pair.color, false);
-            }*/
         }
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
@@ -295,7 +292,7 @@ class Gobe extends Sprite {
             ttf.text   = image_info.get(image_titles[i]).get('title');
             ttf.y      = y ; 
             ttf.x      = 15;
-        ttf.multiline = true;
+            ttf.multiline = true;
             ttf.border = true; 
             if(ttf.text.indexOf('Reverse Complement') != -1  ) {
                 ttf.textColor = 0xff0000;
