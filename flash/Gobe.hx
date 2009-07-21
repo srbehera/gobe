@@ -36,12 +36,16 @@ class Gobe extends Sprite {
     private var img:String;
     public var cnss:Array<Int>;
 
+    public var as_wedge:Bool;
+    public var line_width:Int;
+    
+
     public var drag_sprite:DragSprite;
 
     private var _heights:Array<Int>;
 
     public var base_name:String;
-    public var qbx:QueryBox;
+    //public var qbx:QueryBox;
     // hold the hsps so we know if one contained a click
     public var hsps:Array<HSP>;
     public var panel:Sprite; // holds the lines.
@@ -56,11 +60,16 @@ class Gobe extends Sprite {
     public function clearPanelGraphics(e:MouseEvent){
         while(panel.numChildren != 0){ panel.removeChildAt(0); }
     }
+    public function send_html(html:String){
+        ExternalInterface.call('Gobe.handle_html', html);
+    }
 
     private function query_single(e:MouseEvent, img:String, idx:Int):String {
         var i:Int = 0;
         var turl:String;
-        qbx.info.text = '';
+         
+        this.send_html('');
+        //qbx.info.text = '';
         turl = '&x=' + e.localX;
         this._all = false;
         return turl;
@@ -84,6 +93,7 @@ class Gobe extends Sprite {
 
         if (bbox != null){
             url += query_bbox(e, img, idx, bbox);
+            this._all = true;
         }
         else if(e.shiftKey){
             url      += '&all=1';
@@ -108,8 +118,11 @@ class Gobe extends Sprite {
         for(pair in json){
             if(!this._all){
                 //trace(pair);
-                qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
-                qbx.info.htmlText += "<p>" + pair.annotation + "</p>";
+                
+                this.send_html("<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;" +
+                                "<p>" + pair.annotation + "</p>");
+                //qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
+                //qbx.info.htmlText += "<p>" + pair.annotation + "</p>";
             }
             if(! pair.has_pair){ continue; }
 
@@ -137,14 +150,17 @@ class Gobe extends Sprite {
                     if(coords1[4] == ehsp.coords1[4] || coords2[4] == ehsp.coords1[4]){
                         existing = true;
                         if(ehsp.stage == null){
+                            ehsp.as_wedge = this.as_wedge;
+                            ehsp.wedge.line_width = this.line_width;
                             this.panel.addChild(ehsp);
+                            ehsp.redraw();
                         } 
                         break;
                     } 
                 }
 
                 if(! existing){
-                    var hsp = new HSP(this.panel, coords1, coords2, img1, img2, pair.color, this.qbx.line_width, true);
+                    var hsp = new HSP(this.panel, coords1, coords2, img1, img2, pair.color, this.line_width, this.as_wedge);
                     this.hsps.push(hsp);
                     hsp.gobe = this;
                 }
@@ -153,10 +169,18 @@ class Gobe extends Sprite {
         }
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
-            qbx.info.htmlText = '<b>Not showing annotation for multiple hits.</b>';
+            this.send_html('<b>Not showing annotation for multiple hits.</b>');
+            //qbx.info.htmlText = '<b>Not showing annotation for multiple hits.</b>';
             return;
         }
-        qbx.show();
+        //qbx.show();
+    }
+    public function redraw_wedges(){
+        for(ehsp in this.hsps){
+            ehsp.as_wedge = this.as_wedge;
+            ehsp.wedge.line_width = this.line_width;
+            ehsp.redraw();
+        }
     }
     public function removeHSP(hsp:HSP){
         this.panel.removeChild(hsp);
@@ -168,12 +192,27 @@ class Gobe extends Sprite {
         flash.Lib.current.stage.align     = StageAlign.TOP_LEFT;
         flash.Lib.current.addChild( new Gobe());
     }
+    private function add_callbacks(){
+        ExternalInterface.addCallback("clear_wedges", clear_wedges);
+        ExternalInterface.addCallback("set_linewidth", set_linewidth);
+        ExternalInterface.addCallback("set_connector", set_connector);
+    }
 
+    public function clear_wedges(){
+        this.clearPanelGraphics(new MouseEvent(MouseEvent.CLICK));
+    }
+    public function set_linewidth(lw:String){
+        this.line_width = Std.parseInt(lw);
+        this.redraw_wedges();
+    }
+    public function set_connector(conn:String){
+        this.as_wedge = conn != 'line';
+        this.redraw_wedges();
+    }
 
 
     public function new(){
         super();
-        ExternalInterface.call('Gobe.set_html','hiiii');
         var p = flash.Lib.current.loaderInfo.parameters;
         Gobe.gobe_url  = p.gobe_url;
         this.QUERY_URL = Gobe.gobe_url + 'query.pl?';
@@ -183,19 +222,22 @@ class Gobe extends Sprite {
         this.n         = p.n;
 
         this.drag_sprite = new DragSprite();
+        this.as_wedge = true;
+        this.line_width = 3;
 
         panel = new Sprite(); 
         addChild(panel);
         addChild(this.drag_sprite);
+        this.add_callbacks();
         _heights = [];
         this.hsps = [];
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
-        qbx = new QueryBox(Gobe.gobe_url, this);
-        qbx.x =  1030;
-        qbx.show();
-        qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearPanelGraphics);
+        //qbx = new QueryBox(Gobe.gobe_url, this);
+        //qbx.x =  1030;
+        //qbx.show();
+        //qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearPanelGraphics);
 
     }
 
@@ -457,7 +499,7 @@ class Gobe extends Sprite {
             var anchs:Hash<Int> = image_info.get(image_titles[e.target.i]).get('anchors');
             var elen = exts.get('bpmax') - exts.get('bpmin') + 1;
             var alen = (anchs.get('xmax') - anchs.get('xmin') + 1) * exts.get('bpp');
-            ExternalInterface.call('set_genespace',(e.target.updown == -1) ? 'up' : 'down' , e.target.idx,xupdown, elen, alen);
+            ExternalInterface.call('Gobe.set_genespace',(e.target.updown == -1) ? 'up' : 'down' , e.target.idx,xupdown, elen, alen);
     }
 
 }
