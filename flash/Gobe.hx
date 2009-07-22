@@ -38,6 +38,7 @@ class Gobe extends Sprite {
 
     public var as_wedge:Bool;
     public var line_width:Int;
+    public var wedge_alpha:Float;
     
 
     public var drag_sprite:DragSprite;
@@ -152,6 +153,7 @@ class Gobe extends Sprite {
                         if(ehsp.stage == null){
                             ehsp.as_wedge = this.as_wedge;
                             ehsp.wedge.line_width = this.line_width;
+                            ehsp.wedge_alpha = this.wedge_alpha;
                             this.panel.addChild(ehsp);
                             ehsp.redraw();
                         } 
@@ -160,7 +162,7 @@ class Gobe extends Sprite {
                 }
 
                 if(! existing){
-                    var hsp = new HSP(this.panel, coords1, coords2, img1, img2, pair.color, this.line_width, this.as_wedge);
+                    var hsp = new HSP(this.panel, coords1, coords2, img1, img2, pair.color, this.line_width, this.wedge_alpha, this.as_wedge);
                     this.hsps.push(hsp);
                     hsp.gobe = this;
                 }
@@ -179,6 +181,7 @@ class Gobe extends Sprite {
         for(ehsp in this.hsps){
             ehsp.as_wedge = this.as_wedge;
             ehsp.wedge.line_width = this.line_width;
+            ehsp.wedge_alpha = this.wedge_alpha;
             ehsp.redraw();
         }
     }
@@ -188,9 +191,10 @@ class Gobe extends Sprite {
 
     public static function main(){
         haxe.Firebug.redirectTraces();
-        flash.Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
-        flash.Lib.current.stage.align     = StageAlign.TOP_LEFT;
-        flash.Lib.current.addChild( new Gobe());
+        var stage = flash.Lib.current;
+        stage.stage.scaleMode = StageScaleMode.NO_SCALE;
+        stage.stage.align     = StageAlign.TOP_LEFT;
+        stage.addChild( new Gobe());
     }
     private function add_callbacks(){
         ExternalInterface.addCallback("clear_wedges", clear_wedges);
@@ -209,6 +213,18 @@ class Gobe extends Sprite {
         this.as_wedge = conn != 'line';
         this.redraw_wedges();
     }
+    public function onMouseWheel(e:MouseEvent){
+        var change = e.delta > 0 ? 1 : - 1;
+        if(!this.as_wedge){
+            this.line_width += change;        
+            if(this.line_width < 0){ this.line_width = 0; }
+        } else {
+            this.wedge_alpha += (change / 10.0);
+            if(this.wedge_alpha > 1){ this.wedge_alpha = 1.0; }
+            if(this.wedge_alpha < 0.1){ this.wedge_alpha = 0.1; }
+        }
+        this.redraw_wedges();
+    }
 
 
     public function new(){
@@ -224,6 +240,7 @@ class Gobe extends Sprite {
         this.drag_sprite = new DragSprite();
         this.as_wedge = true;
         this.line_width = 3;
+        this.wedge_alpha = 0.3;
 
         panel = new Sprite(); 
         addChild(panel);
@@ -238,6 +255,11 @@ class Gobe extends Sprite {
         //qbx.x =  1030;
         //qbx.show();
         //qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearPanelGraphics);
+        
+        // the event only gets called when mousing over an HSP.
+        addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
+        // this one the event gets called anywhere.
+        //flash.Lib.current.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
 
     }
 
