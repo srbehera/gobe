@@ -213,9 +213,9 @@ while( my $result = $sth->fetchrow_hashref() ){
 
     my $annotation = $result->{annotation};
     $annotation = $annotation =~ /http/ ? get($annotation) : $annotation;
-    $annotation =~ s/"/'/g;
-    $annotation =~ s/<br\/?>/\n/ig;
-    $annotation =~ s/<.*?>//g;
+#    $annotation =~ s/"/'/g;
+#    $annotation =~ s/<br\/?>/\n/ig;
+#    $annotation =~ s/<.*?>//g;
     my $f1name = $result->{image_id}; # GEvo_rIKDAf4x_1.png -> 1
     my $f2name = $pair->{image_id};
 
