@@ -26,10 +26,11 @@ import HSP;
 
 class Gobe extends Sprite {
 
+    public static var fontSize:Int = 12;
+
     public static  var ctx = new LoaderContext(true);
     private static var gobe_url = '/CoGe/gobe/';
     private static var img_url = '/CoGe/gobe/tmp/';
-
     // gobe_url and n are sent in on the url.
     private var n:Int;
     private var pad_gs:Int; // how many bp in to put the bars from the edge of the image
@@ -122,8 +123,6 @@ class Gobe extends Sprite {
                 
                 this.send_html("<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;" +
                                 "<p>" + pair.annotation + "</p>");
-                //qbx.info.htmlText = "<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;";
-                //qbx.info.htmlText += "<p>" + pair.annotation + "</p>";
             }
             if(! pair.has_pair){ continue; }
 
@@ -172,7 +171,6 @@ class Gobe extends Sprite {
         // if it was showing all the hsps, dont show the annotation.
         if( this._all){
             this.send_html('<b>Not showing annotation for multiple hits.</b>');
-            //qbx.info.htmlText = '<b>Not showing annotation for multiple hits.</b>';
             return;
         }
         //qbx.show();
@@ -251,16 +249,54 @@ class Gobe extends Sprite {
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
-        //qbx = new QueryBox(Gobe.gobe_url, this);
-        //qbx.x =  1030;
-        //qbx.show();
-        //qbx.clear_sprite.addEventListener(MouseEvent.CLICK, clearPanelGraphics);
         
         // the event only gets called when mousing over an HSP.
         addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
+            
         // this one the event gets called anywhere.
-        //flash.Lib.current.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
+        flash.Lib.current.stage.focus = flash.Lib.current.stage;
+        flash.Lib.current.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyPress);
 
+    }
+    public function onKeyPress(e:KeyboardEvent){
+        // if they pressed 'm' or 'M'
+        if(e.keyCode == 77 && this.as_wedge){
+            merge_wedges();
+        }
+        if(e.keyCode == 123){
+
+        }
+        if(e.keyCode == 38){ // up
+            if(Gobe.fontSize > 25){ return; }
+            Gobe.fontSize += 1;
+            for(img in imgs){
+                img.ttf.styleSheet.setStyle('p', {fontSize:Gobe.fontSize});
+            }
+        }
+        else if (e.keyCode == 40){ // down
+            if(Gobe.fontSize < 5){ return; }
+            Gobe.fontSize -= 1;
+            for(img in imgs){
+                img.ttf.styleSheet.setStyle('p', {fontSize:Gobe.fontSize});
+            }
+        }
+
+    }
+    public function merge_wedges(){
+        var xmin:Float = 9999;
+        var xmax:Float = 0;
+        var ymin:Float = 9999;
+        var ymax:Float = 0;
+
+        for(ehsp in this.hsps){
+            if(ehsp.stage == null){ continue; }
+            if (ehsp.x < xmin) xmin = ehsp.x;
+            if (ehsp.y < ymin) ymin = ehsp.y;
+            if (ehsp.x + ehsp.width > xmax) xmax = ehsp.x + ehsp.width;
+            if (ehsp.y + ehsp.height > ymax) ymax = ehsp.y + ehsp.height;
+        }
+        trace([xmin, xmax, ymin, ymax].join(","));
+        
     }
 
     public function getImageInfo(){
@@ -268,6 +304,7 @@ class Gobe extends Sprite {
         ul.addEventListener(Event.COMPLETE, imageInfoReturn);
         ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db=' + this.base_name));
     }
+
 
     public function imageInfoReturn(e:Event){
             var strdata:String = e.target.data;
@@ -350,11 +387,14 @@ class Gobe extends Sprite {
             img.y = y;
             flash.Lib.current.addChildAt(img, 0);
 
-            var ttf = new TextField();
-            ttf.text   = image_info.get(image_titles[i]).get('title');
+            var ttf = new MTextField();
+            img.ttf = ttf;
+            
+            ttf.htmlText   = '<p>' + image_info.get(image_titles[i]).get('title') + '</p>';
             ttf.y      = y ; 
             ttf.x      = 15;
             ttf.multiline = true;
+      
             ttf.border = true; 
             if(ttf.text.indexOf('Reverse Complement') != -1  ) {
                 ttf.textColor = 0xff0000;
@@ -362,8 +402,12 @@ class Gobe extends Sprite {
             ttf.borderColor      = 0xcccccc;
             ttf.opaqueBackground = 0xf4f4f4;
             ttf.autoSize         = flash.text.TextFieldAutoSize.LEFT;
+            ttf.styleSheet.setStyle('p', {fontSize: Gobe.fontSize, display: 'inline',
+                                        fontFamily: '_sans'});
 
             flash.Lib.current.addChildAt(ttf, 1);
+            ttf.styleSheet.setStyle('p', {fontSize: Gobe.fontSize, display: 'inline',
+                                        fontFamily: '_sans'});
             // TODO move this onto the Rectangles.
             img.addEventListener(MouseEvent.CLICK, _query, false);
             //var stage = flash.Lib.current;
@@ -575,6 +619,13 @@ class GSlider extends Sprite {
     }
 }
 
+class MTextField extends TextField {
+    public function new(){
+        super();
+        this.styleSheet = new StyleSheet();
+    }
+}
+
 class GImage extends Sprite {
 
     private var _imageLoader:Loader;
@@ -586,6 +637,7 @@ class GImage extends Sprite {
     public  var url:String;
     public  var i:Int;
     public  var mouse_down:Bool;
+    public  var ttf:MTextField;
 
 
 
