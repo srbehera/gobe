@@ -33,16 +33,12 @@ class info(object):
             result[row['iname']] = dict(
                 title=row['title'],
                 i=i,
-                extents=dict(
-                    img_width=row['px_width'],
-                    bpmin=row['bpmin'],
-                    bpmax=row['bpmax']
-                ),
-                anchors=dict(
-                    idx=row['id'],
-                    xmin=anchor['min'],
-                    xmax=anchor['max']
-                )
+                img_width=row['px_width'],
+                bpmin=row['bpmin'],
+                bpmax=row['bpmax'],
+                idx=row['id'],
+                xmin=anchor['min'],
+                xmax=anchor['max']
             )
         return simplejson.dumps(result)
 
@@ -87,31 +83,33 @@ class query(object):
                        image_track, pair_id, color FROM image_data where 
                        id = ?""", (result['pair_id'], ));
             pair = c2.fetchone()
-            anno = "hi" #result['annotation']
-            if anno.startswith('http'):
-                try:
+            try:
+                anno = result['annotation']
+                if anno.startswith('http'):
                     anno = urllib.urlopen(anno).read()
-                except:
-                     anno = ""
+            except:
+                anno = ""
 
             f1pts = []
             f2pts = []
             for k in ('xmin', 'ymin', 'xmax', 'ymax'):
                 f1pts.append(int(round(result[k])))
-                f2pts.append(int(round(pair[k])))
+                if pair:
+                    f2pts.append(int(round(pair[k])))
                 
             f1pts.extend([result['id'], result['image_track']])
-            f2pts.extend([pair['id'], pair['image_track']])
+            if pair:
+                f2pts.extend([pair['id'], pair['image_track']])
             results.append(dict(
                 # TODO: tell eric to add 'CoGe' to the start of his links.
                 link=result['link'],
                 annotation = anno,
                 # TODO has_pair
-                has_pair= True,
-                color=(result['color'] or pair['color']).replace('#', '0x'),
+                has_pair= bool(pair),
+                color=(result['color'] or (pair and pair['color'])).replace('#', '0x'),
                 features={
                     'key%i' % result['image_id']: f1pts,
-                    'key%i' % pair['image_id']: f2pts}
+                    'key%i' % (pair and pair['image_id'] or 999): f2pts}
             ))
         web.header('Content-type', 'text/javascript')
         return simplejson.dumps({'resultset':results})
