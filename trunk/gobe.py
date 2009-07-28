@@ -24,46 +24,26 @@ class info(object):
         web.header('Content-type', 'text/javascript')
         db = getdb(dbname)
         c = db.cursor()
+        c2 = db.cursor()
         c.execute("SELECT * FROM image_info order by display_id")
-
-        data = {}
-        for row in c:
-            data[row['display_id']] = {}
-            # TODO: see why the perl wraps this dict like: {'img': dict }
-
-            ks = row.keys()
-            data[row['display_id']]['img'] = dict(
-                image_name=row['iname'],
-                title=row['title'],
-                width=row['px_width'],
-                bpmin=row['bpmin'],
-                bpmax=row['bpmax'],
-                id=row['id'])
-
-        c.execute("SELECT min(xmin) as min, max(xmax) as max, image_id FROM image_data WHERE type='anchor' GROUP BY image_id ORDER BY image_id")
-        for anchor in c:
-            data[anchor['image_id']]['anchor'] = dict(
-                max=anchor['max'],
-                min=anchor['min'])
+        c2.execute("SELECT min(xmin) as min, max(xmax) as max, image_id FROM image_data WHERE type='anchor' GROUP BY image_id ORDER BY image_id")
 
         result = {}
-        for i, did in enumerate(sorted(data)):
-            img = data[did]['img']
-            name = img['image_name']
-            anc = data[did]['anchor']
-            if not name in result: result[name] = {}
-            result[name] = dict(
-                title=img['title'],
+        for i, (row, anchor) in enumerate(zip(c, c2)):
+            result[row['iname']] = dict(
+                title=row['title'],
                 i=i,
                 extents=dict(
-                    img_width=img['width'],
-                    bpmin=img['bpmin'],
-                    bpmax=img['bpmax']),
+                    img_width=row['px_width'],
+                    bpmin=row['bpmin'],
+                    bpmax=row['bpmax']
+                ),
                 anchors=dict(
-                    idx=img['id'],
-                    xmin=anc['min'],
-                    xmax=anc['max'])
+                    idx=row['id'],
+                    xmin=anchor['min'],
+                    xmax=anchor['max']
                 )
+            )
         return simplejson.dumps(result)
 
 class follow(object):
@@ -87,7 +67,8 @@ class query(object):
                       BETWEEN ymin AND ymax AND image_id = ? ORDER BY 
                       ABS(image_track) DESC""", (float(web.input().y), img))
             track = c.fetchone()['image_track']
-            c.execute("""SELECT id, xmin, xmax, ymin, ymax, image_id, image_track, pair_id, color FROM image_data 
+            web.debug(track)
+            c.execute("""SELECT id, xmin, xmax, ymin, ymax, image_id, image_track, pair_id, color, link FROM image_data 
                     WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) 
                     and image_id = ? and pair_id != -99 and type = 'HSP'""", (track, track, img))
 
@@ -102,9 +83,11 @@ class query(object):
         # now iterate over the cursor
         results = []
         for result in c:
-            c2.execute("SELECT id, xmin, xmax, ymin, ymax, image_id, image_track, pair_id, color FROM image_data where id = ?", (result['pair_id'], ));
+            c2.execute("""SELECT id, xmin, xmax, ymin, ymax, image_id, 
+                       image_track, pair_id, color FROM image_data where 
+                       id = ?""", (result['pair_id'], ));
             pair = c2.fetchone()
-            anno = result['annotation']
+            anno = "hi" #result['annotation']
             if anno.startswith('http'):
                 try:
                     anno = urllib.urlopen(anno).read()
@@ -117,8 +100,8 @@ class query(object):
                 f1pts.append(int(round(result[k])))
                 f2pts.append(int(round(pair[k])))
                 
-            f1pts.append([result['id'], result['image_track']])
-            f2pts.append([pair['id'], pair['image_track']])
+            f1pts.extend([result['id'], result['image_track']])
+            f2pts.extend([pair['id'], pair['image_track']])
             results.append(dict(
                 # TODO: tell eric to add 'CoGe' to the start of his links.
                 link=result['link'],
@@ -131,12 +114,14 @@ class query(object):
                     'key%i' % pair['image_id']: f2pts}
             ))
         web.header('Content-type', 'text/javascript')
-        return simplejson.dumps(results)
+        return simplejson.dumps({'resultset':results})
+
 
 urls = (
-    '/info/([^\/]+)/', 'info',
-    '/follow/([^\/]+)/', 'follow',
-    '/query/([^\/]+)/', 'query',
+    # the first pattern is always the sqlite db name. e.g.: /GEVo_WxUonWBr/info
+    '/([^\/]+)/info/', 'info',
+    '/([^\/]+)/follow/', 'follow',
+    '/([^\/]+)/query/', 'query',
 )
 
 
