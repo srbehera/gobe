@@ -61,7 +61,7 @@ class HSP extends Sprite {
     }
 
 
-    public function make_rect(coords:Array<Int>, img):SimRect {
+    public function make_rect(coords:Array<Int>, img:GImage):SimRect {
         var xy = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
         
         var db_id = coords[4]; // this links to the id in the image_data table
@@ -69,7 +69,7 @@ class HSP extends Sprite {
         var w = coords[2] - coords[0];
         var h = coords[3] - coords[1];
     
-        var r = new SimRect(xy.x, xy.y, w, h);
+        var r = new SimRect(xy.x, xy.y, w, h, img);
         r.hsp = this;
         return r;
     }
@@ -91,6 +91,9 @@ class MouseOverableSprite extends Sprite {
         //this.addEventListener(MouseEvent.ROLL_OUT, onMouseOut);
         this.addEventListener(MouseEvent.CLICK, onClick);
     }
+    public function onDblClick(e:MouseEvent){
+        trace('dbl click');
+    }
     public function onMouseOver(e:MouseEvent){
         //if(this.mouse_over){ return;}
         //this.mouse_over = true;
@@ -108,7 +111,12 @@ class MouseOverableSprite extends Sprite {
     }
 
     public function onClick(e:MouseEvent){
-        this.hsp.panel.removeChild(this.hsp);
+        if(! e.shiftKey){
+            this.hsp.panel.removeChild(this.hsp);
+        }
+        else {
+           this.hsp.gobe.follow(e, this.getBounds(flash.Lib.current)); 
+        }
     }
 }
 
@@ -189,14 +197,16 @@ class SimRect extends MouseOverableSprite {
     public var color:Int;
     public var w:Float;
     public var h:Float;
+    public var img:GImage;
 
-    public function new(x:Float, y:Float, w:Float, h:Float) {
+    public function new(x:Float, y:Float, w:Float, h:Float, img:GImage) {
         super();
         this.x = x -1.15;
         this.y = y;
 
         this.w = w + 1.0;
         this.h = h;
+        this.img = img;
         this.draw();
         
     }
