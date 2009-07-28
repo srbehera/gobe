@@ -92,22 +92,20 @@ class Gobe extends Sprite {
         var url = this.QUERY_URL + 'follow/';
         var bbox = [bds.x, bds.y, bds.x + bds.width, bds.y + bds.height].join(",");
         url += "?bbox=" + bbox;
-        var idx:Int = image_info.get(image_titles[e.target.img.i]).get('anchors').get('idx');
+        var idx:Int = image_info.get(image_titles[e.target.img.i]).get('idx');
         url += "&img=" + idx;
         request(url);    
     }
     private function query(e:MouseEvent, ?bbox:Array<Float>){
         var img = e.target.url;
-        var idx:Int = image_info.get(image_titles[e.target.i]).get('anchors').get('idx');
+        var idx:Int = image_info.get(image_titles[e.target.i]).idx;
         var url = this.QUERY_URL + 'query/?y=' + e.localY + '&img=' + idx;
 
         if (bbox != null){
-            trace('bbox');
             url += query_bbox(bbox);
             this._all = true;
         }
         else if(e.shiftKey){
-            trace('shift key');
             url      += '&all=1';
             this._all = true;
         }
@@ -132,7 +130,6 @@ class Gobe extends Sprite {
         var pair:Hash<Dynamic>;
         for(pair in json){
             if(!this._all){
-                //trace(pair);
                 
                 this.send_html("<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;" +
                                 "<p>" + pair.annotation + "</p>");
@@ -144,18 +141,16 @@ class Gobe extends Sprite {
             fields.sort(function(a:String, b:String) { return (a < b) ? -1 : 1;} );
             var l = fields.length;
             while (idx < l){
-                trace(idx);
                 var fhsp1 = fields[idx++];
                 var fhsp2 = fields[idx++];
                 var coords1:Array<Int> = Reflect.field(pair.features, fhsp1);
                 var coords2:Array<Int> = Reflect.field(pair.features, fhsp2);
-                trace(coords1);
 
                 var img1_key = base_name + '_' + fhsp1.substr(3) + ".png";
-                var img1:GImage = this.imgs[image_info.get(img1_key).get('i')];
+                var img1:GImage = this.imgs[image_info.get(img1_key).i];
 
                 var img2_key = base_name + '_' + fhsp2.substr(3) + ".png";
-                var img2:GImage = this.imgs[image_info.get(img2_key).get('i')];
+                var img2:GImage = this.imgs[image_info.get(img2_key).i];
 
                 // make sure were not adding an hsp that's already drawn.
                 var ehsp:HSP;
@@ -323,45 +318,29 @@ class Gobe extends Sprite {
 
     public function imageInfoReturn(e:Event){
             var strdata:String = e.target.data;
-            image_info = new Hash<Dynamic>();
+            image_info = new Hash<ImageInfo>();
 
             var json = JSON.decode(strdata);
             // CONVERT THE JSON data into a HASH: sigh.
             image_titles = ['a','b'];
-            for( title in Reflect.fields(json)){
-                if (title == "CNS"){ continue; }
-                var info = Reflect.field(json, title);
-                image_info.set(title, new Hash<Hash<Int>>());
-                for (group_key in Reflect.fields(info)){
-                    var group:Dynamic = Reflect.field(info, group_key);
-                    if(group_key == 'i' || group_key == 'title'){
-                        image_info.get(title).set(group_key, group);
-                        if(group_key == 'i'){
-                            image_titles[group] = title;
-                        }
-                        continue;
-                    }
-                    image_info.get(title).set(group_key, new Hash<Int>());
-                    for(sub_group_key in Reflect.fields(group)){
-                        image_info.get(title).get(group_key).set(sub_group_key, Reflect.field(group, sub_group_key));
-                    }
-                }
-            }
-            for(t in image_titles){
-                var ext = image_info.get(t).get('extents');
-                ext.set('bpp', (ext.get('bpmax') - ext.get('bpmin') + 1)/ext.get('img_width'));
+            for( imgname in Reflect.fields(json)){
+                var info = Reflect.field(json, imgname);
+                var ii = new ImageInfo(info.title, info.i, info.img_width, info.bpmin,
+                            info.bpmax, info.idx, info.xmin, info.xmax);
+                image_info.set(imgname, ii);
+                image_titles[info.i] = imgname;
             }
             initImages();
     }
 
 
     public function pix2rw(px:Float, i:Int):Int {
-        var exts = image_info.get(image_titles[i]).get('extents');
-        return Math.round(exts.get('bpmin') + px * exts.get('bpp'));
+        var ii = image_info.get(image_titles[i]); //.get('extents');
+        return Math.round(ii.bpmin + px * ii.bpp);
     }
     public function rw2pix(rw:Float, i:Int):Float {
-        var exts = image_info.get(imgs[i].title).get('extents');
-        return (rw - exts.get('bpmin')) / exts.get('bpp');
+        var ii = image_info.get(imgs[i].title); //.get('extents');
+        return (rw - ii.bpmin) / ii.bpp;
 
     }
 
@@ -370,14 +349,14 @@ class Gobe extends Sprite {
     // it determines whether to use up/downstream based on which side
     // of the anchor the click falls on.
     public function pix2relative(px:Float, i:Int, updown:Int):Float{
-        var ext:Hash<Int> = image_info.get(image_titles[i]).get('extents');
-        var anchor:Hash<Int> = image_info.get(image_titles[i]).get('anchors');
-        var click_bp =  px * ext.get('bpp');
+        var ii:ImageInfo = image_info.get(image_titles[i]); //.get('extents');
+        //var anchor:Hash<Int> = image_info.get(image_titles[i]) //.get('anchors');
+        var click_bp =  px * ii.bpp;
         if(updown == -1) {
-            var end_of_anchor_bp = anchor.get('xmin') * ext.get('bpp');
+            var end_of_anchor_bp = ii.xmin * ii.bpp;
             return end_of_anchor_bp - click_bp;
         }
-        return  click_bp - anchor.get('xmax') * ext.get('bpp');
+        return  click_bp - ii.xmax * ii.bpp;
     }
 
     public function initImages(){
@@ -405,7 +384,7 @@ class Gobe extends Sprite {
             var ttf = new MTextField();
             img.ttf = ttf;
             
-            ttf.htmlText   = '<p>' + image_info.get(image_titles[i]).get('title') + '</p>';
+            ttf.htmlText   = '<p>' + image_info.get(image_titles[i]).title + '</p>';
             ttf.y      = y ; 
             ttf.x      = 15;
             ttf.multiline = true;
@@ -514,16 +493,14 @@ class Gobe extends Sprite {
     }
 
     public function add_sliders(img:GImage, i:Int, y:Int, h:Int){
-            //var gs0 = new GSlider(y + 24, h - 29, 'drup' + i, 0, _extents[i-1].get('xmin'));
-            var exts = image_info.get(img.title).get('extents');
-            var anchors = image_info.get(img.title).get('anchors');
-            var idx:Int = anchors.get('idx');
-            var gs0 = new GSlider(y + 24, h - 29, -1 , idx, 0, exts.get('img_width') - 4);
+            var ii = image_info.get(img.title); 
+            var idx:Int = ii.idx;
+            var gs0 = new GSlider(y + 24, h - 29, -1 , idx, 0, ii.img_width - 4);
             gs0.i = i - 1;
             gs0.image = img;
 
             // make sure pad_gs cant cause the min to go beyond the gene
-            var xmin = Math.max(rw2pix(exts.get('bpmin') + this.pad_gs, i - 1), 1);
+            var xmin = Math.max(rw2pix(ii.bpmin + this.pad_gs, i - 1), 1);
             gs0.x = xmin; // < 1 ? 1: (xmin > _extents[i-1].get('xmin') ?  _extents[i-1].get('xmin') : xmin);
             img.sliders.push(gs0);
             flash.Lib.current.addChild(gs0);
@@ -531,8 +508,8 @@ class Gobe extends Sprite {
             gs0.addEventListener(MouseEvent.MOUSE_UP, sliderMouseUp, false);
             //gs0.addEventListener(MouseEvent.MOUSE_OUT, sliderMouseOut);
 
-            var xmax = Math.min(rw2pix(exts.get('bpmax') - this.pad_gs, i - 1), exts.get('img_width'));
-            var gs1 = new GSlider(y + 24, h - 29, 1 , idx, 4 , exts.get('img_width'));
+            var xmax = Math.min(rw2pix(ii.bpmax - this.pad_gs, i - 1), ii.img_width);
+            var gs1 = new GSlider(y + 24, h - 29, 1 , idx, 4 , ii.img_width);
 
             gs1.x = xmax; 
             gs1.i = i - 1;
@@ -576,10 +553,9 @@ class Gobe extends Sprite {
 
             var x = e.target.x;
             var xupdown = Math.round(pix2relative(x, e.target.i, e.target.updown));
-            var exts:Hash<Int> = image_info.get(image_titles[e.target.i]).get('extents');
-            var anchs:Hash<Int> = image_info.get(image_titles[e.target.i]).get('anchors');
-            var elen = exts.get('bpmax') - exts.get('bpmin') + 1;
-            var alen = (anchs.get('xmax') - anchs.get('xmin') + 1) * exts.get('bpp');
+            var ii = image_info.get(image_titles[e.target.i]);
+            var elen = ii.bpmax - ii.bpmin + 1;
+            var alen = (ii.bpmax - ii.bpmin + 1) * ii.bpp;
             ExternalInterface.call('Gobe.set_genespace',(e.target.updown == -1) ? 'up' : 'down' , e.target.idx,xupdown, elen, alen);
     }
 
@@ -640,6 +616,31 @@ class MTextField extends TextField {
         this.styleSheet = new StyleSheet();
     }
 }
+
+class ImageInfo {
+    public var title:String; 
+    public var i:Int;
+    public var img_width:Int;
+    public var bpmin:Int;
+    public var bpmax:Int;
+    public var idx:Int;
+    public var xmin:Int;
+    public var xmax:Int;
+    public var bpp:Float;
+    public function new(title:String, i:Int, img_width:Int, bpmin:Int, 
+                        bpmax:Int, idx:Int, xmin:Int, xmax:Int){
+        this.title     = title;
+        this.i         = i;
+        this.img_width = img_width;
+        this.bpmin     = bpmin;
+        this.bpmax     = bpmax;
+        this.idx       = idx;
+        this.xmin      = xmin;
+        this.xmax      = xmax;
+        this.bpp       = (1.0 + bpmax - bpmin)/(1.0 * img_width);
+
+    }
+}    
 
 class GImage extends Sprite {
 
