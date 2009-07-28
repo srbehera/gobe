@@ -89,11 +89,9 @@ class Gobe extends Sprite {
     }
 
     public function follow(e:MouseEvent, bds:flash.geom.Rectangle){
-        var url = this.QUERY_URL + '&db=' + base_name;
+        var url = this.QUERY_URL + 'follow/';
         var bbox = [bds.x, bds.y, bds.x + bds.width, bds.y + bds.height].join(",");
-        url += "&bbox=" + bbox;
-        url += '&follow=1';
-
+        url += "?bbox=" + bbox;
         var idx:Int = image_info.get(image_titles[e.target.img.i]).get('anchors').get('idx');
         url += "&img=" + idx;
         request(url);    
@@ -101,13 +99,15 @@ class Gobe extends Sprite {
     private function query(e:MouseEvent, ?bbox:Array<Float>){
         var img = e.target.url;
         var idx:Int = image_info.get(image_titles[e.target.i]).get('anchors').get('idx');
-        var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + idx + '&db=' + base_name;
+        var url = this.QUERY_URL + 'query/?y=' + e.localY + '&img=' + idx;
 
         if (bbox != null){
+            trace('bbox');
             url += query_bbox(bbox);
             this._all = true;
         }
         else if(e.shiftKey){
+            trace('shift key');
             url      += '&all=1';
             this._all = true;
         }
@@ -144,10 +144,12 @@ class Gobe extends Sprite {
             fields.sort(function(a:String, b:String) { return (a < b) ? -1 : 1;} );
             var l = fields.length;
             while (idx < l){
+                trace(idx);
                 var fhsp1 = fields[idx++];
                 var fhsp2 = fields[idx++];
                 var coords1:Array<Int> = Reflect.field(pair.features, fhsp1);
                 var coords2:Array<Int> = Reflect.field(pair.features, fhsp2);
+                trace(coords1);
 
                 var img1_key = base_name + '_' + fhsp1.substr(3) + ".png";
                 var img1:GImage = this.imgs[image_info.get(img1_key).get('i')];
@@ -242,8 +244,8 @@ class Gobe extends Sprite {
         super();
         var p = flash.Lib.current.loaderInfo.parameters;
         Gobe.gobe_url  = p.gobe_url;
-        this.QUERY_URL = Gobe.gobe_url + 'query.pl?';
         this.base_name = p.base_name;
+        this.QUERY_URL = Gobe.gobe_url + 'gobe.py/' + this.base_name + '/';
         Gobe.img_url   = p.img_url;
         this.pad_gs    = p.pad_gs;
         this.n         = p.n;
@@ -315,7 +317,7 @@ class Gobe extends Sprite {
     public function getImageInfo(){
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, imageInfoReturn);
-        ul.load(new URLRequest(this.QUERY_URL + '&get_info=1&db=' + this.base_name));
+        ul.load(new URLRequest(this.QUERY_URL + 'info/'));
     }
 
 
