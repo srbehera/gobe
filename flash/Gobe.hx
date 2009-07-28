@@ -77,7 +77,7 @@ class Gobe extends Sprite {
         return turl;
     }
 
-    public function query_bbox(e:MouseEvent, String, idx:Int, bbox:Array<Float>):String {
+    public function query_bbox(bbox:Array<Float>):String {
         var turl:String = '&bbox=' + bbox.join(",");
         this._all = true;
         return turl;
@@ -88,13 +88,23 @@ class Gobe extends Sprite {
         query(e);
     }
 
+    public function follow(e:MouseEvent, bds:flash.geom.Rectangle){
+        var url = this.QUERY_URL + '&db=' + base_name;
+        var bbox = [bds.x, bds.y, bds.x + bds.width, bds.y + bds.height].join(",");
+        url += "&bbox=" + bbox;
+        url += '&follow=1';
+
+        var idx:Int = image_info.get(image_titles[e.target.img.i]).get('anchors').get('idx');
+        url += "&img=" + idx;
+        request(url);    
+    }
     private function query(e:MouseEvent, ?bbox:Array<Float>){
         var img = e.target.url;
         var idx:Int = image_info.get(image_titles[e.target.i]).get('anchors').get('idx');
         var url = this.QUERY_URL + '&y=' + e.localY + '&img=' + idx + '&db=' + base_name;
 
         if (bbox != null){
-            url += query_bbox(e, img, idx, bbox);
+            url += query_bbox(bbox);
             this._all = true;
         }
         else if(e.shiftKey){
@@ -107,6 +117,9 @@ class Gobe extends Sprite {
             url += turl;
         } 
 
+        this.request(url);
+    }
+    public function request(url:String){
         trace(url);
         var queryLoader = new URLLoader();
         queryLoader.addEventListener(Event.COMPLETE, handleQueryReturn);
