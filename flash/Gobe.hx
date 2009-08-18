@@ -92,7 +92,7 @@ class Gobe extends Sprite {
         var url = this.QUERY_URL + 'follow/';
         var bbox = [bds.x, bds.y, bds.x + bds.width, bds.y + bds.height].join(",");
         url += "?bbox=" + bbox;
-        var idx:Int = image_info.get(image_titles[e.target.img.i]).get('idx');
+        var idx:Int = image_info.get(image_titles[e.target.img.i]).idx;
         url += "&img=" + idx;
         request(url);    
     }

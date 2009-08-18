@@ -42,9 +42,78 @@ class info(object):
             )
         return simplejson.dumps(result)
 
+
 class follow(object):
     def GET(self, dbname):
+        web.header('content-type', 'text/javascript')
         db = getdb(dbname)
+        c = db.cursor()
+        c2 = db.cursor()
+        img = web.input(img=None).img
+
+        bbox = map(float, web.input().bbox.split(","))
+        ids = []
+        pair_ids = []
+
+        used_pairs = []
+
+        def get_pair_data(pair_id):
+            c.execute("""SELECT xmin, xmax, ymin, ymax, image_id, image_track FROM image_data WHERE id = ?""", (pair_id,))
+            p = c.fetchone()
+            return dict(
+                         pair_id=pair_id,
+                         pair_image_id=p['image_id'],
+                          pair_track=p['image_track'],
+                         pair_bbox=(p['xmin'], p['ymin'], p['xmax'], p['ymax']))
+
+        def get_pairs(img_id, bbox):
+            c.execute("""SELECT id, pair_id, image_id, xmin, xmax, ymin, ymax FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND 
+              ? - 1 > ymin AND ? + 1 < ymax AND image_id = ? AND pair_id != -99 AND type = 'HSP'""", \
+              (bbox[2], bbox[0], bbox[3], bbox[1], img_id))
+            results = c.fetchall()
+            if not results: return None
+            pairs = []
+            for r in results:
+                d = dict(id=r['id'], bbox=(r['xmin'], r['ymin'], r['xmax'], r['ymax']), image_id=r['image_id'])
+                d.update(get_pair_data(r['pair_id']))
+                pairs.append(d)
+            
+            return pairs 
+
+        def get_pairs_for_bbox_image(xmin, xmax, img_id, exclude_track):
+            c.execute("""SELECT id, pair_id, image_id, xmin, xmax, ymin, ymax 
+                      FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND 
+                      image_id = ? AND pair_id != -99 AND image_track != ? AND type = 'HSP'""", \
+              (xmax, xmin, img_id, exclude_track))
+            web.debug("""SELECT id, pair_id, image_id, xmin, xmax, ymin, ymax 
+                      FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND 
+                      image_id = ? AND pair_id != -99 AND image_track != ? AND type = 'HSP'""")
+            web.debug((xmax, xmin, img_id, exclude_track))
+
+            results = c.fetchall()
+            pairs = []
+            for r in results:
+                d = dict(id=r['id'], bbox=(r['xmin'], r['ymin'], r['xmax'], r['ymax']), image_id=r['image_id'])
+                d.update(get_pair_data(r['pair_id']))
+                pairs.append(d)
+            return pairs 
+        
+        pairs = get_pairs(img, bbox)
+        i = 0
+        while True:
+            L = len(pairs)
+            if i == L: break
+            pair = pairs[i]
+            new_pairs = get_pairs(pair['pair_image_id'], pair['pair_bbox'])
+            for np in (_np for _np in new_pairs if not _np in pairs):
+                new2 = get_pairs_for_bbox_image(np['bbox'][0], np['bbox'][2], np['image_id'], np['pair_track'])
+                if new2 == []: continue
+                if not new2 in pairs:
+                    pairs.append(new2)
+            pairs.extend([np for np in new_pairs if not np in pairs])
+            i += 1
+            if L == len(pairs): break
+            web.debug(pairs)
 
 
 class query(object):
