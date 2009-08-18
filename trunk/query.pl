@@ -171,13 +171,12 @@ my $all  = $q->param('all') || 0;
 my $img_id = $q->param('img');
 
 my $statement;
-
-if ($q->param('bbox')) {
+if ($q->param('follow')){
+}
+elsif ($q->param('bbox')) {
     my @bbox = split(/,/, $q->param('bbox'));
     my $query ="SELECT * FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND ? - 1 > ymin AND ? + 1 < ymax AND image_id = ? and pair_id != -99 and type = 'HSP'";
     $sth = $dbh->prepare($query);
-    print STDERR $query . "\n";
-    print STDERR join("\t", ($bbox[2], $bbox[0], $bbox[3], $bbox[1], $img_id)) . "\n";
     $sth->execute($bbox[2], $bbox[0], $bbox[3], $bbox[1], $img_id);
 } 
 elsif($all){
