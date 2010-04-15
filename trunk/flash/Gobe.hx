@@ -1,4 +1,4 @@
-import flash.external.ExternalInterface; 
+import flash.external.ExternalInterface;
 import flash.display.MovieClip;
 import flash.display.Sprite;
 import flash.display.Shape;
@@ -40,14 +40,12 @@ class Gobe extends Sprite {
     public var as_wedge:Bool;
     public var line_width:Int;
     public var wedge_alpha:Float;
-    
 
     public var drag_sprite:DragSprite;
 
     private var _heights:Array<Int>;
 
     public var base_name:String;
-    //public var qbx:QueryBox;
     // hold the hsps so we know if one contained a click
     public var hsps:Array<HSP>;
     public var panel:Sprite; // holds the lines.
@@ -69,7 +67,7 @@ class Gobe extends Sprite {
     private function query_single(e:MouseEvent, img:String, idx:Int):String {
         var i:Int = 0;
         var turl:String;
-         
+
         this.send_html('');
         //qbx.info.text = '';
         turl = '&x=' + e.localX;
@@ -82,7 +80,7 @@ class Gobe extends Sprite {
         this._all = true;
         return turl;
     }
-    // needed because cant use default args like in query() 
+    // needed because cant use default args like in query()
     // with addEventListener expecting a different sig.
     private function _query(e:MouseEvent){
         query(e);
@@ -94,7 +92,7 @@ class Gobe extends Sprite {
         url += "?bbox=" + bbox;
         var idx:Int = image_info.get(image_titles[e.target.img.i]).idx;
         url += "&img=" + idx;
-        request(url);    
+        request(url);
     }
     private function query(e:MouseEvent, ?bbox:Array<Float>){
         var img = e.target.url;
@@ -113,7 +111,7 @@ class Gobe extends Sprite {
             var turl = query_single(e, img, idx);
             if(turl == ""){ return; }
             url += turl;
-        } 
+        }
 
         this.request(url);
     }
@@ -130,7 +128,7 @@ class Gobe extends Sprite {
         var pair:Hash<Dynamic>;
         for(pair in json){
             if(!this._all){
-                
+
                 this.send_html("<p><a target='_blank' href='" + pair.link + "'>full annotation</a></p>&#10;&#10;" +
                                 "<p>" + pair.annotation + "</p>");
             }
@@ -165,9 +163,9 @@ class Gobe extends Sprite {
                             ehsp.wedge_alpha = this.wedge_alpha;
                             this.panel.addChild(ehsp);
                             ehsp.redraw();
-                        } 
+                        }
                         break;
-                    } 
+                    }
                 }
 
                 if(! existing){
@@ -175,7 +173,7 @@ class Gobe extends Sprite {
                     this.hsps.push(hsp);
                     hsp.gobe = this;
                 }
-        
+
             }
         }
         // if it was showing all the hsps, dont show the annotation.
@@ -183,8 +181,8 @@ class Gobe extends Sprite {
             this.send_html('<b>Not showing annotation for multiple hits.</b>');
             return;
         }
-        //qbx.show();
     }
+
     public function redraw_wedges(){
         for(ehsp in this.hsps){
             ehsp.as_wedge = this.as_wedge;
@@ -224,7 +222,7 @@ class Gobe extends Sprite {
     public function onMouseWheel(e:MouseEvent){
         var change = e.delta > 0 ? 1 : - 1;
         if(!this.as_wedge){
-            this.line_width += change;        
+            this.line_width += change;
             if(this.line_width < 0){ this.line_width = 0; }
         } else {
             this.wedge_alpha += (change / 10.0);
@@ -259,10 +257,10 @@ class Gobe extends Sprite {
         var i:Int;
         for(i in 0...p.n){ _heights[i] = 0; }
         getImageInfo(); // this calls initImages();
-        
+
         // the event only gets called when mousing over an HSP.
         addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
-            
+
         // this one the event gets called anywhere.
         flash.Lib.current.stage.focus = flash.Lib.current.stage;
         flash.Lib.current.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyPress);
@@ -306,7 +304,7 @@ class Gobe extends Sprite {
             if (ehsp.y + ehsp.height > ymax) ymax = ehsp.y + ehsp.height;
         }
         trace([xmin, xmax, ymin, ymax].join(","));
-        
+
     }
 
     public function getImageInfo(){
@@ -375,7 +373,7 @@ class Gobe extends Sprite {
         _heights[e.target.i] = e.target.image.height;
         // wait for all previous images to load...
         for(h in _heights){ if(h == 0){ return; } }
-        
+
         for(h in _heights){
             var img = imgs[i];
             img.y = y;
@@ -410,7 +408,7 @@ class Gobe extends Sprite {
             img.addEventListener(MouseEvent.MOUSE_UP, mouseUp);
             i++;
             add_sliders(img, i, y, h);
-             
+
             img.addEventListener(MouseEvent.MOUSE_UP, imageMouseUp, true);
             //img.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
             y+=h;
@@ -441,7 +439,7 @@ class Gobe extends Sprite {
         for (img in this.imgs){
             img.dispatchEvent(e);
         }
-    
+
     }
 
     public function stageMouseUp(e:MouseEvent){
@@ -449,7 +447,7 @@ class Gobe extends Sprite {
         for (img in this.imgs){
             img.dispatchEvent(e);
         }
-    
+
     }
     public function mouseUp(e:MouseEvent){
         if(! e.target.mouse_down){ return; }
@@ -467,17 +465,17 @@ class Gobe extends Sprite {
             ymin -= _heights[i];
             ymax -= _heights[i];
         }
-    
+
         query(e, [xmin, ymin, xmax, ymax]);
         var t = new Timer(600);
         t.addEventListener(TimerEvent.TIMER, function(e:TimerEvent){ d.graphics.clear(); } );
         t.start();
-        
-        
+
+
     }
 
 
-    public function imageMouseUp(e:MouseEvent){ 
+    public function imageMouseUp(e:MouseEvent){
         var i:Int;
         for( i in 0 ... 2){
             e.target.sliders[i]._buttonDown = true;
@@ -493,7 +491,7 @@ class Gobe extends Sprite {
     }
 
     public function add_sliders(img:GImage, i:Int, y:Int, h:Int){
-            var ii = image_info.get(img.title); 
+            var ii = image_info.get(img.title);
             var idx:Int = ii.idx;
             var gs0 = new GSlider(y + 24, h - 29, -1 , idx, 0, ii.img_width - 4);
             gs0.i = i - 1;
@@ -511,7 +509,7 @@ class Gobe extends Sprite {
             var xmax = Math.min(rw2pix(ii.bpmax - this.pad_gs, i - 1), ii.img_width);
             var gs1 = new GSlider(y + 24, h - 29, 1 , idx, 4 , ii.img_width);
 
-            gs1.x = xmax; 
+            gs1.x = xmax;
             gs1.i = i - 1;
             gs1.image = img;
             flash.Lib.current.addChild(gs1);
@@ -578,7 +576,7 @@ class GSlider extends Sprite {
         super();
         this.idx = idx;
         this.updown = updown;
-            
+
         var g = this.graphics;
         _buttonDown = true;
         bounds = new Rectangle(bounds_min,y0,bounds_max,0);
@@ -594,7 +592,7 @@ class GSlider extends Sprite {
         g.lineTo(0, 0);
         g.endFill();
 
-        addEventListener(MouseEvent.MOUSE_DOWN, sliderMouseDown);    
+        addEventListener(MouseEvent.MOUSE_DOWN, sliderMouseDown);
         addEventListener(MouseEvent.MOUSE_MOVE, sliderMouseMove);
         this.y = y0;
 
@@ -618,7 +616,7 @@ class MTextField extends TextField {
 }
 
 class ImageInfo {
-    public var title:String; 
+    public var title:String;
     public var i:Int;
     public var img_width:Int;
     public var bpmin:Int;
@@ -627,7 +625,7 @@ class ImageInfo {
     public var xmin:Int;
     public var xmax:Int;
     public var bpp:Float;
-    public function new(title:String, i:Int, img_width:Int, bpmin:Int, 
+    public function new(title:String, i:Int, img_width:Int, bpmin:Int,
                         bpmax:Int, idx:Int, xmin:Int, xmax:Int){
         this.title     = title;
         this.i         = i;
@@ -640,7 +638,7 @@ class ImageInfo {
         this.bpp       = (1.0 + bpmax - bpmin)/(1.0 * img_width);
 
     }
-}    
+}
 
 class GImage extends Sprite {
 
@@ -684,7 +682,7 @@ class DragSprite extends Sprite {
     public function new(){
         super();
     }
-    public function do_draw(eX:Float, eY:Float){ 
+    public function do_draw(eX:Float, eY:Float){
         this.graphics.clear();
         this.graphics.lineStyle(1, 0xcccccc);
         var xmin = Math.min(this.startx, eX);
