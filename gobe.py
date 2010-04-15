@@ -70,7 +70,7 @@ class follow(object):
                          pair_bbox=(p['xmin'], p['ymin'], p['xmax'], p['ymax']))
 
         def get_pairs(img_id, bbox):
-            c.execute("""SELECT id, pair_id, image_id, xmin, xmax, ymin, ymax FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND 
+            c.execute("""SELECT id, pair_id, image_id, xmin, xmax, ymin, ymax FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND
               ? - 1 > ymin AND ? + 1 < ymax AND image_id = ? AND pair_id != -99 AND type = 'HSP'""", \
               (bbox[2], bbox[0], bbox[3], bbox[1], img_id))
             results = c.fetchall()
@@ -80,16 +80,16 @@ class follow(object):
                 d = dict(id=r['id'], bbox=(r['xmin'], r['ymin'], r['xmax'], r['ymax']), image_id=r['image_id'])
                 d.update(get_pair_data(r['pair_id']))
                 pairs.append(d)
-            
-            return pairs 
+
+            return pairs
 
         def get_pairs_for_bbox_image(xmin, xmax, img_id, exclude_track):
-            c.execute("""SELECT id, pair_id, image_id, xmin, xmax, ymin, ymax 
-                      FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND 
+            c.execute("""SELECT id, pair_id, image_id, xmin, xmax, ymin, ymax
+                      FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND
                       image_id = ? AND pair_id != -99 AND image_track != ? AND type = 'HSP'""", \
               (xmax, xmin, img_id, exclude_track))
-            web.debug("""SELECT id, pair_id, image_id, xmin, xmax, ymin, ymax 
-                      FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND 
+            web.debug("""SELECT id, pair_id, image_id, xmin, xmax, ymin, ymax
+                      FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND
                       image_id = ? AND pair_id != -99 AND image_track != ? AND type = 'HSP'""")
             web.debug((xmax, xmin, img_id, exclude_track))
 
@@ -99,8 +99,8 @@ class follow(object):
                 d = dict(id=r['id'], bbox=(r['xmin'], r['ymin'], r['xmax'], r['ymax']), image_id=r['image_id'])
                 d.update(get_pair_data(r['pair_id']))
                 pairs.append(d)
-            return pairs 
-        
+            return pairs
+
         pairs = get_pairs(img, bbox)
         i = 0
         while True:
@@ -127,32 +127,32 @@ class query(object):
 
         if web.input(bbox=None).bbox:
             bbox = map(float, web.input().bbox.split(","))
-            c.execute("""SELECT * FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND 
+            c.execute("""SELECT * FROM image_data WHERE ? + 1 > xmin AND ? - 1 < xmax AND
                       ? - 1 > ymin AND ? + 1 < ymax AND image_id = ? AND pair_id != -99 AND type = 'HSP'""", \
                       (bbox[2], bbox[0], bbox[3], bbox[1], img))
         elif web.input(all=None).all:
-            c.execute("""SELECT distinct(image_track) as image_track FROM image_data WHERE ? 
-                      BETWEEN ymin AND ymax AND image_id = ? ORDER BY 
+            c.execute("""SELECT distinct(image_track) as image_track FROM image_data WHERE ?
+                      BETWEEN ymin AND ymax AND image_id = ? ORDER BY
                       ABS(image_track) DESC""", (float(web.input().y), img))
             track = c.fetchone()['image_track']
             web.debug(track)
-            c.execute("""SELECT id, xmin, xmax, ymin, ymax, image_id, image_track, pair_id, color, link FROM image_data 
-                    WHERE ( (image_track = ?) or (image_track = (? * -1) ) ) 
+            c.execute("""SELECT id, xmin, xmax, ymin, ymax, image_id, image_track, pair_id, color, link FROM image_data
+                    WHERE ( (image_track = ?) or (image_track = (? * -1) ) )
                     and image_id = ? and pair_id != -99 and type = 'HSP'""", (track, track, img))
 
         else: # point query.
             x = float(web.input().x)
             y = float(web.input().y)
             c.execute("""SELECT * FROM image_data WHERE ? + 3 > xmin AND ? - 3
-                      < xmax AND ? BETWEEN ymin and ymax and image_id = ?""", 
+                      < xmax AND ? BETWEEN ymin and ymax and image_id = ?""",
                       (x, x, y, img))
 
         c2 = db.cursor()
         # now iterate over the cursor
         results = []
         for result in c:
-            c2.execute("""SELECT id, xmin, xmax, ymin, ymax, image_id, 
-                       image_track, pair_id, color FROM image_data where 
+            c2.execute("""SELECT id, xmin, xmax, ymin, ymax, image_id,
+                       image_track, pair_id, color FROM image_data where
                        id = ?""", (result['pair_id'], ));
             pair = c2.fetchone()
             try:
@@ -168,15 +168,15 @@ class query(object):
                 f1pts.append(int(round(result[k])))
                 if pair:
                     f2pts.append(int(round(pair[k])))
-                
+
             f1pts.extend([result['id'], result['image_track']])
             if pair:
                 f2pts.extend([pair['id'], pair['image_track']])
             results.append(dict(
-                # TODO: tell eric to add 'CoGe' to the start of his links.
+                # user provided link info.
                 link=result['link'],
                 annotation = anno,
-                # TODO has_pair
+
                 has_pair= bool(pair),
                 color=(result['color'] or (pair and pair['color'])).replace('#', '0x'),
                 features={
