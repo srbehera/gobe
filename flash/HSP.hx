@@ -5,13 +5,95 @@ import flash.geom.Point;
 import flash.utils.Timer;
 import flash.events.TimerEvent;
 import Gobe;
-
 /*
-TODO:
-1. handle clicks on highlighted HSPs
-2. link to gui for toggle between line and wedge.
-3. highlight currently queried HSP
+{
+ "tracks": [
+     {"title": "At2g26540", "bpmin": 1234, "bpmax": 4567},
+     {"title": "At4g16240", "bpmin": 21274, "bpmax": 24567}
+     ],
+ "annotations": [
+     {"type": "CDS", "start": 1259, "end": 1467, "strand": "+", "track": 0, "name": "At2g26540"},
+     {"type": "CDS", "start": 1259, "end": 1467, "strand": "+", "track": 1, "name": "At4g16240"}
+ ],
+ "edge": [[123, 134, 0.6], [144, 171, 0.2]]
+}
 */
+
+class Edge extends Sprite {
+    public var a:Annotation;
+    public var b:Annotation;
+    public var strength:Float;
+    public var i:Int;
+    public function new(a:Annotation, b:Annotation, s:Float, i:Int){
+        super();
+        this.a = a; this.b = b; this.strength = s; this.i = i;
+    }
+}
+
+// this is the base class for drawable annotations.
+class Annotation extends Sprite {
+    public var ftype:String;
+    public var start:Int;
+    public var end:Int;
+    public var strand:String;
+    public var edges:Array<Int>;
+
+    public var track_i:Int;
+    public var fname:String;
+    public function new(json:Dynamic){
+        super();
+        this.ftype = json.type;
+        this.start = json.start;
+        this.end = json.end;
+        this.strand = json.strand;
+        this.track_i = json.track;
+        this.fname = json.name;
+    }
+    public function draw(track:Track){
+        var g = this.graphics;
+        g.beginFill(0, 0.5);
+        g.lineStyle(0, 0.5);
+        g.moveTo(10, 20);
+        g.lineTo(10, 200);
+        g.lineTo(200, 200);
+        g.lineTo(200, 20);
+        g.lineTo(20, 10);
+        
+    }
+}
+
+class CDS extends Annotation {
+    public override function draw(track:Track){
+        var g = this.graphics;
+    }
+}
+
+
+class Track extends Sprite {
+
+    public  var title:String;
+    public  var i:Int; // index.
+    public  var bpmin:Int;
+    public  var bpmax:Int;
+    public  var bpp:Float;
+
+    public  var mouse_down:Bool;
+    public  var ttf:MTextField;
+
+    public function new(title:String, i:Int, bpmin:Int, bpmax:Int, stage_width:Int){
+        super();
+        this.title = title;
+        this.i   = i;
+        this.bpmin = bpmin;
+        this.bpmax = bpmax;
+        this.mouse_down = false;
+        // TODO: check that widht is correct.
+        this.bpp  = (1.0 + bpmax - bpmin)/(1.0 * stage_width);
+
+    }
+}
+
+
 
 class HSP extends Sprite {
     public var gobe:Gobe;
@@ -21,7 +103,6 @@ class HSP extends Sprite {
     public var coords1:Array<Int>;
     public var coords2:Array<Int>;
     public var line_color:Int;
-    public var as_wedge:Bool;    
     public var wedge_alpha:Float;    
 
     public var wedge:Wedge;    
@@ -31,8 +112,8 @@ class HSP extends Sprite {
 
     
     public function new(panel:Sprite, coords1:Array<Int>, coords2:Array<Int>, 
-                                img1:GImage, img2:GImage,
-                                line_color:Int, line_width:Int, wedge_alpha:Float, as_wedge:Bool){
+                                track1:Track, track2:Track,
+                                line_color:Int, wedge_alpha:Float){
         super();
         this.db_ids = [0, 0];
 
@@ -41,12 +122,11 @@ class HSP extends Sprite {
         this.coords1 = coords1;
         this.coords2 = coords2;
         this.line_color = line_color;
-        this.as_wedge = as_wedge;
         this.wedge_alpha = wedge_alpha;
         this.panel.addChild(this);
 
-        var rect1 = this.make_rect(coords1, img1);
-        var rect2 = this.make_rect(coords2, img2);
+        var rect1 = this.make_rect(coords1, track1);
+        var rect2 = this.make_rect(coords2, track2);
         this.addChild(rect1);
         this.addChild(rect2);
         this.pair = [rect1, rect2];
@@ -54,22 +134,22 @@ class HSP extends Sprite {
         this.db_ids[0] = coords1[4];
         this.db_ids[1] = coords2[4];
         
-        this.wedge = new Wedge(coords1, coords2, img1, img2, line_color, line_width, wedge_alpha, as_wedge);
+        this.wedge = new Wedge(coords1, coords2, track1, track2, line_color, wedge_alpha);
         wedge.hsp = this;
         this.addChild(wedge); 
         
     }
 
 
-    public function make_rect(coords:Array<Int>, img:GImage):SimRect {
-        var xy = img.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
+    public function make_rect(coords:Array<Int>, track:Track):SimRect {
+        var xy = track.localToGlobal(new flash.geom.Point(coords[0],coords[1]));
         
         var db_id = coords[4]; // this links to the id in the image_data table
 
         var w = coords[2] - coords[0];
         var h = coords[3] - coords[1];
     
-        var r = new SimRect(xy.x, xy.y, w, h, img);
+        var r = new SimRect(xy.x, xy.y, w, h, track);
         r.hsp = this;
         return r;
     }
@@ -77,7 +157,6 @@ class HSP extends Sprite {
         this.pair[0].draw();
         this.pair[1].draw();
         this.wedge.wedge_alpha = this.wedge_alpha;
-        this.wedge.as_wedge = this.as_wedge;
         this.wedge.draw();
     }
 }
@@ -115,16 +194,14 @@ class MouseOverableSprite extends Sprite {
             this.hsp.panel.removeChild(this.hsp);
         }
         else {
-           this.hsp.gobe.follow(e, this.getBounds(flash.Lib.current)); 
+            // can do something with shift-click.
         }
     }
 }
 
 class Wedge extends MouseOverableSprite {
     public var line_color:Int;
-    public var line_width:Int;
     public var strand:Int;
-    public var as_wedge:Bool;
     public var wedge_alpha:Float;
     public var xy1a:Point;
     public var xy1b:Point;
@@ -132,19 +209,17 @@ class Wedge extends MouseOverableSprite {
     public var xy2b:Point;
 
     public function new(coords1:Array<Int>, coords2:Array<Int>, 
-                                img1:GImage, img2:GImage,
-                                line_color:Int, line_width:Int, wedge_alpha:Float, as_wedge:Bool){
+                                track1:Track, track2:Track,
+                                line_color:Int, wedge_alpha:Float){
         super();
-        this.xy1a = img1.localToGlobal(new flash.geom.Point(coords1[0] - 0.75, coords1[1]));
-        this.xy1b = img1.localToGlobal(new flash.geom.Point(coords1[2] - 0.75, coords1[3]));
+        this.xy1a = track1.localToGlobal(new flash.geom.Point(coords1[0] - 0.75, coords1[1]));
+        this.xy1b = track1.localToGlobal(new flash.geom.Point(coords1[2] - 0.75, coords1[3]));
         
-        this.xy2a = img2.localToGlobal(new flash.geom.Point(coords2[0] - 0.75, coords2[1]));
-        this.xy2b = img2.localToGlobal(new flash.geom.Point(coords2[2] - 0.75, coords2[3]));
+        this.xy2a = track2.localToGlobal(new flash.geom.Point(coords2[0] - 0.75, coords2[1]));
+        this.xy2b = track2.localToGlobal(new flash.geom.Point(coords2[2] - 0.75, coords2[3]));
 
-        this.line_width = line_width;
         this.line_color = line_color;
         this.strand = coords1[5] < 0 ? -1 : 1;
-        this.as_wedge = as_wedge;
         this.wedge_alpha = wedge_alpha;
 
 
@@ -153,12 +228,7 @@ class Wedge extends MouseOverableSprite {
 
     public function draw(highlight:Bool=false){
         this.graphics.clear();
-        if(!this.as_wedge){
-            this.draw_line(xy1a, xy1b, xy2a, xy2b);
-        }
-        else {
-            this.draw_wedge(xy1a, xy1b, xy2a, xy2b, strand);
-        }
+        this.draw_wedge(xy1a, xy1b, xy2a, xy2b, strand);
     }
 
     public function draw_wedge(xy1a:Point, xy1b:Point, xy2a:Point, xy2b:Point, strand:Int){
@@ -180,33 +250,22 @@ class Wedge extends MouseOverableSprite {
             g.endFill();
     }
 
-    public function draw_line(xy1a:Point, xy1b:Point, xy2a:Point, xy2b:Point){
-            var x1mid = (xy1a.x + xy1b.x) / 2;
-            var y1mid = (xy1a.y + xy1b.y) / 2;
-
-            var x2mid = (xy2a.x + xy2b.x) / 2;
-            var y2mid = (xy2a.y + xy2b.y) / 2;
-
-            this.graphics.lineStyle(this.line_width, this.line_color, 0.65);
-            this.graphics.moveTo(x1mid, y1mid);
-            this.graphics.lineTo(x2mid, y2mid);
-    }
 }
 
 class SimRect extends MouseOverableSprite {
     public var color:Int;
     public var w:Float;
     public var h:Float;
-    public var img:GImage;
+    public var track:Track;
 
-    public function new(x:Float, y:Float, w:Float, h:Float, img:GImage) {
+    public function new(x:Float, y:Float, w:Float, h:Float, track:Track) {
         super();
         this.x = x -1.15;
         this.y = y;
 
         this.w = w + 1.0;
         this.h = h;
-        this.img = img;
+        this.track = track;
         this.draw();
         
     }

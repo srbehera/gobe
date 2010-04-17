@@ -32,6 +32,4 @@ var Gobe = {
         }
         Gobe.swf.set_connector(contype);
     }
-    
-    
 };
