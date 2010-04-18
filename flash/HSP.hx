@@ -4,6 +4,7 @@ import flash.events.MouseEvent;
 import flash.geom.Point;
 import flash.utils.Timer;
 import flash.events.TimerEvent;
+import flash.external.ExternalInterface;
 import Gobe;
 /*
 {
@@ -33,41 +34,69 @@ class Edge extends Sprite {
 // this is the base class for drawable annotations.
 class Annotation extends Sprite {
     public var ftype:String;
-    public var start:Int;
-    public var end:Int;
-    public var strand:String;
+    public var pxmin:Float;
+    public var pxmax:Float;
+    public var strand:Int;
     public var edges:Array<Int>;
+    public var bpmin:Int;
+    public var bpmax:Int;
+    private var style:Style;
+    public var track:Track;
 
-    public var track_i:Int;
     public var fname:String;
-    public function new(json:Dynamic){
+    public function new(json:Dynamic, style:Style, track:Track){
         super();
+        this.style = style;
         this.ftype = json.type;
-        this.start = json.start;
-        this.end = json.end;
-        this.strand = json.strand;
-        this.track_i = json.track;
+        this.bpmin = json.start;
+        this.bpmax = json.end;
+        this.strand = json.strand ==  "-" ? -1 : json.strand == "+" ? 1 : 0;
+        this.track = track;
         this.fname = json.name;
+        this.pxmin = track.rw2pix(this.bpmin);
+        this.pxmax = track.rw2pix(this.bpmax);
+        trace(this.pxmin);
+        trace(this.pxmax);
+        this.addEventListener(MouseEvent.CLICK, onClick);
     }
-    public function draw(track:Track){
+    public function draw(){
         var g = this.graphics;
-        g.beginFill(0, 0.5);
-        g.lineStyle(0, 0.5);
-        g.moveTo(10, 20);
-        g.lineTo(10, 200);
-        g.lineTo(200, 200);
-        g.lineTo(200, 20);
-        g.lineTo(20, 10);
-        
+        g.beginFill(style.fill_color, style.fill_alpha);
+        g.lineStyle(style.line_width, style.line_color);
+        var ymid = track.sheight / 2;
+        var yoff = style.offset * track.sheight;
+        var ymin = ymid - yoff;
+        var ymax = ymin + yoff;
+        g.moveTo(this.pxmin, ymin);
+        g.lineTo(this.pxmin, ymax);
+        g.lineTo(this.pxmax, ymax);
+        g.lineTo(this.pxmax, ymin);
+        g.lineTo(this.pxmin, ymin);
+        g.endFill(); 
     }
+    public function onClick(e:MouseEvent){
+        ExternalInterface.call('alert', this.fname);
+    }
+
 }
 
-class CDS extends Annotation {
-    public override function draw(track:Track){
-        var g = this.graphics;
+class Style {
+    public var ftype:String;
+    public var fill_color:UInt;
+    public var fill_alpha:Float;
+    public var offset:Float;
+    public var line_width:Float;
+    public var line_color:UInt;
+
+    public function new(ftype:String, json:Dynamic){
+        this.ftype = ftype;
+        this.fill_color = json.fill_color;
+        this.fill_alpha = json.fill_alpha;
+        this.offset = json.offset;
+        this.line_width = json.line_width;
+        this.line_color = json.line_color;
     }
 }
-
 
 class Track extends Sprite {
 
@@ -76,20 +105,27 @@ class Track extends Sprite {
     public  var bpmin:Int;
     public  var bpmax:Int;
     public  var bpp:Float;
+    public var sheight:Int;
 
     public  var mouse_down:Bool;
     public  var ttf:MTextField;
 
-    public function new(title:String, i:Int, bpmin:Int, bpmax:Int, stage_width:Int){
+    public function new(title:String, i:Int, bpmin:Int, bpmax:Int,
+                        stage_width:Int, sheight:Int){
         super();
         this.title = title;
         this.i   = i;
         this.bpmin = bpmin;
+        this.sheight = sheight;
         this.bpmax = bpmax;
         this.mouse_down = false;
         // TODO: check that widht is correct.
         this.bpp  = (1.0 + bpmax - bpmin)/(1.0 * stage_width);
 
+    }
+
+    public inline function rw2pix(x:Int){
+        return (x - this.bpmin) / this.bpp;        
     }
 }
 
