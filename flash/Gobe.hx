@@ -21,6 +21,7 @@ import flash.text.StyleSheet;
 import flash.utils.Timer;
 import flash.events.TimerEvent;
 import hxjson2.JSON;
+import StringTools;
 import Util;
 import HSP;
 
@@ -34,8 +35,8 @@ class Gobe extends Sprite {
     private var n:Int;
     private var track:String;
     public var cnss:Array<Int>;
-    public var sheight:Int;
-    public var swidth:Int;
+    public var stage_height:Int;
+    public var stage_width:Int;
 
     public var wedge_alpha:Float;
 
@@ -49,62 +50,15 @@ class Gobe extends Sprite {
     public var styles:Hash<Style>; // {'CDS': CDSINFO }
     public static var edges = new Array<Edge>();
 
-    public var data_url:String;
+    public var annotations_url:String;
     public var edges_url:String;
+    public var tracks_url:String;
+
     public function clearPanelGraphics(e:MouseEvent){
         while(panel.numChildren != 0){ panel.removeChildAt(0); }
     }
     public function send_html(html:String){
         ExternalInterface.call('Gobe.handle_html', html);
-    }
-
-    private function query_single(e:MouseEvent, track:String, idx:Int):String {
-        var i:Int = 0;
-        var turl:String;
-
-        this.send_html('');
-        //qbx.info.text = '';
-        turl = '&x=' + e.localX;
-        this._all = false;
-        return turl;
-    }
-
-    public function query_bbox(bbox:Array<Float>):String {
-        var turl:String = '&bbox=' + bbox.join(",");
-        this._all = true;
-        return turl;
-    }
-    // needed because cant use default args like in query()
-    // with addEventListener expecting a different sig.
-    private function _query(e:MouseEvent){
-        query(e);
-    }
-
-    private function query(e:MouseEvent, ?bbox:Array<Float>){
-        var track = e.target.url;
-        var url = "";
-        // TODO
-        this.request(url);
-    }
-    public function request(url:String){
-        var queryLoader = new URLLoader();
-        queryLoader.addEventListener(Event.COMPLETE, handleQueryReturn);
-        queryLoader.load(new URLRequest(url));
-    }
-
-
-    private function handleQueryReturn(e:Event){
-        var json:Array<Dynamic> = JSON.decode(e.target.data).resultset;
-        var pair:Hash<Dynamic>;
-        trace('TODO');
-        // this.send_html('<b>Not showing annotation for multiple hits.</b>');
-    }
-
-    public function redraw_wedges(){
-        // TODO
-    }
-    public function removeHSP(hsp:HSP){
-        this.panel.removeChild(hsp);
     }
 
     public static function main(){
@@ -126,7 +80,7 @@ class Gobe extends Sprite {
         this.wedge_alpha += (change / 10.0);
         if(this.wedge_alpha > 1){ this.wedge_alpha = 1.0; }
         if(this.wedge_alpha < 0.1){ this.wedge_alpha = 0.1; }
-        this.redraw_wedges();
+        //this.redraw_wedges();
     }
 
 
@@ -136,8 +90,9 @@ class Gobe extends Sprite {
 
         this.drag_sprite = new DragSprite();
         this.wedge_alpha = 0.3;
-        this.data_url = p.data;
+        this.annotations_url = p.annotations;
         this.edges_url = p.edges;
+        this.tracks_url = p.tracks;
 
         panel = new Sprite(); 
         addChild(panel);
@@ -152,8 +107,8 @@ class Gobe extends Sprite {
         // this one the event gets called anywhere.
         flash.Lib.current.stage.focus = flash.Lib.current.stage;
         flash.Lib.current.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyPress);
-        this.swidth = flash.Lib.current.stage.stageWidth;
-        this.sheight = flash.Lib.current.stage.stageHeight;
+        this.stage_width = flash.Lib.current.stage.stageWidth;
+        this.stage_height = flash.Lib.current.stage.stageHeight;
 
     }
     public function onKeyPress(e:KeyboardEvent){
@@ -174,29 +129,57 @@ class Gobe extends Sprite {
         }
     }
     public function geturl(url:String, handler:Event -> Void){
+        trace("getting:" + url);
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, handler);
         ul.load(new URLRequest(url));
     }
 
     public function edgeReturn(e:Event){
-        var lines:Array<String> = e.target.data.split("\n");
+        var lines:Array<String> = StringTools.ltrim(e.target.data).split("\n");
         for(line in lines){
-            if(line.charAt(0) == "#") { continue; }
+            if(line.charAt(0) == "#" || line.length == 0) { continue; }
             var edge = Util.add_edge_line(line, annotations);
         }
     }
 
-    public function dataReturn(e:Event){
-        var strdata:String = e.target.data;
-        var json = JSON.decode(strdata);
-        initTracks(json.tracks);
-        initAnnotations(json.annotations);
+    public function annotationReturn(e:Event){
+        annotations = new Hash<Annotation>();
+        var lines:Array<String> = StringTools.ltrim(e.target.data).split("\n");
+        for(line in lines){
+            if(line.charAt(0) == "#" || line.length == 0){ continue;}
+            var a = new Annotation(line, tracks);
+            a.style = styles.get(a.ftype);
+            annotations.set(a.id, a);
+            a.track.addChild(a);
+            a.draw();
+        } 
         geturl(this.edges_url, edgeReturn);
     }
 
+    public function trackReturn(e:Event){
+        this.geturl(this.annotations_url, annotationReturn); // 
+        tracks = new Array<Track>();
+        var lines:Array<String> = e.target.data.split("\n");
+        n = 0;
+        for(line in lines){ if (line.charAt(0) != "#"){ n += 1; }}
+        var track_height = Std.int(this.stage_height / this.n);
+        var k = 0;
+        for(line in lines){
+            if(line.charAt(0) == "#"){ continue; }
+            var t = new Track(line, stage_width, track_height);
+            tracks.push(t);
+            t.y = k * track_height;
+            flash.Lib.current.addChildAt(t, 0);
+            setUpTextField(t);
+            k += 1;
+            // TODO: move setUpTextField to track method.
+        }
+    }
+    
     public function styleReturn(e:Event){
-        this.geturl(this.data_url, dataReturn); // 
+        this.geturl(this.tracks_url, trackReturn); // 
+        
         var strdata:String = e.target.data.replace('"#', '"0x').replace("'#", "'0x");
         var json = JSON.decode(strdata);
         // get the array of feature-type keys.
@@ -217,40 +200,6 @@ class Gobe extends Sprite {
             trace('TODO');
             return 1;
     }
-
-    public function initAnnotations(annotations_json:Array<Dynamic>){
-        annotations = new Hash<Annotation>();
-        var i:Int;
-        for(i in 0 ... annotations_json.length){
-            var a:Dynamic = annotations_json[i];
-            // TODO: it's not an Annotation, it's a lookup based on type...
-            trace(a.id);
-            var an = new Annotation(a, styles.get(a.type), tracks[a.track]);
-            annotations.set(an.id, an);
-    
-            an.track.addChild(an);
-            an.draw();
-            
-        }
-    }
-
-    public function initTracks(tracks_json:Array<Dynamic>){
-        tracks = new Array<Track>();
-        this.n = tracks_json.length;
-        trace(this.n);
-        for(k in 0... this.n){
-            var t:Dynamic = tracks_json[k];
-            tracks[k] = new Track(t.title, t.k, t.bpmin, t.bpmax, swidth,
-                                    Std.int(this.sheight / this.n));
-            flash.Lib.current.addChildAt(tracks[k], 0);
-            tracks[k].y = k * this.sheight / this.n;
-            // have to adjust this if using sub-tracks...
-            trace(this.sheight + "," + this.n);
-            trace(tracks[k].height);
-            setUpTextField(tracks[k]);
-        }
-    }
-    
 
     public function setUpTextField(track:Track){
         var ttf = new MTextField();

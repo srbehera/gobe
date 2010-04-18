@@ -20,7 +20,8 @@
         var params = {'bgcolor': '#FFFFFF'};
         // only var is config=/web/path/to/config.js
         var flashVars = {
-            'data'   : get('data'),
+            'tracks'   : get('tracks') || 'tracks.txt',
+            'annotations'   : get('annotations') || 'annotations.txt',
             'edges'   : get('edges') || 'edges.txt',
             'style'  : get('style') || 'style.json'
         };
