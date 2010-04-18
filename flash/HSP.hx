@@ -16,7 +16,7 @@ import Gobe;
      {"type": "CDS", "start": 1259, "end": 1467, "strand": "+", "track": 0, "name": "At2g26540"},
      {"type": "CDS", "start": 1259, "end": 1467, "strand": "+", "track": 1, "name": "At4g16240"}
  ],
- "edge": [[123, 134, 0.6], [144, 171, 0.2]]
+ "edges": [[123, 134, 0.6], [144, 171, 0.2]]
 }
 */
 
@@ -25,9 +25,37 @@ class Edge extends Sprite {
     public var b:Annotation;
     public var strength:Float;
     public var i:Int;
+    public var drawn:Bool;
     public function new(a:Annotation, b:Annotation, s:Float, i:Int){
         super();
         this.a = a; this.b = b; this.strength = s; this.i = i;
+        this.drawn = false;
+    }
+    public function draw(?force:Bool=false){
+        var g = this.graphics;
+        g.clear();
+        // TODO use visible.
+        if (this.drawn){
+            // probably force because they want to draw every edge. but this is
+            // already drawn, so leave it.
+            this.drawn = force;
+            return;
+        }
+        var ul = a.track.localToGlobal(new flash.geom.Point(a.pxmin, a.y + a.h));
+        var ur = a.track.localToGlobal(new flash.geom.Point(a.pxmax + 1, a.y + a.h));
+
+        var ll = b.track.localToGlobal(new flash.geom.Point(b.pxmin, b.y));
+        var lr = b.track.localToGlobal(new flash.geom.Point(b.pxmax + 1, b.y));
+
+        g.beginFill(0x0000ff, 0.3);
+        g.lineStyle(0, 0.4);
+        g.moveTo(ul.x, ul.y);
+        g.lineTo(ur.x, ur.y);
+        g.lineTo(lr.x, lr.y);
+        g.lineTo(ll.x, ll.y);
+        g.lineTo(ul.x, ul.y);
+        g.endFill();
+        this.drawn = true;
     }
 }
 
@@ -42,10 +70,12 @@ class Annotation extends Sprite {
     public var bpmax:Int;
     private var style:Style;
     public var track:Track;
+    public var h:Float;
 
     public var fname:String;
     public function new(json:Dynamic, style:Style, track:Track){
         super();
+        this.edges = new Array<Int>();
         this.style = style;
         this.ftype = json.type;
         this.bpmin = json.start;
@@ -55,27 +85,32 @@ class Annotation extends Sprite {
         this.fname = json.name;
         this.pxmin = track.rw2pix(this.bpmin);
         this.pxmax = track.rw2pix(this.bpmax);
-        trace(this.pxmin);
-        trace(this.pxmax);
         this.addEventListener(MouseEvent.CLICK, onClick);
+        this.h = style.offset * track.sheight;
     }
     public function draw(){
         var g = this.graphics;
         g.beginFill(style.fill_color, style.fill_alpha);
         g.lineStyle(style.line_width, style.line_color);
         var ymid = track.sheight / 2;
-        var yoff = style.offset * track.sheight;
-        var ymin = ymid - yoff;
-        var ymax = ymin + yoff;
-        g.moveTo(this.pxmin, ymin);
-        g.lineTo(this.pxmin, ymax);
-        g.lineTo(this.pxmax, ymax);
-        g.lineTo(this.pxmax, ymin);
-        g.lineTo(this.pxmin, ymin);
+        //var yoff = style.offset * track.sheight;
+        var ymin = ymid - h;
+        this.y = ymin;
+        this.x = this.pxmin;
+        var tw = this.pxmax;
+        g.moveTo(0, 0);
+        g.lineTo(0, h);
+        g.lineTo(tw, h);
+        g.lineTo(tw, 0);
+        g.lineTo(0, 0);
         g.endFill(); 
     }
     public function onClick(e:MouseEvent){
-        ExternalInterface.call('alert', this.fname);
+        var te = this.edges;
+        for(i in 0 ... te.length){
+            Gobe.edges[te[i]].draw();
+        }
+        //ExternalInterface.call('alert', this.fname);
     }
 
 }

@@ -46,7 +46,7 @@ class Gobe extends Sprite {
     public var tracks:Array<Track>;
     public var annotations:Array<Annotation>;
     public var styles:Hash<Style>; // {'CDS': CDSINFO }
-    public var edges:Array<Edge>;
+    public static var edges = new Array<Edge>();
 
     public var data_url:String;
     public function clearPanelGraphics(e:MouseEvent){
@@ -227,16 +227,17 @@ class Gobe extends Sprite {
             
         }
         // now add info to the annotations based on info in edges.
-        edges = new Array<Edge>();
         for(i in 0 ... edges_json.length){
             var ea:Array<Float> = edges_json[i];
             var e0 = Std.int(ea[0]);
             var e1 = Std.int(ea[1]);
             var edge = new Edge(annotations[e0],
                                 annotations[e1], ea[2], i);
-            annotations[e0].edges.push(e1);
-            annotations[e1].edges.push(e0);
-            edges.push(edge);
+            var l = Gobe.edges.length;
+            annotations[e0].edges.push(l);
+            annotations[e1].edges.push(l);
+            Gobe.edges.push(edge);
+            flash.Lib.current.addChild(edge);
         } 
     }
 

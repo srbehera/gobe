@@ -1,3 +1,6 @@
+use visible in wedge drawing.
+use flat-file/csv format.
+
 > 1. Line drawing:  can you make it so that a user can select and deselect
 > HSPs or tracks of HSPs.  I think you have it working for an individual
 > HSP, but it would be cool to be able to add or remove tracks of HSPs as
