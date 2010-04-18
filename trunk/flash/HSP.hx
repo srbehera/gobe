@@ -34,6 +34,12 @@ class Edge extends Sprite {
     public function draw(?force:Bool=false){
         var g = this.graphics;
         g.clear();
+        var aa = this.a;
+        var bb = this.b;
+        if(aa.y > bb.y){
+            aa = this.b;
+            bb = this.a;
+        }
         // TODO use visible.
         if (this.drawn){
             // probably force because they want to draw every edge. but this is
@@ -41,11 +47,11 @@ class Edge extends Sprite {
             this.drawn = force;
             return;
         }
-        var ul = a.track.localToGlobal(new flash.geom.Point(a.pxmin, a.y + a.h));
-        var ur = a.track.localToGlobal(new flash.geom.Point(a.pxmax + 1, a.y + a.h));
+        var ul = aa.track.localToGlobal(new flash.geom.Point(aa.pxmin, aa.y + aa.h));
+        var ur = aa.track.localToGlobal(new flash.geom.Point(aa.pxmax + 1, aa.y + aa.h));
 
-        var ll = b.track.localToGlobal(new flash.geom.Point(b.pxmin, b.y));
-        var lr = b.track.localToGlobal(new flash.geom.Point(b.pxmax + 1, b.y));
+        var ll = bb.track.localToGlobal(new flash.geom.Point(bb.pxmin, bb.y));
+        var lr = bb.track.localToGlobal(new flash.geom.Point(bb.pxmax + 1, bb.y));
 
         g.beginFill(0x0000ff, 0.3);
         g.lineStyle(0, 0.4);
@@ -62,6 +68,7 @@ class Edge extends Sprite {
 // this is the base class for drawable annotations.
 class Annotation extends Sprite {
     public var ftype:String;
+    public var id:String; // key for anntations hash.
     public var pxmin:Float;
     public var pxmax:Float;
     public var strand:Int;
@@ -76,6 +83,7 @@ class Annotation extends Sprite {
     public function new(json:Dynamic, style:Style, track:Track){
         super();
         this.edges = new Array<Int>();
+        this.id = json.id;
         this.style = style;
         this.ftype = json.type;
         this.bpmin = json.start;
@@ -194,7 +202,7 @@ class HSP extends Sprite {
         this.coords2 = coords2;
         this.line_color = line_color;
         this.wedge_alpha = wedge_alpha;
-        this.panel.addChild(this);
+        this.panel.addChildAt(this, this.panel.numChildren - 1);
 
         var rect1 = this.make_rect(coords1, track1);
         var rect2 = this.make_rect(coords2, track2);
