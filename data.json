@@ -4,8 +4,8 @@
      {"title": "At4g16240", "bpmin": 21274, "bpmax": 24567}
      ],
  "annotations": [
-     {"type": "CDS", "start": 1259, "end": 1467, "strand": "+", "track": 0, "name": "At2g26540"},
-     {"type": "CDS", "start": 21359, "end": 24467, "strand": "+", "track": 1, "name": "At4g16240"}
+     {"id": "aaa", "type": "CDS", "start": 1259, "end": 1467, "strand": "+", "track": 0, "name": "At2g26540"},
+     {"id": "bbb", "type": "CDS", "start": 21359, "end": 24467, "strand": "+", "track": 1, "name": "At4g16240"}
  ],
- "edges": [[0, 1, 0.6]]
+ "edges": [["aaa", "bbb", 0.6]]
 }

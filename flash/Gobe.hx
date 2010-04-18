@@ -44,7 +44,7 @@ class Gobe extends Sprite {
 
     private var _all:Bool;
     public var tracks:Array<Track>;
-    public var annotations:Array<Annotation>;
+    public var annotations:Hash<Annotation>;
     public var styles:Hash<Style>; // {'CDS': CDSINFO }
     public static var edges = new Array<Edge>();
 
@@ -214,13 +214,14 @@ class Gobe extends Sprite {
     }
 
     public function initAnnotations(annotations_json:Array<Dynamic>, edges_json:Array<Dynamic>){
-        annotations = new Array<Annotation>();
+        annotations = new Hash<Annotation>();
         var i:Int;
         for(i in 0 ... annotations_json.length){
             var a:Dynamic = annotations_json[i];
             // TODO: it's not an Annotation, it's a lookup based on type...
+            trace(a.id);
             var an = new Annotation(a, styles.get(a.type), tracks[a.track]);
-            annotations.push(an);
+            annotations.set(an.id, an);
     
             an.track.addChild(an);
             an.draw();
@@ -228,17 +229,16 @@ class Gobe extends Sprite {
         }
         // now add info to the annotations based on info in edges.
         for(i in 0 ... edges_json.length){
-            var ea:Array<Float> = edges_json[i];
-            var e0 = Std.int(ea[0]);
-            var e1 = Std.int(ea[1]);
-            var edge = new Edge(annotations[e0],
-                                annotations[e1], ea[2], i);
+            var ea:Array<Dynamic> = edges_json[i];
+            var a0 = annotations.get(ea[0]);
+            var a1 = annotations.get(ea[1]);
+            var edge = new Edge(a0, a1, ea[2], i);
             var l = Gobe.edges.length;
-            annotations[e0].edges.push(l);
-            annotations[e1].edges.push(l);
+            a0.edges.push(l);
+            a1.edges.push(l);
             Gobe.edges.push(edge);
             flash.Lib.current.addChild(edge);
-        } 
+        }
     }
 
     public function initTracks(tracks_json:Array<Dynamic>){
