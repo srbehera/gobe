@@ -26,9 +26,9 @@ class Edge extends Sprite {
     public var strength:Float;
     public var i:Int;
     public var drawn:Bool;
-    public function new(a:Annotation, b:Annotation, s:Float, i:Int){
+    public function new(a:Annotation, b:Annotation, s:Float){
         super();
-        this.a = a; this.b = b; this.strength = s; this.i = i;
+        this.a = a; this.b = b; this.strength = s;
         this.drawn = false;
     }
     public function draw(?force:Bool=false){
