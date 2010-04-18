@@ -33,7 +33,6 @@ class Gobe extends Sprite {
     private var n:Int;
     private var track:String;
     public var cnss:Array<Int>;
-    public static var config:String;
     public var sheight:Int;
     public var swidth:Int;
 
@@ -46,11 +45,10 @@ class Gobe extends Sprite {
     private var _all:Bool;
     public var tracks:Array<Track>;
     public var annotations:Array<Annotation>;
+    public var styles:Hash<Style>; // {'CDS': CDSINFO }
     public var edges:Array<Edge>;
-    public var QUERY_URL:String;
-    public var image_titles:Array<String>;
 
-
+    public var data_url:String;
     public function clearPanelGraphics(e:MouseEvent){
         while(panel.numChildren != 0){ panel.removeChildAt(0); }
     }
@@ -87,7 +85,6 @@ class Gobe extends Sprite {
         this.request(url);
     }
     public function request(url:String){
-        trace(url);
         var queryLoader = new URLLoader();
         queryLoader.addEventListener(Event.COMPLETE, handleQueryReturn);
         queryLoader.load(new URLRequest(url));
@@ -134,17 +131,17 @@ class Gobe extends Sprite {
     public function new(){
         super();
         var p = flash.Lib.current.loaderInfo.parameters;
-        Gobe.config  = p.config;
 
         this.drag_sprite = new DragSprite();
         this.wedge_alpha = 0.3;
+        this.data_url = p.data;
 
         panel = new Sprite(); 
         addChild(panel);
         addChild(this.drag_sprite);
         this.add_callbacks();
         var i:Int;
-        loadConfig(); // 
+        loadStyle(p.style); // this then calls load config
 
         // the event only gets called when mousing over an HSP.
         addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
@@ -172,21 +169,39 @@ class Gobe extends Sprite {
                 track.ttf.styleSheet.setStyle('p', {fontSize:Gobe.fontSize});
             }
         }
-
     }
 
-    public function loadConfig(){
+    public function loadStyle(style:String){
         var ul = new URLLoader();
-        ul.addEventListener(Event.COMPLETE, configReturn);
-        ul.load(new URLRequest(Gobe.config));
+        ul.addEventListener(Event.COMPLETE, styleReturn);
+        ul.load(new URLRequest(style));
+    }
+    public function loadData(data_url:String){
+        var ul = new URLLoader();
+        ul.addEventListener(Event.COMPLETE, dataReturn);
+        ul.load(new URLRequest(data_url));
     }
 
 
-    public function configReturn(e:Event){
+    public function dataReturn(e:Event){
         var strdata:String = e.target.data;
         var json = JSON.decode(strdata);
         initTracks(json.tracks);
         initAnnotations(json.annotations, json.edges);
+    }
+
+    public function styleReturn(e:Event){
+        loadData(this.data_url); // 
+        var strdata:String = e.target.data.replace('"#', '"0x').replace("'#", "'0x");
+        var json = JSON.decode(strdata);
+        // get the array of feature-type keys.
+        var ftypes:Array<String> = Reflect.fields(json);
+        styles = new Hash<Style>();
+        for(i in 0 ... ftypes.length){
+            var ftype = ftypes[i];
+            var st = Reflect.field(json, ftype);
+            styles.set(ftype, new Style(ftype, st));
+        }
     }
 
     public function pix2rw(px:Float, i:Int):Int {
@@ -204,10 +219,11 @@ class Gobe extends Sprite {
         for(i in 0 ... annotations_json.length){
             var a:Dynamic = annotations_json[i];
             // TODO: it's not an Annotation, it's a lookup based on type...
-            var an = new Annotation(a);
+            var an = new Annotation(a, styles.get(a.type), tracks[a.track]);
             annotations.push(an);
-            tracks[an.track_i].addChild(an);
-            an.draw(tracks[an.track_i]);
+    
+            an.track.addChild(an);
+            an.draw();
             
         }
         // now add info to the annotations based on info in edges.
@@ -227,11 +243,16 @@ class Gobe extends Sprite {
     public function initTracks(tracks_json:Array<Dynamic>){
         tracks = new Array<Track>();
         this.n = tracks_json.length;
+        trace(this.n);
         for(k in 0... this.n){
             var t:Dynamic = tracks_json[k];
-            tracks[k] = new Track(t.title, t.k, t.bpmin, t.bpmax, swidth);
-            tracks[k].y = k * this.sheight / this.n;
+            tracks[k] = new Track(t.title, t.k, t.bpmin, t.bpmax, swidth,
+                                    Std.int(this.sheight / this.n));
             flash.Lib.current.addChildAt(tracks[k], 0);
+            tracks[k].y = k * this.sheight / this.n;
+            // have to adjust this if using sub-tracks...
+            trace(this.sheight + "," + this.n);
+            trace(tracks[k].height);
             setUpTextField(tracks[k]);
         }
     }

@@ -20,7 +20,8 @@
         var params = {'bgcolor': '#FFFFFF'};
         // only var is config=/web/path/to/config.js
         var flashVars = {
-        	'config'   : get('config')
+            'data'   : get('data'),
+            'style'  : get('style') || 'style.json'
         };
         swfobject.embedSWF("flash/gobe.swf", "flashcontent", width, height, "9.0.0"
                 , "static/swfobject/expresssinstall.swf", flashVars, params, {}
