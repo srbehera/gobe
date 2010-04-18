@@ -21,6 +21,7 @@ import flash.text.StyleSheet;
 import flash.utils.Timer;
 import flash.events.TimerEvent;
 import hxjson2.JSON;
+import Util;
 import HSP;
 
 
@@ -49,6 +50,7 @@ class Gobe extends Sprite {
     public static var edges = new Array<Edge>();
 
     public var data_url:String;
+    public var edges_url:String;
     public function clearPanelGraphics(e:MouseEvent){
         while(panel.numChildren != 0){ panel.removeChildAt(0); }
     }
@@ -135,13 +137,14 @@ class Gobe extends Sprite {
         this.drag_sprite = new DragSprite();
         this.wedge_alpha = 0.3;
         this.data_url = p.data;
+        this.edges_url = p.edges;
 
         panel = new Sprite(); 
         addChild(panel);
         addChild(this.drag_sprite);
         this.add_callbacks();
         var i:Int;
-        loadStyle(p.style); // this then calls load config
+        geturl(p.style, styleReturn); // this then calls load config
 
         // the event only gets called when mousing over an HSP.
         addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
@@ -170,28 +173,30 @@ class Gobe extends Sprite {
             }
         }
     }
-
-    public function loadStyle(style:String){
+    public function geturl(url:String, handler:Event -> Void){
         var ul = new URLLoader();
-        ul.addEventListener(Event.COMPLETE, styleReturn);
-        ul.load(new URLRequest(style));
-    }
-    public function loadData(data_url:String){
-        var ul = new URLLoader();
-        ul.addEventListener(Event.COMPLETE, dataReturn);
-        ul.load(new URLRequest(data_url));
+        ul.addEventListener(Event.COMPLETE, handler);
+        ul.load(new URLRequest(url));
     }
 
+    public function edgeReturn(e:Event){
+        var lines:Array<String> = e.target.data.split("\n");
+        for(line in lines){
+            if(line.charAt(0) == "#") { continue; }
+            var edge = Util.add_edge_line(line, annotations);
+        }
+    }
 
     public function dataReturn(e:Event){
         var strdata:String = e.target.data;
         var json = JSON.decode(strdata);
         initTracks(json.tracks);
-        initAnnotations(json.annotations, json.edges);
+        initAnnotations(json.annotations);
+        geturl(this.edges_url, edgeReturn);
     }
 
     public function styleReturn(e:Event){
-        loadData(this.data_url); // 
+        this.geturl(this.data_url, dataReturn); // 
         var strdata:String = e.target.data.replace('"#', '"0x').replace("'#", "'0x");
         var json = JSON.decode(strdata);
         // get the array of feature-type keys.
@@ -213,7 +218,7 @@ class Gobe extends Sprite {
             return 1;
     }
 
-    public function initAnnotations(annotations_json:Array<Dynamic>, edges_json:Array<Dynamic>){
+    public function initAnnotations(annotations_json:Array<Dynamic>){
         annotations = new Hash<Annotation>();
         var i:Int;
         for(i in 0 ... annotations_json.length){
@@ -226,18 +231,6 @@ class Gobe extends Sprite {
             an.track.addChild(an);
             an.draw();
             
-        }
-        // now add info to the annotations based on info in edges.
-        for(i in 0 ... edges_json.length){
-            var ea:Array<Dynamic> = edges_json[i];
-            var a0 = annotations.get(ea[0]);
-            var a1 = annotations.get(ea[1]);
-            var edge = new Edge(a0, a1, ea[2], i);
-            var l = Gobe.edges.length;
-            a0.edges.push(l);
-            a1.edges.push(l);
-            Gobe.edges.push(edge);
-            flash.Lib.current.addChild(edge);
         }
     }
 

@@ -21,6 +21,7 @@
         // only var is config=/web/path/to/config.js
         var flashVars = {
             'data'   : get('data'),
+            'edges'   : get('edges') || 'edges.txt',
             'style'  : get('style') || 'style.json'
         };
         swfobject.embedSWF("flash/gobe.swf?d=" + Math.random(), "flashcontent", width, height, "9.0.0"
