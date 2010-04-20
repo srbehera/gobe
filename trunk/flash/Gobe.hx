@@ -171,9 +171,7 @@ class Gobe extends Sprite {
             tracks.push(t);
             t.y = k * track_height;
             flash.Lib.current.addChildAt(t, 0);
-            setUpTextField(t);
             k += 1;
-            // TODO: move setUpTextField to track method.
         }
     }
     
@@ -199,27 +197,6 @@ class Gobe extends Sprite {
     public function rw2pix(rw:Float, i:Int):Float {
             trace('TODO');
             return 1;
-    }
-
-    public function setUpTextField(track:Track){
-        var ttf = new MTextField();
-        track.ttf = ttf;
-        
-        ttf.htmlText   = '<p>' + track.title + '</p>';
-        ttf.y      = y ; 
-        ttf.x      = 15;
-        ttf.multiline = true;
-  
-        ttf.border = true; 
-        ttf.borderColor      = 0xcccccc;
-        ttf.opaqueBackground = 0xf4f4f4;
-        ttf.autoSize         = flash.text.TextFieldAutoSize.LEFT;
-        ttf.styleSheet.setStyle('p', {fontSize: Gobe.fontSize, display: 'inline',
-                                    fontFamily: '_sans'});
-
-        track.addChild(ttf);
-        ttf.styleSheet.setStyle('p', {fontSize: Gobe.fontSize, display: 'inline',
-                                    fontFamily: '_sans'});
     }
 }
 
