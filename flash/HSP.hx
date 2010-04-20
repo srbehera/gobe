@@ -156,10 +156,30 @@ class Track extends Sprite {
         this.mouse_down = false;
         // TODO: check that widht is correct.
         this.bpp  = (0.001 + bpmax - bpmin)/(1.0 * stage_width);
-
+        this.setUpTextField();
     }
 
     public inline function rw2pix(x:Int){
         return (x - this.bpmin) / this.bpp;        
+    }
+
+    public function setUpTextField(){
+        this.ttf = new MTextField();
+        
+        ttf.htmlText   = '<p>' + this.title + '</p>';
+        ttf.y      = y ; 
+        ttf.x      = 15;
+        ttf.multiline = true;
+  
+        ttf.border = true; 
+        ttf.borderColor      = 0xcccccc;
+        ttf.opaqueBackground = 0xf4f4f4;
+        ttf.autoSize         = flash.text.TextFieldAutoSize.LEFT;
+        ttf.styleSheet.setStyle('p', {fontSize: Gobe.fontSize, display: 'inline',
+                                    fontFamily: '_sans'});
+
+        this.addChild(ttf);
+        ttf.styleSheet.setStyle('p', {fontSize: Gobe.fontSize, display: 'inline',
+                                    fontFamily: '_sans'});
     }
 }
