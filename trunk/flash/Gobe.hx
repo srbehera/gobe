@@ -32,7 +32,6 @@ class Gobe extends Sprite {
 
     public static  var ctx = new LoaderContext(true);
 
-    private var n:Int;
     private var track:String;
     public var cnss:Array<Int>;
     public var stage_height:Int;
@@ -134,61 +133,116 @@ class Gobe extends Sprite {
         trace("getting:" + url);
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, handler);
+        ul.addEventListener(flash.events.ErrorEvent.ERROR, function(e:Event){ trace("failed:" + url); });
         ul.load(new URLRequest(url));
     }
 
     public function edgeReturn(e:Event){
+        trace('edgeReturn');
         var lines:Array<String> = StringTools.ltrim(e.target.data).split("\n");
-        trace(lines);
+        // for each track, keep track of the other tracks it maps to.
+        var edge_tracks = new Hash<Hash<Int>>();
+        trace('looping');
         for(line in lines){
             if(line.charAt(0) == "#" || line.length == 0) { continue; }
             var edge = Util.add_edge_line(line, annotations);
+            if (edge == null){ continue; }
+
+            // so here we tabulate all the unique track pairs...
+            var aid = edge.a.track.id;
+            var bid = edge.b.track.id;
+
+            // for each edge, need to see the annos.tracks it's associated with...
+            if(! edge_tracks.exists(aid)) { edge_tracks.set(aid, new Hash<Int>()); }
+            if(! edge_tracks.exists(bid)) { edge_tracks.set(bid, new Hash<Int>()); }
+            edge_tracks.get(bid).set(aid, 1);
+            edge_tracks.get(aid).set(bid, 1);
+        }
+        initializeSubTracks(edge_tracks);
+        addAnnotations();
+    }
+    private function initializeSubTracks(edge_tracks:Hash<Hash<Int>>){
+        // so here, it knows all the annotations and edges, so we figure out
+        // the subtracks it needs to show the relationships.
+        for(aid in edge_tracks.keys()){
+            var btrack_ids = new Array<String>();
+            for(bid in edge_tracks.get(aid).keys()){ btrack_ids.push(bid); }
+            var ntracks = btrack_ids.length;
+            var atrack = tracks.get(aid);
+
+            var i = 1;
+            var sub_height = atrack.track_height / (2 * (ntracks + 1));
+            for(bid in btrack_ids){
+                trace(aid + "," + bid);
+                var btrack = tracks.get(bid);
+                var sub = new SubTrack(atrack, btrack);
+                atrack.subtracks.set(bid, sub);
+                atrack.addChildAt(sub, 0);
+                // TODO. negative strand...
+                sub.y = i * sub_height;
+                sub.draw();
+                i += 1;
+            }
+        }
+    }
+    private function addAnnotations(){
+        var arr = new Array<Annotation>();
+        var a:Annotation;
+        for(a in annotations.iterator()){ arr.push(a); }
+        arr.sort(function(a:Annotation, b:Annotation):Int {
+            return a.style.zindex < b.style.zindex ? -1 : 1;
+        });
+        for(a in arr){
+            if(a.ftype != "HSP"){ a.track.addChild(a); }
+            else {
+                // loop over the pairs and add to appropriate subtrack based on the id of other.
+                for(edge_id in a.edges){
+                    var edge = edges[edge_id];
+                    var other = edge.a == a ? edge.b : edge.a;
+                    var sub = a.track.subtracks.get(other.track.id);
+                    sub.addChild(a);
+                }
+            }
+            a.draw();
         }
     }
 
     public function annotationReturn(e:Event){
         annotations = new Hash<Annotation>();
-        var arr = new Array<Annotation>();
         var anno_lines:Array<String> = StringTools.ltrim(e.target.data).split("\n");
         for(line in anno_lines){
             if(line.charAt(0) == "#" || line.length == 0){ continue;}
             var a = new Annotation(line, tracks);
             a.style = styles.get(a.ftype);
             annotations.set(a.id, a);
-            arr.push(a);
-        }
-        arr.sort(function(a:Annotation, b:Annotation):Int {
-            return a.style.zindex < b.style.zindex ? -1 : 1;
-        });
-        for(a in arr){
-            a.track.addChild(a);
-            a.draw();
         }
         geturl(this.edges_url, edgeReturn);
 
     }
 
     public function trackReturn(e:Event){
-        this.geturl(this.annotations_url, annotationReturn); // 
+        // called by style return.
+        this.geturl(this.annotations_url, annotationReturn);
         tracks = new Hash<Track>();
         var lines:Array<String> = e.target.data.split("\n");
-        n = 0;
-        for(line in lines){ if (line.charAt(0) != "#"){ n += 1; }}
-        var track_height = Std.int(this.stage_height / this.n);
+        var ntracks = 0;
+        for(line in lines){ if (line.charAt(0) != "#" && line.length != 0){ ntracks += 1; }}
+        var track_height = Std.int(this.stage_height / ntracks);
+        trace(track_height + ", " + ntracks);
         var k = 0;
         for(line in lines){
             if(line.charAt(0) == "#" || line.length == 0){ continue; }
-            var t = new Track(line, stage_width, track_height);
+            var t = new Track(line, track_height);
             tracks.set(t.id, t);
             t.y = k * track_height;
             flash.Lib.current.addChildAt(t, 0);
             k += 1;
         }
     }
-    
+
     public function styleReturn(e:Event){
-        this.geturl(this.tracks_url, trackReturn); // 
-        
+        this.geturl(this.tracks_url, trackReturn); //
+
         var strdata:String = e.target.data.replace('"#', '"0x').replace("'#", "'0x");
         var json = JSON.decode(strdata);
         // get the array of feature-type keys.
