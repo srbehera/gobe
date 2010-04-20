@@ -173,7 +173,6 @@ class Gobe extends Sprite {
             var i = 1;
             var sub_height = atrack.track_height / (2 * (ntracks + 1));
             for(bid in btrack_ids){
-                trace(aid + "," + bid);
                 var btrack = tracks.get(bid);
                 var sub = new SubTrack(atrack, btrack);
                 atrack.subtracks.set(bid, sub);
@@ -193,6 +192,7 @@ class Gobe extends Sprite {
             return a.style.zindex < b.style.zindex ? -1 : 1;
         });
         for(a in arr){
+            a.draw();
             if(a.ftype != "HSP"){ a.track.addChild(a); }
             else {
                 // loop over the pairs and add to appropriate subtrack based on the id of other.
@@ -200,10 +200,10 @@ class Gobe extends Sprite {
                     var edge = edges[edge_id];
                     var other = edge.a == a ? edge.b : edge.a;
                     var sub = a.track.subtracks.get(other.track.id);
+                    a.subtrack = sub;
                     sub.addChild(a);
                 }
             }
-            a.draw();
         }
     }
 
