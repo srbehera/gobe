@@ -17,12 +17,19 @@ class Edge extends Sprite {
         super();
         this.a = a; this.b = b; this.strength = s;
         this.drawn = false;
+        this.addEventListener(MouseEvent.CLICK, onClick);
     }
     public function draw(?force:Bool=false){
+        if(this.drawn){
+            this.visible = true;
+            return;
+        }
         var g = this.graphics;
         g.clear();
         var aa = this.a;
         var bb = this.b;
+        trace(aa.y);
+        trace(this.y);
         if(aa.y > bb.y){
             aa = this.b;
             bb = this.a;
@@ -37,11 +44,11 @@ class Edge extends Sprite {
             this.drawn = force;
             return;
         }
-        var ul = aa.track.localToGlobal(new flash.geom.Point(aa.pxmin, aa.y + aa.h));
-        var ur = aa.track.localToGlobal(new flash.geom.Point(aa.pxmax + 1, aa.y + aa.h));
+        var ul = aa.subtrack.localToGlobal(new flash.geom.Point(aa.pxmin, aa.y + aa.h));
+        var ur = aa.subtrack.localToGlobal(new flash.geom.Point(aa.pxmax + 1, aa.y + aa.h));
 
-        var ll = bb.track.localToGlobal(new flash.geom.Point(bb.pxmin, bb.y));
-        var lr = bb.track.localToGlobal(new flash.geom.Point(bb.pxmax + 1, bb.y));
+        var ll = bb.subtrack.localToGlobal(new flash.geom.Point(bb.pxmin, bb.y));
+        var lr = bb.subtrack.localToGlobal(new flash.geom.Point(bb.pxmax + 1, bb.y));
 
         g.beginFill(0x0000ff, 0.3);
         g.lineStyle(0, 0.4);
@@ -52,6 +59,9 @@ class Edge extends Sprite {
         g.lineTo(ul.x, ul.y);
         g.endFill();
         this.drawn = true;
+    }
+    public function onClick(e:MouseEvent){
+        this.visible = false;
     }
 }
 
@@ -67,6 +77,7 @@ class Annotation extends Sprite {
     public var bpmax:Int;
     public var style:Style;
     public var track:Track;
+    public var subtrack:SubTrack;
     public var track_id:String;
     public var h:Float;
 
@@ -99,7 +110,7 @@ class Annotation extends Sprite {
         this.h = style.feat_height * 20;
         g.lineStyle(style.line_width, style.line_color);
         var ymid = track.track_height / 2 + 2;
-        var ymin = ymid - this.strand * h;
+        var ymin = ymid + this.strand * h;
         this.y = ymin;
         var tw = this.pxmax - this.pxmin;
         g.moveTo(0, 0);
