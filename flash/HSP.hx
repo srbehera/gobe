@@ -27,6 +27,9 @@ class Edge extends Sprite {
             aa = this.b;
             bb = this.a;
         }
+        else {
+
+        }
         // TODO use visible.
         if (this.drawn){
             // probably force because they want to draw every edge. but this is
@@ -93,7 +96,7 @@ class Annotation extends Sprite {
     public function draw(){
         var g = this.graphics;
         g.clear();
-        var h = style.feat_height * 20;
+        this.h = style.feat_height * 20;
         g.lineStyle(style.line_width, style.line_color);
         var ymid = track.track_height / 2 + 2;
         var ymin = ymid - this.strand * h;
@@ -127,7 +130,6 @@ class Style {
     public var zindex:Int;
 
     public function new(ftype:String, json:Dynamic){
-        trace('in new!');
         this.ftype = ftype;
         this.fill_color = json.fill_color;
         this.fill_alpha = json.fill_alpha;
@@ -136,6 +138,26 @@ class Style {
         this.feat_height = json.height;
         this.zindex = json.z ? json.z : 5;
     }
+}
+
+class SubTrack extends Sprite {
+    public var track:Track;
+    public var other:Track;
+    /// other is a pointer to the other track which shares
+    /// pairs with this one.
+    public function new(track:Track, other:Track){
+        super();
+        this.track = track;
+        this.other = other;
+        this.draw();
+    }
+    public function draw(){
+        var sw = flash.Lib.current.stage.stageWidth - 1;
+        var g = this.graphics;
+        g.lineStyle(1, 0.5);
+        g.lineTo(sw, 0);
+    }
+
 }
 
 class Track extends Sprite {
@@ -147,12 +169,15 @@ class Track extends Sprite {
     public  var bpmax:Int;
     public  var bpp:Float;
     public var track_height:Int;
+    // key is id of other track.
+    public var subtracks:Hash<SubTrack>;
 
     public  var mouse_down:Bool;
     public  var ttf:MTextField;
 
-    public function new(line:String, stage_width:Float, track_height:Int){
+    public function new(line:String, track_height:Int){
         super();
+        subtracks = new Hash<SubTrack>();
         var l = line.split(",");
         this.id = l[0];
         this.title = l[1];
@@ -161,11 +186,10 @@ class Track extends Sprite {
         this.bpmin = Std.parseInt(l[2]);
         this.bpmax = Std.parseInt(l[3]);
         this.mouse_down = false;
-        // TODO: check that widht is correct.
         this.setUpTextField();
         this.bpp = (bpmax - bpmin)/(1.0 * flash.Lib.current.stage.stageWidth);
         this.draw();
-        trace("stage_width:" + stage_width + ", bpmin-bpmax(rng):" + bpmin +"-" + bpmax + "(" + (bpmax - bpmin) + "), bpp:" + this.bpp);
+        //trace("bpmin-bpmax(rng):" + bpmin +"-" + bpmax + "(" + (bpmax - bpmin) + "), bpp:" + this.bpp);
     }
     public function draw(){
         var g = this.graphics;
@@ -174,7 +198,7 @@ class Track extends Sprite {
         var sw = flash.Lib.current.stage.stageWidth - 1;
         g.lineStyle(1, 0.5);
         // the border around this track.
-        g.drawRoundRect(0, 0, sw, track_height, 12);
+        g.drawRoundRect(0, 0, sw, track_height, 22);
 
         // the dotted line in the middle.
         g.lineStyle(1, 0x444444, 0.9, false,
