@@ -83,6 +83,13 @@ class Gobe extends Sprite {
         if(this.wedge_alpha < 0.1){ this.wedge_alpha = 0.1; }
         //this.redraw_wedges();
     }
+    public function onMouseMove(e:MouseEvent){
+        var x = e.localX;
+        var tid = this.tracks.keys().next();
+        var t = tracks.get(tid);
+        trace(x);
+        //t.ttf.htmlText = "<p>" + t.pix2rw(x) + "</p>";
+    }
 
 
     public function new(){
@@ -104,6 +111,7 @@ class Gobe extends Sprite {
 
         // the event only gets called when mousing over an HSP.
         addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
+        addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
 
         // this one the event gets called anywhere.
         flash.Lib.current.stage.focus = flash.Lib.current.stage;
@@ -134,24 +142,30 @@ class Gobe extends Sprite {
         trace(lines);
         for(line in lines){
             if(line.charAt(0) == "#" || line.length == 0) { continue; }
-            trace(line);
             var edge = Util.add_edge_line(line, annotations);
-            trace(edge);
         }
     }
 
     public function annotationReturn(e:Event){
         annotations = new Hash<Annotation>();
-        var lines:Array<String> = StringTools.ltrim(e.target.data).split("\n");
-        for(line in lines){
+        var arr = new Array<Annotation>();
+        var anno_lines:Array<String> = StringTools.ltrim(e.target.data).split("\n");
+        for(line in anno_lines){
             if(line.charAt(0) == "#" || line.length == 0){ continue;}
             var a = new Annotation(line, tracks);
             a.style = styles.get(a.ftype);
             annotations.set(a.id, a);
+            arr.push(a);
+        }
+        arr.sort(function(a:Annotation, b:Annotation):Int {
+            return a.style.zindex < b.style.zindex ? -1 : 1;
+        });
+        for(a in arr){
             a.track.addChild(a);
             a.draw();
-        } 
+        }
         geturl(this.edges_url, edgeReturn);
+
     }
 
     public function trackReturn(e:Event){
