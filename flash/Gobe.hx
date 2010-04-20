@@ -45,7 +45,7 @@ class Gobe extends Sprite {
     public var panel:Sprite; // holds the lines.
 
     private var _all:Bool;
-    public var tracks:Array<Track>;
+    public var tracks:Hash<Track>;
     public var annotations:Hash<Annotation>;
     public var styles:Hash<Style>; // {'CDS': CDSINFO }
     public static var edges = new Array<Edge>();
@@ -112,19 +112,12 @@ class Gobe extends Sprite {
 
     }
     public function onKeyPress(e:KeyboardEvent){
-        // if they pressed 'm' or 'M'
-        if(e.keyCode == 38){ // up
-            if(Gobe.fontSize > 25){ return; }
-            Gobe.fontSize += 1;
-            for(track in tracks){
-                track.ttf.styleSheet.setStyle('p', {fontSize:Gobe.fontSize});
-            }
-        }
-        else if (e.keyCode == 40){ // down
-            if(Gobe.fontSize < 5){ return; }
-            Gobe.fontSize -= 1;
-            for(track in tracks){
-                track.ttf.styleSheet.setStyle('p', {fontSize:Gobe.fontSize});
+        if(e.keyCode == 38 || e.keyCode == 40){ // up
+            if(e.keyCode == 38 && Gobe.fontSize > 25){ return; }
+            if(Gobe.fontSize < 5 && Gobe.fontSize < 5){ return; }
+            Gobe.fontSize += (e.keyCode == 38 ? 1 : - 1);
+            for(k in tracks.keys()){
+                tracks.get(k).ttf.styleSheet.setStyle('p', {fontSize:Gobe.fontSize});
             }
         }
     }
@@ -159,16 +152,16 @@ class Gobe extends Sprite {
 
     public function trackReturn(e:Event){
         this.geturl(this.annotations_url, annotationReturn); // 
-        tracks = new Array<Track>();
+        tracks = new Hash<Track>();
         var lines:Array<String> = e.target.data.split("\n");
         n = 0;
         for(line in lines){ if (line.charAt(0) != "#"){ n += 1; }}
         var track_height = Std.int(this.stage_height / this.n);
         var k = 0;
         for(line in lines){
-            if(line.charAt(0) == "#"){ continue; }
+            if(line.charAt(0) == "#" || line.length == 0){ continue; }
             var t = new Track(line, stage_width, track_height);
-            tracks.push(t);
+            tracks.set(t.id, t);
             t.y = k * track_height;
             flash.Lib.current.addChildAt(t, 0);
             k += 1;

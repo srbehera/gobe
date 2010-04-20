@@ -64,11 +64,11 @@ class Annotation extends Sprite {
     public var bpmax:Int;
     public var style:Style;
     public var track:Track;
-    public var track_id:Int;
+    public var track_id:String;
     public var h:Float;
 
     public var fname:String;
-    public function new(line:String, tracks:Array<Track>){
+    public function new(line:String, tracks:Hash<Track>){
         super();
         //#id,type,start,end,strand,track,name
         var l = line.split(",");
@@ -79,22 +79,23 @@ class Annotation extends Sprite {
         this.bpmin = Std.parseInt(l[2]);
         this.bpmax = Std.parseInt(l[3]);
         this.strand = l[4] == "+" ? 1 : l[4] == "-" ? -1 : 0;
-        this.track_id = Std.parseInt(l[5]);
+        this.track_id = l[5];
         this.fname = l[6];
         
-        this.track = tracks[this.track_id];
+        this.track = tracks.get(this.track_id);
         this.pxmin = track.rw2pix(this.bpmin);
         this.pxmax = track.rw2pix(this.bpmax);
         this.addEventListener(MouseEvent.CLICK, onClick);
 
     }
     public function draw(){
-        this.h = this.style.offset * this.track.stage_height;
+        this.h = this.strand * this.style.offset * this.track.track_height;
+        this.h = this.style.height;
         var g = this.graphics;
         g.beginFill(style.fill_color, style.fill_alpha);
         g.lineStyle(style.line_width, style.line_color);
-        var ymid = track.stage_height / 2;
-        var ymin = ymid - h;
+        var ymid = track.track_height / 2;
+        var ymin = ymid - this.strand * h;
         this.y = ymin;
         this.x = this.pxmin;
         var tw = this.pxmax;
@@ -122,6 +123,7 @@ class Style {
     public var offset:Float;
     public var line_width:Float;
     public var line_color:UInt;
+    public var height:Int; // in px;
 
     public function new(ftype:String, json:Dynamic){
         this.ftype = ftype;
@@ -130,29 +132,32 @@ class Style {
         this.offset = json.offset;
         this.line_width = json.line_width;
         this.line_color = json.line_color;
+        this.height = json.height;
     }
 }
 
 class Track extends Sprite {
 
     public  var title:String;
+    public  var id:String;
     public  var i:Int; // index.
     public  var bpmin:Int;
     public  var bpmax:Int;
     public  var bpp:Float;
-    public var stage_height:Int;
+    public var track_height:Int;
 
     public  var mouse_down:Bool;
     public  var ttf:MTextField;
 
-    public function new(line:String, stage_width:Int, stage_height:Int){
+    public function new(line:String, stage_width:Int, track_height:Int){
         super();
         var l = line.split(",");
-        this.title = l[0];
+        this.id = l[0];
+        this.title = l[1];
         
-        this.stage_height = stage_height;
-        this.bpmin = Std.parseInt(l[1]);
-        this.bpmax = Std.parseInt(l[2]);
+        this.track_height = track_height;
+        this.bpmin = Std.parseInt(l[2]);
+        this.bpmax = Std.parseInt(l[3]);
         this.mouse_down = false;
         // TODO: check that widht is correct.
         this.bpp  = (0.001 + bpmax - bpmin)/(1.0 * stage_width);
