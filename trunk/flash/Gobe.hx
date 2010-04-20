@@ -66,14 +66,13 @@ class Gobe extends Sprite {
         stage.align     = StageAlign.TOP_LEFT;
         stage.scaleMode = StageScaleMode.NO_SCALE;
         stage.addChild( new Gobe());
-        trace(stage.stageWidth);
     }
     private function add_callbacks(){
         ExternalInterface.addCallback("clear_wedges", clear_wedges);
     }
 
     public function clear_wedges(){
-        this.clearPanelGraphics(new MouseEvent(MouseEvent.CLICK));
+        for(w in edges){ w.visible = false; }
     }
     public function onMouseWheel(e:MouseEvent){
         var change = e.delta > 0 ? 1 : - 1;
@@ -174,12 +173,19 @@ class Gobe extends Sprite {
             var sub_height = atrack.track_height / (2 * (ntracks + 1));
             for(bid in btrack_ids){
                 var btrack = tracks.get(bid);
-                var sub = new SubTrack(atrack, btrack);
-                atrack.subtracks.set(bid, sub);
-                atrack.addChildAt(sub, 0);
-                // TODO. negative strand...
-                sub.y = i * sub_height;
-                sub.draw();
+                for(strand in ['+', '-']){
+
+                    var sub = new SubTrack(atrack, btrack, sub_height);
+                    atrack.subtracks.set(strand + bid, sub);
+                    atrack.addChildAt(sub, 0);
+                    if (strand == '+'){
+                        sub.y = i * sub_height;
+                    }
+                    else {
+                        sub.y = atrack.track_height - i * sub_height;
+                    }
+                    sub.draw();
+                }
                 i += 1;
             }
         }
@@ -192,18 +198,19 @@ class Gobe extends Sprite {
             return a.style.zindex < b.style.zindex ? -1 : 1;
         });
         for(a in arr){
-            a.draw();
             if(a.ftype != "HSP"){ a.track.addChild(a); }
             else {
                 // loop over the pairs and add to appropriate subtrack based on the id of other.
                 for(edge_id in a.edges){
                     var edge = edges[edge_id];
-                    var other = edge.a == a ? edge.b : edge.a;
-                    var sub = a.track.subtracks.get(other.track.id);
+                    var other:Annotation = edge.a == a ? edge.b : edge.a;
+                    var strand = other.strand == 1 ? '+' : '-';
+                    var sub = a.track.subtracks.get(strand + other.track.id);
                     a.subtrack = sub;
                     sub.addChild(a);
                 }
             }
+            a.draw();
         }
     }
 
@@ -228,7 +235,6 @@ class Gobe extends Sprite {
         var ntracks = 0;
         for(line in lines){ if (line.charAt(0) != "#" && line.length != 0){ ntracks += 1; }}
         var track_height = Std.int(this.stage_height / ntracks);
-        trace(track_height + ", " + ntracks);
         var k = 0;
         for(line in lines){
             if(line.charAt(0) == "#" || line.length == 0){ continue; }

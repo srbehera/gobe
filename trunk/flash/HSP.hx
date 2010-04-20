@@ -28,8 +28,6 @@ class Edge extends Sprite {
         g.clear();
         var aa = this.a;
         var bb = this.b;
-        trace(aa.y);
-        trace(this.y);
         if(aa.y > bb.y){
             aa = this.b;
             bb = this.a;
@@ -44,11 +42,14 @@ class Edge extends Sprite {
             this.drawn = force;
             return;
         }
-        var ul = aa.subtrack.localToGlobal(new flash.geom.Point(aa.pxmin, aa.y + aa.h));
-        var ur = aa.subtrack.localToGlobal(new flash.geom.Point(aa.pxmax + 1, aa.y + aa.h));
+        trace(aa.y + "," + aa.h);
+        var ul = aa.localToGlobal(new flash.geom.Point(0, aa.y + aa.h));
+        var ur = aa.localToGlobal(new flash.geom.Point(aa.pxmax - aa.pxmin, aa.y + aa.h));
+        trace(ul.y);
+        trace(ul.x);
 
-        var ll = bb.subtrack.localToGlobal(new flash.geom.Point(bb.pxmin, bb.y));
-        var lr = bb.subtrack.localToGlobal(new flash.geom.Point(bb.pxmax + 1, bb.y));
+        var ll = bb.localToGlobal(new flash.geom.Point(0, 0));
+        var lr = bb.localToGlobal(new flash.geom.Point(bb.pxmax - bb.pxmin, 0));
 
         g.beginFill(0x0000ff, 0.3);
         g.lineStyle(0, 0.4);
@@ -106,18 +107,17 @@ class Annotation extends Sprite {
     }
     public function draw(){
         var g = this.graphics;
+        this.y = -this.subtrack.track_height / 2;
         g.clear();
-        this.h = style.feat_height * 20;
+        this.h = style.feat_height * this.subtrack.track_height;
+        trace(this.h);
         g.lineStyle(style.line_width, style.line_color);
-        var ymid = track.track_height / 2 + 2;
-        var ymin = ymid + this.strand * h;
-        this.y = ymin;
         var tw = this.pxmax - this.pxmin;
-        g.moveTo(0, 0);
+        g.moveTo(0, h/2);
         g.beginFill(style.fill_color, style.fill_alpha);
-        g.lineTo(0, h);
-        g.lineTo(tw, h);
-        g.lineTo(tw, 0);
+        g.lineTo(0, -h/2);
+        g.lineTo(tw,-h/2);
+        g.lineTo(tw, h/2);
         //g.lineTo(0, 0);
         g.endFill();
     }
@@ -154,19 +154,41 @@ class Style {
 class SubTrack extends Sprite {
     public var track:Track;
     public var other:Track;
+    public var track_height:Float;
     /// other is a pointer to the other track which shares
     /// pairs with this one.
-    public function new(track:Track, other:Track){
+    public function new(track:Track, other:Track, track_height:Float){
         super();
         this.track = track;
         this.other = other;
+        this.track_height = track_height;
         this.draw();
+        this.addEventListener(MouseEvent.CLICK, onClick);
+    }
+    public function onClick(e:MouseEvent){
+        if(e.shiftKey){
+            for(i in 0 ... this.numChildren){
+                var a = cast(this.getChildAt(i), Annotation);
+                a.onClick(e);
+            }
+        }
+        else if(e.ctrlKey){
+            trace('ctrl');
+        }
     }
     public function draw(){
         var sw = flash.Lib.current.stage.stageWidth - 1;
         var g = this.graphics;
-        g.lineStyle(1, 0.5);
+        g.lineStyle(0.5, 0.2);
         g.lineTo(sw, 0);
+        g.lineStyle(0, 0.0, 0);
+        g.beginFill(0, 0);
+        g.moveTo(0, -this.track_height);
+        g.lineTo(sw, -this.track_height);
+        g.lineTo(sw, 0);
+        g.lineTo(0, 0);
+        g.endFill();
+
     }
 
 }
@@ -207,7 +229,7 @@ class Track extends Sprite {
         var mid = track_height/2 + 1;
         g.clear();
         var sw = flash.Lib.current.stage.stageWidth - 1;
-        g.lineStyle(1, 0.5);
+        g.lineStyle(1, 0.6);
         // the border around this track.
         g.drawRoundRect(0, 0, sw, track_height, 22);
 
