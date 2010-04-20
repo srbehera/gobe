@@ -1,8 +1,8 @@
 {
-    "CDS": { "fill_color": "#00ff00", "fill_alpha": 0.5, "line_width": 0.1, "line_color": "#0000ff", "height": 0.9 },
-    "HSP": { "fill_color": "#0000ff", "fill_alpha": 0.8, "line_width": 0.1, "line_color": "#0000ff", "height": 0.4 },
-    "gene": { "fill_color": "#cccccc", "fill_alpha": 0.8, "line_width": 0.0, "line_color": "#0000ff", "height": 0.2 },
-    "mRNA": { "fill_color": "#00ff00", "fill_alpha": 0.8, "line_width": 0.0, "line_color": "#0000ff", "height": 0.8 },
-    "exon": { "fill_color": "#00ff00", "fill_alpha": 0.8, "line_width": 0.0, "line_color": "#0000ff", "height": 0.8 },
-    "three_prime_UTR": { "fill_color": "#0000ff", "fill_alpha": 0.8, "line_width": 0.0, "line_color": "#0000ff", "height": 0.7 }
+    "CDS": { "fill_color": "#00ff00", "fill_alpha": 0.5, "line_width": 0.1, "line_color": "#0000ff", "height": 0.9, "z": 16},
+    "HSP": { "fill_color": "#0000ff", "fill_alpha": 0.8, "line_width": 0.1, "line_color": "#0000ff", "height": 0.4, "z": 20},
+    "gene": { "fill_color": "#cccccc", "fill_alpha": 0.8, "line_width": 0.0, "line_color": "#0000ff", "height": 0.2, "z":0},
+    "mRNA": { "fill_color": "#00ff00", "fill_alpha": 0.8, "line_width": 0.0, "line_color": "#0000ff", "height": 0.8, "z": 12},
+    "exon": { "fill_color": "#00ff00", "fill_alpha": 0.8, "line_width": 0.0, "line_color": "#0000ff", "height": 0.8, "z": 2},
+    "three_prime_UTR": { "fill_color": "#0000ff", "fill_alpha": 0.8, "line_width": 0.0, "line_color": "#0000ff", "height": 0.7, "z": 5}
 }

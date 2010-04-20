@@ -81,31 +81,31 @@ class Annotation extends Sprite {
         this.strand = l[4] == "+" ? 1 : l[4] == "-" ? -1 : 0;
         this.track_id = l[5];
         this.fname = l[6];
-        
+
         this.track = tracks.get(this.track_id);
         this.pxmin = track.rw2pix(this.bpmin);
         this.pxmax = track.rw2pix(this.bpmax);
+        this.x = pxmin;
         this.addEventListener(MouseEvent.CLICK, onClick);
-        trace(this.bpmin + "," + this.bpmax + "=>" + this.pxmin + "," + this.pxmax);
+        //trace(this.bpmin + "," + this.bpmax + "=>" + this.pxmin + "," + this.pxmax);
 
     }
     public function draw(){
         var g = this.graphics;
+        g.clear();
         var h = style.feat_height * 20;
-        g.beginFill(style.fill_color, style.fill_alpha);
         g.lineStyle(style.line_width, style.line_color);
         var ymid = track.track_height / 2 + 2;
         var ymin = ymid - this.strand * h;
         this.y = ymin;
-        this.x = this.pxmin;
-        var tw = this.pxmax;
-        trace("drawing xmax:" + tw);
+        var tw = this.pxmax - this.pxmin;
         g.moveTo(0, 0);
+        g.beginFill(style.fill_color, style.fill_alpha);
         g.lineTo(0, h);
         g.lineTo(tw, h);
         g.lineTo(tw, 0);
-        g.lineTo(0, 0);
-        g.endFill(); 
+        //g.lineTo(0, 0);
+        g.endFill();
     }
     public function onClick(e:MouseEvent){
         var te = this.edges;
@@ -124,14 +124,17 @@ class Style {
     public var line_width:Float;
     public var line_color:UInt;
     public var feat_height:Float; // in pct;
+    public var zindex:Int;
 
     public function new(ftype:String, json:Dynamic){
+        trace('in new!');
         this.ftype = ftype;
         this.fill_color = json.fill_color;
         this.fill_alpha = json.fill_alpha;
         this.line_width = json.line_width;
         this.line_color = json.line_color;
         this.feat_height = json.height;
+        this.zindex = json.z ? json.z : 5;
     }
 }
 
@@ -153,7 +156,7 @@ class Track extends Sprite {
         var l = line.split(",");
         this.id = l[0];
         this.title = l[1];
-        
+
         this.track_height = track_height;
         this.bpmin = Std.parseInt(l[2]);
         this.bpmax = Std.parseInt(l[3]);
@@ -174,8 +177,8 @@ class Track extends Sprite {
         g.drawRoundRect(0, 0, sw, track_height, 12);
 
         // the dotted line in the middle.
-        g.lineStyle(1, 0x444444, 0.9, false, 
-                    flash.display.LineScaleMode.NORMAL, 
+        g.lineStyle(1, 0x444444, 0.9, false,
+                    flash.display.LineScaleMode.NORMAL,
                     flash.display.CapsStyle.ROUND);
         var dash_w = 20;
         var gap_w = 10;
@@ -190,20 +193,20 @@ class Track extends Sprite {
     }
 
     public inline function rw2pix(bp:Int){
-        var pix = (bp - this.bpmin) / this.bpp;        
+        var pix = (bp - this.bpmin) / this.bpp;
         //trace(bp + " => " + pix);
         return pix;
     }
 
     public function setUpTextField(){
         this.ttf = new MTextField();
-        
+
         ttf.htmlText   = '<p>' + this.title + '</p>';
-        ttf.y      = y + 3; 
+        ttf.y      = y + 3;
         ttf.x      = 5;
         ttf.multiline = true;
-  
-        ttf.border = true; 
+
+        ttf.border = true;
         ttf.borderColor      = 0xcccccc;
         ttf.opaqueBackground = 0xf4f4f4;
         ttf.autoSize         = flash.text.TextFieldAutoSize.LEFT;
