@@ -36,7 +36,7 @@ class Gobe extends Sprite {
     private var track:String;
     public var cnss:Array<Int>;
     public var stage_height:Int;
-    public var stage_width:Int;
+    public var stage_width:Float;
 
     public var wedge_alpha:Float;
 
@@ -63,10 +63,11 @@ class Gobe extends Sprite {
 
     public static function main(){
         haxe.Firebug.redirectTraces();
-        var stage = flash.Lib.current;
-        stage.stage.scaleMode = StageScaleMode.NO_SCALE;
-        stage.stage.align     = StageAlign.TOP_LEFT;
+        var stage = flash.Lib.current.stage;
+        stage.align     = StageAlign.TOP_LEFT;
+        stage.scaleMode = StageScaleMode.NO_SCALE;
         stage.addChild( new Gobe());
+        trace(stage.stageWidth);
     }
     private function add_callbacks(){
         ExternalInterface.addCallback("clear_wedges", clear_wedges);
@@ -107,14 +108,14 @@ class Gobe extends Sprite {
         // this one the event gets called anywhere.
         flash.Lib.current.stage.focus = flash.Lib.current.stage;
         flash.Lib.current.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyPress);
-        this.stage_width = flash.Lib.current.stage.stageWidth;
-        this.stage_height = flash.Lib.current.stage.stageHeight;
+        this.stage_width = flash.Lib.current.stage.stage.stageWidth;
+        this.stage_height = flash.Lib.current.stage.stage.stageHeight;
 
     }
     public function onKeyPress(e:KeyboardEvent){
         if(e.keyCode == 38 || e.keyCode == 40){ // up
             if(e.keyCode == 38 && Gobe.fontSize > 25){ return; }
-            if(Gobe.fontSize < 5 && Gobe.fontSize < 5){ return; }
+            if(e.keyCode == 40 && Gobe.fontSize < 8){ return; }
             Gobe.fontSize += (e.keyCode == 38 ? 1 : - 1);
             for(k in tracks.keys()){
                 tracks.get(k).ttf.styleSheet.setStyle('p', {fontSize:Gobe.fontSize});
@@ -130,9 +131,12 @@ class Gobe extends Sprite {
 
     public function edgeReturn(e:Event){
         var lines:Array<String> = StringTools.ltrim(e.target.data).split("\n");
+        trace(lines);
         for(line in lines){
             if(line.charAt(0) == "#" || line.length == 0) { continue; }
+            trace(line);
             var edge = Util.add_edge_line(line, annotations);
+            trace(edge);
         }
     }
 
