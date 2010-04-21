@@ -45,18 +45,19 @@ class Edge extends Sprite {
         trace(aa.y + "," + aa.h);
         var ul = aa.localToGlobal(new flash.geom.Point(0, aa.y + aa.h));
         var ur = aa.localToGlobal(new flash.geom.Point(aa.pxmax - aa.pxmin, aa.y + aa.h));
-        trace(ul.y);
-        trace(ul.x);
 
         var ll = bb.localToGlobal(new flash.geom.Point(0, 0));
         var lr = bb.localToGlobal(new flash.geom.Point(bb.pxmax - bb.pxmin, 0));
-
-        g.lineStyle(0, 0.4);
+        // alternating linestyle is to draw only lines on the y, not along the x
+        g.lineStyle(0, 0.0);
         g.beginFill(aa.subtrack.fill_color, 0.3);
         g.moveTo(ul.x, ul.y);
         g.lineTo(ur.x, ur.y);
+        g.lineStyle(0, 0.5);
         g.lineTo(lr.x, lr.y);
+        g.lineStyle(0, 0.0);
         g.lineTo(ll.x, ll.y);
+        g.lineStyle(0, 0.5);
         g.lineTo(ul.x, ul.y);
         g.endFill();
         this.drawn = true;
@@ -178,8 +179,8 @@ class SubTrack extends Sprite {
     public function onClick(e:MouseEvent){
         if(e.shiftKey){
             for(i in 0 ... this.numChildren){
+                if (!Std.is(this.getChildAt(i), Annotation)) { continue; }
                 var a = cast(this.getChildAt(i), Annotation);
-                trace(i + ", " + a);
                 a.onClick(e);
             }
         }
@@ -206,9 +207,11 @@ class SubTrack extends Sprite {
 
     public function draw(){
         var sw = flash.Lib.current.stage.stageWidth - 1;
+        var off = 3;
         var g = this.graphics;
         g.lineStyle(0.5, 0.2);
-        g.lineTo(sw, 0);
+        g.moveTo(off, 0);
+        g.lineTo(sw - off, 0);
         g.lineStyle(0, 0.0, 0);
         if(this.track == this.other){
             g.beginFill(0, 0.1);
@@ -231,8 +234,27 @@ class AnnoTrack extends SubTrack {
 }
 
 class HSPTrack extends SubTrack {
+    public  var ttf:MTextField;
+
     public function new(track:Track, other:Track, track_height:Float){
         super(track, other, track_height);
+        this.setUpTextField();
+    }
+    public function setUpTextField(){
+        this.ttf = new MTextField();
+
+        ttf.htmlText   = '<p>' + other.title + '</p>';
+        ttf.multiline = true;
+
+        ttf.border = false;
+        ttf.borderColor      = 0xcccccc;
+        //ttf.opaqueBackground = 0xf4f4f4;
+        ttf.autoSize         = flash.text.TextFieldAutoSize.LEFT;
+        this.addChildAt(ttf, this.numChildren);
+        ttf.styleSheet.setStyle('p', {fontSize: Gobe.fontSize - 2, display: 'inline', fontColor: '0xcccccc',
+                                    fontFamily: '_sans'});
+        ttf.x      = flash.Lib.current.stage.stageWidth - ttf.width - 10;
+        ttf.y      = -ttf.height;
     }
 }
 
