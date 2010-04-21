@@ -51,8 +51,8 @@ class Edge extends Sprite {
         var ll = bb.localToGlobal(new flash.geom.Point(0, 0));
         var lr = bb.localToGlobal(new flash.geom.Point(bb.pxmax - bb.pxmin, 0));
 
-        g.beginFill(0x0000ff, 0.3);
         g.lineStyle(0, 0.4);
+        g.beginFill(aa.subtrack.fill_color, 0.3);
         g.moveTo(ul.x, ul.y);
         g.lineTo(ur.x, ur.y);
         g.lineTo(lr.x, lr.y);
@@ -117,7 +117,7 @@ class Annotation extends Sprite {
         var xend = this.strand == 1 ? tw : 0;
 
         g.moveTo(xstart, h/2);
-        g.beginFill(style.fill_color, style.fill_alpha);
+        g.beginFill(Std.is(subtrack, HSPTrack) ? subtrack.fill_color : style.fill_color, style.fill_alpha);
         g.lineTo(xstart, -h/2);
         g.lineTo(xend - alen, -h/2);
         g.lineTo(xend, 0);
@@ -159,6 +159,7 @@ class Style {
 
 class SubTrack extends Sprite {
     public var track:Track;
+    public var fill_color:UInt;
     public var other:Track;
     public var track_height:Float;
     /// other is a pointer to the other track which shares
@@ -170,11 +171,15 @@ class SubTrack extends Sprite {
         this.track_height = track_height;
         this.draw();
         this.addEventListener(MouseEvent.CLICK, onClick);
+        this.addEventListener(MouseEvent.MOUSE_OVER, onMouseOver);
+        this.addEventListener(MouseEvent.MOUSE_OUT, onMouseOut);
+
     }
     public function onClick(e:MouseEvent){
         if(e.shiftKey){
             for(i in 0 ... this.numChildren){
                 var a = cast(this.getChildAt(i), Annotation);
+                trace(i + ", " + a);
                 a.onClick(e);
             }
         }
@@ -182,6 +187,23 @@ class SubTrack extends Sprite {
             trace('ctrl');
         }
     }
+
+    public function onMouseOut(e:MouseEvent){
+        if(!e.ctrlKey){ return; }
+        for(i in 0 ... this.numChildren){
+            var a = cast(this.getChildAt(i), Annotation);
+            for (ed in a.edges){
+                Gobe.edges[ed].visible = false;
+            }
+        }
+    }
+    public function onMouseOver(e:MouseEvent){
+        if (! e.ctrlKey ){ return; }
+        trace('clicking');
+        e.shiftKey = true;
+        onClick(e);
+    }
+
     public function draw(){
         var sw = flash.Lib.current.stage.stageWidth - 1;
         var g = this.graphics;
@@ -200,6 +222,18 @@ class SubTrack extends Sprite {
 
     }
 
+}
+
+class AnnoTrack extends SubTrack {
+    public function new(track:Track, other:Track, track_height:Float){
+        super(track, other, track_height);
+    }
+}
+
+class HSPTrack extends SubTrack {
+    public function new(track:Track, other:Track, track_height:Float){
+        super(track, other, track_height);
+    }
 }
 
 class Track extends Sprite {
@@ -238,9 +272,9 @@ class Track extends Sprite {
         var mid = track_height/2 + 1;
         g.clear();
         var sw = flash.Lib.current.stage.stageWidth - 1;
-        g.lineStyle(1, 0.6);
+        g.lineStyle(3.5, 0.6);
         // the border around this track.
-        g.drawRoundRect(0, 0, sw, track_height, 22);
+        g.drawRoundRect(1, 1, sw - 2, track_height - 2, 22);
 
         // the dotted line in the middle.
         g.lineStyle(1, 0x444444, 0.9, false,

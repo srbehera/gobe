@@ -112,7 +112,7 @@ class Gobe extends Sprite {
         addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
 
         // this one the event gets called anywhere.
-        flash.Lib.current.stage.focus = flash.Lib.current.stage;
+        flash.Lib.current.stage.focus = flash.Lib.current.stage.stage;
         flash.Lib.current.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyPress);
         this.stage_width = flash.Lib.current.stage.stage.stageWidth;
         this.stage_height = flash.Lib.current.stage.stage.stageHeight;
@@ -162,9 +162,10 @@ class Gobe extends Sprite {
     private function initializeSubTracks(edge_tracks:Hash<Hash<Int>>){
         // so here, it knows all the annotations and edges, so we figure out
         // the subtracks it needs to show the relationships.
-        for(aid in edge_tracks.keys()){
-            var btrack_ids = new Array<String>();
-            for(bid in edge_tracks.get(aid).keys()){ btrack_ids.push(bid); }
+        var atrack_ids:Array<String> = Util.sorted_keys(edge_tracks.keys());
+        var colors = new Hash<UInt>();
+        for(aid in atrack_ids){
+            var btrack_ids = Util.sorted_keys(edge_tracks.get(aid).keys());
             var ntracks = btrack_ids.length;
             var atrack = tracks.get(aid);
 
@@ -174,10 +175,14 @@ class Gobe extends Sprite {
             var remaining = atrack.track_height - (sub_height * 2 * ntracks);
             trace(sub_height + ", " +  remaining + ", " + remaining / 2);
             for(bid in btrack_ids){
+                var color_key = aid < bid ? aid + "|" + bid : bid + "|" + aid;
+                var track_color = Util.next_track_color(aid, bid, colors);
                 var btrack = tracks.get(bid);
                 for(strand in ['+', '-']){
 
-                    var sub = new SubTrack(atrack, btrack, sub_height);
+                    var sub = new HSPTrack(atrack, btrack, sub_height);
+                    //sub.fill_color = Util.track_colors[btrack.i];
+                    sub.fill_color = track_color;
                     atrack.subtracks.set(strand + bid, sub);
                     atrack.addChildAt(sub, 0);
                     if (strand == '+'){
@@ -194,8 +199,8 @@ class Gobe extends Sprite {
             }
             // now initialize the tracks for +/- annotations.
             i -= 1;
-            var plus  = new SubTrack(atrack, atrack, remaining/2);
-            var minus = new SubTrack(atrack, atrack, remaining/2);
+            var plus  = new AnnoTrack(atrack, atrack, remaining/2);
+            var minus = new AnnoTrack(atrack, atrack, remaining/2);
             plus.y = i * sub_height + remaining / 2;
             minus.y = plus.y + remaining/ 2;
             //minus.y = atrack.track_height - (ntracks - i) * sub_height - remaining/2;
@@ -260,6 +265,7 @@ class Gobe extends Sprite {
         for(line in lines){
             if(line.charAt(0) == "#" || line.length == 0){ continue; }
             var t = new Track(line, track_height);
+            t.i = k;
             tracks.set(t.id, t);
             t.y = k * track_height;
             flash.Lib.current.addChildAt(t, 0);
@@ -278,7 +284,6 @@ class Gobe extends Sprite {
         for(i in 0 ... ftypes.length){
             var ftype = ftypes[i];
             var st = Reflect.field(json, ftype);
-            trace(ftype + ":"  + st.fill_color);
             styles.set(ftype, new Style(ftype, st));
         }
     }
