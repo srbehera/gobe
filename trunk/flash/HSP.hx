@@ -254,7 +254,7 @@ class HSPTrack extends SubTrack {
         ttf.styleSheet.setStyle('p', {fontSize: Gobe.fontSize - 2, display: 'inline', fontColor: '0xcccccc',
                                     fontFamily: '_sans'});
         ttf.x      = flash.Lib.current.stage.stageWidth - ttf.width - 10;
-        ttf.y      = -ttf.height;
+        ttf.y      = -track_height; // - ttf.height;
     }
 }
 
@@ -291,7 +291,7 @@ class Track extends Sprite {
     }
     public function draw(){
         var g = this.graphics;
-        var mid = track_height/2 + 1;
+        var mid = track_height/2;
         g.clear();
         var sw = flash.Lib.current.stage.stageWidth - 1;
         g.lineStyle(3.5, 0.6);
@@ -311,6 +311,26 @@ class Track extends Sprite {
             dx += gap_w;
             g.moveTo(dx, mid);
             dx += dash_w;
+        }
+        this.draw_ruler();
+    }
+    public function draw_ruler(){
+        var g = this.graphics;
+        var mid = track_height/2;
+        var sw = flash.Lib.current.stage.stageWidth - 1;
+        var px_posns = [0, sw/2, sw];
+        var bp_posns = [this.bpmin, (this.bpmin + this.bpmax)/2, this.bpmax];
+        for(i in 0 ... 3){
+            var t = new MTextField();
+            t.htmlText = (bp_posns[i] + "");
+            t.y = mid;
+            t.x = px_posns[i];
+            t.autoSize         = flash.text.TextFieldAutoSize.LEFT;
+            t.opaqueBackground = 0xf2f2f2;
+            addChild(t);
+            if(i == 2){ t.x -= (t.width + 4); }
+            if(i == 0){ t.x += 4; }
+            t.y -= 0.60 * t.height;
         }
     }
 
