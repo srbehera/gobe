@@ -10,7 +10,7 @@
     examples:
     <ul>
         <li><a href="/gobe/">simple annos</a></li>
-        <li><a href="/gobe/?tracks=t.tracks&annotations=t.annos&edges=t.edges">hsps</a></li>
+        <li><a href="/gobe/?tracks=data/t.tracks&annotations=data/t.annos&edges=data/t.edges">hsps</a></li>
     </ul>
 
     <input type="submit" onclick="Gobe.clear()" value="Clear" /><br/>
@@ -26,20 +26,20 @@
 <script type="text/javascript">
         // <![CDATA[
         var get = swfobject.getQueryParamValue;
-        var width = get('w') || "1010"; 
-        var height = get('h') || "700"; 
+        var width = get('w') || "1010";
+        var height = get('h') || "700";
         var params = {'bgcolor': '#FFFFFF'};
         // only var is config=/web/path/to/config.js
         var flashVars = {
-            'tracks'   : get('tracks') || 'tracks.txt',
-            'annotations'   : get('annotations') || 'annotations.txt',
-            'edges'   : get('edges') || 'edges.txt',
+            'tracks'   : get('tracks') || 'data/tracks.txt',
+            'annotations'   : get('annotations') || 'data/annotations.txt',
+            'edges'   : get('edges') || 'data/edges.txt',
             'style'  : get('style') || 'style.json'
         };
         swfobject.embedSWF("flash/gobe.swf?d=" + Math.random(), "flashcontent", width, height, "9.0.0"
                 , "static/swfobject/expresssinstall.swf", flashVars, params, {}
                 , function(){ Gobe.swf = Gobe.get_movie(); });
-                
+
         // ]]>
     </script>
 </body>
