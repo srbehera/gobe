@@ -3,17 +3,25 @@
     <script src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
     <script src="static/gobe.js"></script>
 <style>
-    #flashcontent { width:1010px; height 1010px; }
+#querybox, #flashcontent { width:1010px; height 700px; }
 </style>
 </head>
 <body>
+    examples:
+    <ul>
+        <li><a href="/gobe/">simple annos</a></li>
+        <li><a href="/gobe/?tracks=t.tracks&annotations=t.annos&edges=t.edges">hsps</a></li>
+    </ul>
 
-<input type="submit" onclick="Gobe.clear()" value="Clear" />
+    <input type="submit" onclick="Gobe.clear()" value="Clear" /><br/>
 <div id="flashcontent" name="flashcontent" style="z-index=0;position:absolute">
     <strong>You need to install <a href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash">Flash Player</a> (or turn it back on in your browser settings).</strong>
 </div>
 <div id="querybox"></div>
-            
+<ul>
+    <li>click a gray HSP to see its pair.</li>
+    <li>shift-click in a track to draw lines to all HSPs</li>
+</ul>
 
 <script type="text/javascript">
         // <![CDATA[
