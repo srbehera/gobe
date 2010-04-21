@@ -112,12 +112,17 @@ class Annotation extends Sprite {
         this.h = style.feat_height * this.subtrack.track_height;
         g.lineStyle(style.line_width, style.line_color);
         var tw = this.pxmax - this.pxmin;
-        g.moveTo(0, h/2);
+        var alen = this.style.arrow_len * tw * this.strand;
+        var xstart = this.strand == 1 ? 0 : tw;
+        var xend = this.strand == 1 ? tw : 0;
+
+        g.moveTo(xstart, h/2);
         g.beginFill(style.fill_color, style.fill_alpha);
-        g.lineTo(0, -h/2);
-        g.lineTo(tw,-h/2);
-        g.lineTo(tw, h/2);
-        //g.lineTo(0, 0);
+        g.lineTo(xstart, -h/2);
+        g.lineTo(xend - alen, -h/2);
+        g.lineTo(xend, 0);
+        g.lineTo(xend - alen, h/2);
+
         g.endFill();
     }
     public function onClick(e:MouseEvent){
@@ -136,6 +141,7 @@ class Style {
     public var fill_alpha:Float;
     public var line_width:Float;
     public var line_color:UInt;
+    public var arrow_len:Float;
     public var feat_height:Float; // in pct;
     public var zindex:Int;
 
@@ -146,6 +152,7 @@ class Style {
         this.line_width = json.line_width;
         this.line_color = json.line_color;
         this.feat_height = json.height;
+        this.arrow_len = json.arrow_len ? json.arrow_len : 0.0;
         this.zindex = json.z ? json.z : 5;
     }
 }
