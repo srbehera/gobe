@@ -110,7 +110,6 @@ class Annotation extends Sprite {
         this.y = -this.subtrack.track_height / 2;
         g.clear();
         this.h = style.feat_height * this.subtrack.track_height;
-        trace(this.h);
         g.lineStyle(style.line_width, style.line_color);
         var tw = this.pxmax - this.pxmin;
         g.moveTo(0, h/2);
@@ -128,8 +127,8 @@ class Annotation extends Sprite {
         }
         //ExternalInterface.call('alert', this.fname);
     }
-
 }
+
 
 class Style {
     public var ftype:String;
@@ -182,7 +181,10 @@ class SubTrack extends Sprite {
         g.lineStyle(0.5, 0.2);
         g.lineTo(sw, 0);
         g.lineStyle(0, 0.0, 0);
-        g.beginFill(0, 0);
+        if(this.track == this.other){
+            g.beginFill(0, 0.1);
+        }
+        else { g.beginFill(0, 0); }
         g.moveTo(0, -this.track_height);
         g.lineTo(sw, -this.track_height);
         g.lineTo(sw, 0);

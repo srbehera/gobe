@@ -141,7 +141,6 @@ class Gobe extends Sprite {
         var lines:Array<String> = StringTools.ltrim(e.target.data).split("\n");
         // for each track, keep track of the other tracks it maps to.
         var edge_tracks = new Hash<Hash<Int>>();
-        trace('looping');
         for(line in lines){
             if(line.charAt(0) == "#" || line.length == 0) { continue; }
             var edge = Util.add_edge_line(line, annotations);
@@ -170,7 +169,10 @@ class Gobe extends Sprite {
             var atrack = tracks.get(aid);
 
             var i = 1;
-            var sub_height = atrack.track_height / (2 * (ntracks + 1));
+            // the height used per HSP row.
+            var sub_height = 0.95 * atrack.track_height / (2 * (ntracks + 1));
+            var remaining = atrack.track_height - (sub_height * 2 * ntracks);
+            trace(sub_height + ", " +  remaining + ", " + remaining / 2);
             for(bid in btrack_ids){
                 var btrack = tracks.get(bid);
                 for(strand in ['+', '-']){
@@ -179,15 +181,29 @@ class Gobe extends Sprite {
                     atrack.subtracks.set(strand + bid, sub);
                     atrack.addChildAt(sub, 0);
                     if (strand == '+'){
+                        // start from top, goes to middle
                         sub.y = i * sub_height;
                     }
                     else {
-                        sub.y = atrack.track_height - i * sub_height;
+                        // start from bottom, goes to middle
+                        sub.y = atrack.track_height - (ntracks - i) * sub_height;
                     }
                     sub.draw();
                 }
                 i += 1;
             }
+            // now initialize the tracks for +/- annotations.
+            i -= 1;
+            var plus  = new SubTrack(atrack, atrack, remaining/2);
+            var minus = new SubTrack(atrack, atrack, remaining/2);
+            plus.y = i * sub_height + remaining / 2;
+            minus.y = plus.y + remaining/ 2;
+            //minus.y = atrack.track_height - (ntracks - i) * sub_height - remaining/2;
+            //trace(plus.y);
+            atrack.subtracks.set('+', plus);
+            atrack.subtracks.set('-', minus);
+            atrack.addChildAt(plus, 0);
+            atrack.addChildAt(minus, 0);
         }
     }
     private function addAnnotations(){
@@ -198,7 +214,12 @@ class Gobe extends Sprite {
             return a.style.zindex < b.style.zindex ? -1 : 1;
         });
         for(a in arr){
-            if(a.ftype != "HSP"){ a.track.addChild(a); }
+            if(a.ftype != "HSP"){
+                trace(a);
+                var sub = a.track.subtracks.get(a.strand == 1 ? '+' : '-');
+                a.subtrack = sub;
+                sub.addChild(a);
+            }
             else {
                 // loop over the pairs and add to appropriate subtrack based on the id of other.
                 for(edge_id in a.edges){
@@ -249,7 +270,7 @@ class Gobe extends Sprite {
     public function styleReturn(e:Event){
         this.geturl(this.tracks_url, trackReturn); //
 
-        var strdata:String = e.target.data.replace('"#', '"0x').replace("'#", "'0x");
+        var strdata:String = StringTools.replace(StringTools.replace(e.target.data, '"#', '"0x'), "'#", "'0x");
         var json = JSON.decode(strdata);
         // get the array of feature-type keys.
         var ftypes:Array<String> = Reflect.fields(json);
@@ -257,6 +278,7 @@ class Gobe extends Sprite {
         for(i in 0 ... ftypes.length){
             var ftype = ftypes[i];
             var st = Reflect.field(json, ftype);
+            trace(ftype + ":"  + st.fill_color);
             styles.set(ftype, new Style(ftype, st));
         }
     }
