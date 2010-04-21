@@ -2,6 +2,7 @@ import HSP;
 import Gobe;
 
 class Util {
+    public static var track_colors:Array<UInt> = [0xff9900, 0x330000, 0x99cc00, 0x009966, 0x9933cc, 0x3300ff, 0xffcc99];
     public static function add_edge_line(line:String, annotations:Hash<Annotation>):Null<Edge>{
         var l = line.split(",");
         var a = annotations.get(l[0]);
@@ -18,4 +19,23 @@ class Util {
         return edge;
     }
 
+    public static function sorted_keys(keys:Iterator<String>):Array<String>{
+        var skeys = new Array<String>();
+        for(k in keys){ skeys.push(k); }
+        skeys.sort(function(a:String, b:String){ return a < b ? 1: -1; });
+        return skeys;
+    }
+
+    public static function next_track_color(aid:String, bid:String, colors:Hash<UInt>):UInt{
+        // if the key exists, use it, otherwise, get the next color and add it to the hash.
+        var color_key = aid < bid ? aid + "|" + bid : bid + "|" + aid;
+
+        if(colors.exists(color_key)){
+            return colors.get(color_key);
+        }
+        var l = 0; for(k in colors.keys()){ l += 1; }
+        var track_color = Util.track_colors[l];
+        colors.set(color_key, track_color);
+        return track_color;
+    }
 }
