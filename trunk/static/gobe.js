@@ -4,6 +4,9 @@ var Gobe = {
     'onclick': function(id, name, bpx, px, track_id){
         console.log(id, name, bpx, px, track_id);
     },
+    'warn': function(msg){
+        console.error("Flash msg:" + msg);
+    },
 
     DIV: 'flashcontent',
     'get_movie': function () {

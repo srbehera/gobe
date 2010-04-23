@@ -58,6 +58,9 @@ class Gobe extends Sprite {
     public static function js_onclick(fid:String, fname:String, px:Float, x:Float, track_id:String){
         ExternalInterface.call('Gobe.onclick', fid, fname, px, x, track_id);
     }
+    public static function js_warn(warning:String){
+        ExternalInterface.call('Gobe.warn', warning);
+    }
     public static function js_onmouseover(fid:String, fname:String, px:Float, x:Float, track_id:String){
         ExternalInterface.call('Gobe.onmouseover', fid, fname, px, x, track_id);
     }
@@ -137,7 +140,6 @@ class Gobe extends Sprite {
     }
 
     public function edgeReturn(e:Event){
-        trace('edgeReturn');
         var lines:Array<String> = StringTools.ltrim(e.target.data).split("\n");
         // for each track, keep track of the other tracks it maps to.
         var edge_tracks = new Hash<Hash<Int>>();
@@ -173,7 +175,7 @@ class Gobe extends Sprite {
             // the height used per HSP row.
             var sub_height = 0.95 * atrack.track_height / (2 * (ntracks + 1));
             var remaining = atrack.track_height - (sub_height * 2 * ntracks);
-            trace(sub_height + ", " +  remaining + ", " + remaining / 2);
+            //trace(sub_height + ", " +  remaining + ", " + remaining / 2);
             for(bid in btrack_ids){
                 var color_key = aid < bid ? aid + "|" + bid : bid + "|" + aid;
                 var track_color = Util.next_track_color(aid, bid, colors);
@@ -220,7 +222,6 @@ class Gobe extends Sprite {
         });
         for(a in arr){
             if(a.ftype != "HSP"){
-                trace(a);
                 var sub = a.track.subtracks.get(a.strand == 1 ? '+' : '-');
                 a.subtrack = sub;
                 sub.addChild(a);
@@ -247,6 +248,9 @@ class Gobe extends Sprite {
             if(line.charAt(0) == "#" || line.length == 0){ continue;}
             var a = new Annotation(line, tracks);
             a.style = styles.get(a.ftype);
+            if(annotations.exists(a.id)) {
+                Gobe.js_warn(a.id + " is not a unique annotation id. overwriting");
+            }
             annotations.set(a.id, a);
         }
         geturl(this.edges_url, edgeReturn);
@@ -288,14 +292,6 @@ class Gobe extends Sprite {
         }
     }
 
-    public function pix2rw(px:Float, i:Int):Int {
-            trace('TODO');
-            return 1;
-    }
-    public function rw2pix(rw:Float, i:Int):Float {
-            trace('TODO');
-            return 1;
-    }
 }
 
 class MTextField extends TextField {
