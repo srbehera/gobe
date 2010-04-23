@@ -48,15 +48,15 @@ class Edge extends Sprite {
         var ll = bb.localToGlobal(new flash.geom.Point(0, 0));
         var lr = bb.localToGlobal(new flash.geom.Point(bb.pxmax - bb.pxmin, 0));
         // alternating linestyle is to draw only lines on the y, not along the x
-        g.lineStyle(0, 0.0);
+        g.lineStyle(0.0, 0.0);
         g.beginFill(aa.subtrack.fill_color, 0.3);
         g.moveTo(ul.x, ul.y);
         g.lineTo(ur.x, ur.y);
-        g.lineStyle(0, 0.5);
+        g.lineStyle(0, aa.subtrack.fill_color);
         g.lineTo(lr.x, lr.y);
         g.lineStyle(0, 0.0);
         g.lineTo(ll.x, ll.y);
-        g.lineStyle(0, 0.5);
+        g.lineStyle(0, aa.subtrack.fill_color);
         g.lineTo(ul.x, ul.y);
         g.endFill();
         this.drawn = true;
@@ -107,17 +107,18 @@ class Annotation extends Sprite {
     }
     public function draw(){
         var g = this.graphics;
+        var is_hsptrack = Std.is(subtrack, HSPTrack);
         this.y = -this.subtrack.track_height / 2;
         g.clear();
         this.h = style.feat_height * this.subtrack.track_height;
-        g.lineStyle(style.line_width, style.line_color);
+        g.lineStyle(style.line_width, is_hsptrack ? subtrack.fill_color : style.line_color);
         var tw = this.pxmax - this.pxmin;
         var alen = this.style.arrow_len * tw * this.strand;
         var xstart = this.strand == 1 ? 0 : tw;
         var xend = this.strand == 1 ? tw : 0;
 
         g.moveTo(xstart, h/2);
-        g.beginFill(Std.is(subtrack, HSPTrack) ? subtrack.fill_color : style.fill_color, style.fill_alpha);
+        g.beginFill(is_hsptrack ? subtrack.fill_color : style.fill_color, style.fill_alpha);
         g.lineTo(xstart, -h/2);
         g.lineTo(xend - alen, -h/2);
         g.lineTo(xend, 0);
