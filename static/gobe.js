@@ -1,7 +1,8 @@
 var Gobe = {
-    'mouseover': function(id, name, px, py, bpx, bpy){
+    'onmouseover': function(id, name, bpx, px, track_id){
     },
-    'click': function(id, name, px, py, bpx, bpy){
+    'onclick': function(id, name, bpx, px, track_id){
+        console.log(id, name, bpx, px, track_id);
     },
 
     DIV: 'flashcontent',

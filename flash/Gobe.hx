@@ -21,7 +21,6 @@ import flash.text.StyleSheet;
 import flash.utils.Timer;
 import flash.events.TimerEvent;
 import hxjson2.JSON;
-import StringTools;
 import Util;
 import HSP;
 
@@ -56,8 +55,11 @@ class Gobe extends Sprite {
     public function clearPanelGraphics(e:MouseEvent){
         while(panel.numChildren != 0){ panel.removeChildAt(0); }
     }
-    public function send_html(html:String){
-        ExternalInterface.call('Gobe.handle_html', html);
+    public static function js_onclick(fid:String, fname:String, px:Float, x:Float, track_id:String){
+        ExternalInterface.call('Gobe.onclick', fid, fname, px, x, track_id);
+    }
+    public static function js_onmouseover(fid:String, fname:String, px:Float, x:Float, track_id:String){
+        ExternalInterface.call('Gobe.onmouseover', fid, fname, px, x, track_id);
     }
 
     public static function main(){
@@ -79,14 +81,12 @@ class Gobe extends Sprite {
         this.wedge_alpha += (change / 10.0);
         if(this.wedge_alpha > 1){ this.wedge_alpha = 1.0; }
         if(this.wedge_alpha < 0.1){ this.wedge_alpha = 0.1; }
-        //this.redraw_wedges();
     }
     public function onMouseMove(e:MouseEvent){
         var x = e.localX;
         var tid = this.tracks.keys().next();
         var t = tracks.get(tid);
         trace(x);
-        //t.ttf.htmlText = "<p>" + t.pix2rw(x) + "</p>";
     }
 
 
@@ -109,10 +109,10 @@ class Gobe extends Sprite {
 
         // the event only gets called when mousing over an HSP.
         addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
-        addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
 
         // this one the event gets called anywhere.
         flash.Lib.current.stage.focus = flash.Lib.current.stage.stage;
+        //flash.Lib.current.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
         flash.Lib.current.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyPress);
         this.stage_width = flash.Lib.current.stage.stage.stageWidth;
         this.stage_height = flash.Lib.current.stage.stage.stageHeight;
