@@ -130,7 +130,7 @@ class Annotation extends Sprite {
         for(i in 0 ... te.length){
             Gobe.edges[te[i]].draw();
         }
-        trace([this.id, this.fname, (this.bpmax + this.bpmin)/ 2, e.stageX, this.track_id].join(","));
+        //trace([this.id, this.fname, (this.bpmax + this.bpmin)/ 2, e.stageX, this.track_id].join(","));
         Gobe.js_onclick(this.id, this.fname, (this.bpmax + this.bpmin)/ 2, e.stageX, this.track_id);
     }
 }
