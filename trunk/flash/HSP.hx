@@ -90,7 +90,7 @@ class Annotation extends Sprite {
 
         this.edges = new Array<Int>();
         this.id = l[0];
-        this.ftype = l[1];
+        this.ftype = l[1].toLowerCase();
         this.bpmin = Std.parseInt(l[2]);
         this.bpmax = Std.parseInt(l[3]);
         this.strand = l[4] == "+" ? 1 : l[4] == "-" ? -1 : 0;
@@ -118,7 +118,16 @@ class Annotation extends Sprite {
         var xend = this.strand == 1 ? tw : 0;
 
         g.moveTo(xstart, h/2);
-        g.beginFill(is_hsptrack ? subtrack.fill_color : style.fill_color, style.fill_alpha);
+        //g.beginFill(is_hsptrack ? subtrack.fill_color : style.fill_color, style.fill_alpha);
+        var c = is_hsptrack ? subtrack.fill_color : style.fill_color;
+        var m = new flash.geom.Matrix();
+        m.createGradientBox(tw, h/2, 90, 0, 0);
+        g.beginGradientFill(flash.display.GradientType.LINEAR, 
+                         [c - 200, c + 200], 
+                         [style.fill_alpha, style.fill_alpha],
+                        [0x00, 0xFF], m);
+    
+
         g.lineTo(xstart, -h/2);
         g.lineTo(xend - alen, -h/2);
         g.lineTo(xend, 0);
@@ -138,7 +147,7 @@ class Annotation extends Sprite {
 
 
 class Style {
-    public var ftype:String;
+    public var ftype:String; // *LOWER*case feature type.
     public var fill_color:UInt;
     public var fill_alpha:Float;
     public var line_width:Float;
@@ -148,14 +157,18 @@ class Style {
     public var zindex:Int;
 
     public function new(ftype:String, json:Dynamic){
-        this.ftype = ftype;
-        this.fill_color = json.fill_color;
-        this.fill_alpha = json.fill_alpha;
-        this.line_width = json.line_width;
-        this.line_color = json.line_color;
-        this.feat_height = json.height;
-        this.arrow_len = json.arrow_len ? json.arrow_len : 0.0;
-        this.zindex = json.z ? json.z : 5;
+        this.ftype = ftype.toLowerCase(); 
+        this.fill_color = Util.color_string_to_uint(json.fill_color);
+        this.fill_alpha = Std.parseFloat(json.fill_alpha);
+        this.line_width = Std.parseFloat(json.line_width);
+        this.line_color = Util.color_string_to_uint(json.line_color);
+        this.feat_height = Std.parseFloat(json.height);
+        this.arrow_len = json.arrow_len ? Std.parseFloat(json.arrow_len) : 0.0;
+        this.zindex = json.z ? Std.parseInt(json.z) : 5;
+        trace(this);
+    }
+    public function toString(){
+        return "Style(" + this.ftype + "," + this.fill_color + "," + this.fill_alpha +")";
     }
 }
 

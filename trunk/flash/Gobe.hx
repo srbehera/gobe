@@ -20,7 +20,7 @@ import flash.text.TextFormat;
 import flash.text.StyleSheet;
 import flash.utils.Timer;
 import flash.events.TimerEvent;
-import hxjson2.JSON;
+import flash.events.IOErrorEvent;
 import Util;
 import HSP;
 
@@ -41,6 +41,7 @@ class Gobe extends Sprite {
     public var drag_sprite:DragSprite;
 
     public var panel:Sprite; // holds the lines.
+    public var feature_stylesheet:StyleSheet; // how to draw stuff..
 
     private var _all:Bool;
     public var tracks:Hash<Track>;
@@ -108,7 +109,6 @@ class Gobe extends Sprite {
         addChild(this.drag_sprite);
         this.add_callbacks();
         var i:Int;
-        geturl(p.style, styleReturn); // this then calls load config
 
         // the event only gets called when mousing over an HSP.
         addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
@@ -119,8 +119,22 @@ class Gobe extends Sprite {
         flash.Lib.current.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyPress);
         this.stage_width = flash.Lib.current.stage.stage.stageWidth;
         this.stage_height = flash.Lib.current.stage.stage.stageHeight;
+        geturl(p.style, styleReturn);
+
 
     }
+    public function styleReturn(e:Event) {
+        feature_stylesheet = new StyleSheet();
+        feature_stylesheet.parseCSS(e.target.data);
+        styles = new Hash<Style>();
+        for(ftype in feature_stylesheet.styleNames){
+            ftype = ftype.toLowerCase();
+            var st = feature_stylesheet.getStyle(ftype);
+            styles.set(ftype, new Style(ftype, st));
+        }
+        this.geturl(this.tracks_url, trackReturn); //
+    }
+
     public function onKeyPress(e:KeyboardEvent){
         if(e.keyCode == 38 || e.keyCode == 40){ // up
             if(e.keyCode == 38 && Gobe.fontSize > 25){ return; }
@@ -135,7 +149,7 @@ class Gobe extends Sprite {
         trace("getting:" + url);
         var ul = new URLLoader();
         ul.addEventListener(Event.COMPLETE, handler);
-        ul.addEventListener(flash.events.ErrorEvent.ERROR, function(e:Event){ trace("failed:" + url); });
+        ul.addEventListener(IOErrorEvent.IO_ERROR, function(e:Event){ trace("failed:" + url); });
         ul.load(new URLRequest(url));
     }
 
@@ -221,7 +235,7 @@ class Gobe extends Sprite {
             return a.style.zindex < b.style.zindex ? -1 : 1;
         });
         for(a in arr){
-            if(a.ftype != "HSP"){
+            if(a.ftype != "hsp"){
                 var sub = a.track.subtracks.get(a.strand == 1 ? '+' : '-');
                 a.subtrack = sub;
                 sub.addChild(a);
@@ -274,21 +288,6 @@ class Gobe extends Sprite {
             t.y = k * track_height;
             flash.Lib.current.addChildAt(t, 0);
             k += 1;
-        }
-    }
-
-    public function styleReturn(e:Event){
-        this.geturl(this.tracks_url, trackReturn); //
-
-        var strdata:String = StringTools.replace(StringTools.replace(e.target.data, '"#', '"0x'), "'#", "'0x");
-        var json = JSON.decode(strdata);
-        // get the array of feature-type keys.
-        var ftypes:Array<String> = Reflect.fields(json);
-        styles = new Hash<Style>();
-        for(i in 0 ... ftypes.length){
-            var ftype = ftypes[i];
-            var st = Reflect.field(json, ftype);
-            styles.set(ftype, new Style(ftype, st));
         }
     }
 
