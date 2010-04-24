@@ -38,4 +38,7 @@ class Util {
         colors.set(color_key, track_color);
         return track_color;
     }
+    public static function color_string_to_uint(c:String):UInt{
+        return Std.parseInt(StringTools.replace(StringTools.replace(c, '"#', '"0x'), "'#", "'0x"));
+    }
 }
