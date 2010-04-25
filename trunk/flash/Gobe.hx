@@ -148,9 +148,10 @@ class Gobe extends Sprite {
     public function geturl(url:String, handler:Event -> Void){
         trace("getting:" + url);
         var ul = new URLLoader();
-        ul.addEventListener(Event.COMPLETE, handler);
-        ul.addEventListener(IOErrorEvent.IO_ERROR, function(e:Event){ trace("failed:" + url); });
         ul.load(new URLRequest(url));
+        ul.addEventListener(Event.COMPLETE, handler);
+        ul.addEventListener(IOErrorEvent.IO_ERROR, function(e:Event){
+Gobe.js_warn("failed to get:" + url + "\n" + e); });
     }
 
     public function edgeReturn(e:Event){
