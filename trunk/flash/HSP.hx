@@ -120,10 +120,12 @@ class Annotation extends Sprite {
         g.moveTo(xstart, h/2);
         //g.beginFill(is_hsptrack ? subtrack.fill_color : style.fill_color, style.fill_alpha);
         var c = is_hsptrack ? subtrack.fill_color : style.fill_color;
+
+
         var m = new flash.geom.Matrix();
-        m.createGradientBox(tw, h/2, 90, 0, 0);
+        m.createGradientBox(tw, h/3, 290, 0, -h/6);
         g.beginGradientFill(flash.display.GradientType.LINEAR, 
-                         [c - 200, c + 200], 
+                         [Util.color_shift(c, -24), Util.color_shift(c, 24)], 
                          [style.fill_alpha, style.fill_alpha],
                         [0x00, 0xFF], m);
     
@@ -165,7 +167,6 @@ class Style {
         this.feat_height = Std.parseFloat(json.height);
         this.arrow_len = json.arrow_len ? Std.parseFloat(json.arrow_len) : 0.0;
         this.zindex = json.z ? Std.parseInt(json.z) : 5;
-        trace(this);
     }
     public function toString(){
         return "Style(" + this.ftype + "," + this.fill_color + "," + this.fill_alpha +")";

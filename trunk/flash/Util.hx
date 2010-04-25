@@ -38,7 +38,24 @@ class Util {
         colors.set(color_key, track_color);
         return track_color;
     }
-    public static function color_string_to_uint(c:String):UInt{
-        return Std.parseInt(StringTools.replace(StringTools.replace(c, '"#', '"0x'), "'#", "'0x"));
+    public static inline function color_string_to_uint(c:String):UInt{
+        c = StringTools.replace(c, '#', '0x');
+        return Std.parseInt(c);
+    }
+
+    public static inline function color_shift(c:UInt, cshift:Int):UInt {
+        var r:UInt = ((c >> 16) & 0xff) + cshift;
+        var g:UInt = ((c >> 8) & 0xff) + cshift;
+        var b:UInt = (c & 0xff) + cshift;
+        // *shrugh* please fix me!!
+
+        if(r > 0xffff){ r = 0; }
+        if(g > 0xffff){ g = 0; }
+        if(b > 0xffff){ b = 0; }
+        if(r > 255){ r = 255;}
+        if(g > 255){ g = 255;}
+        if(b > 255){ b = 255;}
+        return r << 16 | g << 8 | b;
+
     }
 }
